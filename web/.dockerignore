@@ -1,0 +1,48 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+package-lock.json  # We're using pnpm, so this can be excluded
+
+# Build outputs
+.svelte-kit/
+build/
+.vercel/
+.netlify/
+
+# Development files
+.git/
+.github/
+.gitignore
+*.md
+!README.md
+.env
+.env.*
+!.env.example
+
+# Project specific
+legacy/
+myfiles/
+__tests__/
+test/
+tests/
+coverage/
+
+# Config files not needed in Docker
+.prettierrc
+.prettierignore
+.vscode/
+.npmrc
+eslint.config.js
+
+# Editor directories and files
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+

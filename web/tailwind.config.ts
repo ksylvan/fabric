@@ -1,5 +1,4 @@
-import { join } from 'path';
-import type { Config } from 'tailwindcss';
+import { join } from 'node:path';
 import forms from '@tailwindcss/forms';
 import typography from '@tailwindcss/typography';
 import { skeleton } from '@skeletonlabs/tw-plugin';

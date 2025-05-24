@@ -27,7 +27,7 @@ const initializeHighlighter = async () => {
   }
 };
 
-let shikiHighlighterPromise = initializeHighlighter();
+const shikiHighlighterPromise = initializeHighlighter();
 
 /** @type {import('mdsvex').MdsvexOptions} */
 const mdsvexOptions = {
@@ -81,7 +81,7 @@ const config = {
       handleHttpError: ({ path, referrer, message }) => {
         // Log the error for debugging
         console.warn(`HTTP error during prerendering: ${message}\nPath: ${path}\nReferrer: ${referrer}`);
-        
+
         // ignore 404 for specific case
         if (path === '/not-found' && referrer === '/') {
           return;
