@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.4.301 (2025-08-28)
+
+### PR [#1735](https://github.com/danielmiessler/Fabric/pull/1735) by [ksylvan](https://github.com/ksylvan): Fix Docker Build Path Configuration
+
+- Fix: update Docker workflow to use specific Dockerfile and monitor markdown file changes
+- Add explicit Dockerfile path to Docker build action
+- Remove markdown files from workflow paths-ignore filter
+- Enable CI triggers for documentation file changes
+- Specify Docker build context with custom file location
+### Direct commits
+
+- Fix: update Docker workflow to use specific Dockerfile and monitor markdown file changes
+• Add explicit Dockerfile path to Docker build action
+• Remove markdown files from workflow paths-ignore filter
+• Enable CI triggers for documentation file changes
+• Specify Docker build context with custom file location
+
 ## v1.4.300 (2025-08-28)
 
 ### PR [#1732](https://github.com/danielmiessler/Fabric/pull/1732) by [ksylvan](https://github.com/ksylvan): CI Infra: Changelog Generation Tool + Docker Image Pubishing

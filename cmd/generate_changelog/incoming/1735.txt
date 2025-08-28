@@ -1,7 +1,0 @@
-### PR [#1735](https://github.com/danielmiessler/Fabric/pull/1735) by [ksylvan](https://github.com/ksylvan): Fix Docker Build Path Configuration
-
-- Fix: update Docker workflow to use specific Dockerfile and monitor markdown file changes
-- Add explicit Dockerfile path to Docker build action
-- Remove markdown files from workflow paths-ignore filter
-- Enable CI triggers for documentation file changes
-- Specify Docker build context with custom file location
