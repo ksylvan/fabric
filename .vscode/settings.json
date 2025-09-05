@@ -182,7 +182,10 @@
 		"go.mod",
 		".gitignore",
 		"CHANGELOG.md",
-		"./scripts/installer/install.*"
+		"scripts/installer/install.*",
+		"web/static/data/pattern_descriptions.json",
+		"scripts/pattern_descriptions/*.json",
+		"data/patterns/pattern_explanations.md"
 	],
 	"markdownlint.config": {
 		"MD004": false,
@@ -197,10 +200,12 @@
 				"code",
 				"div",
 				"em",
+				"h",
 				"h4",
 				"img",
 				"module",
-				"p"
+				"p",
+				"sup"
 			]
 		},
 		"MD041": false

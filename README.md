@@ -2,7 +2,7 @@
     <a href="https://go.warp.dev/fabric" target="_blank">
         <sup>Special thanks to:</sup>
         <br>
-        <img alt="Warp sponsorship" width="400" src="https://github.com/warpdotdev/brand-assets/blob/main/Github/Sponsor/Warp-Github-LG-02.png">
+        <img alt="Warp sponsorship" width="400" src="https://raw.githubusercontent.com/warpdotdev/brand-assets/refs/heads/main/Github/Sponsor/Warp-Github-LG-02.png">
         <br>
         <h>Warp, built for coding with multiple AI agents</b>
         <br>

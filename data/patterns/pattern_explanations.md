@@ -178,47 +178,46 @@
 174. **refine_design_document**: Refines a design document based on a design review by analyzing, mapping concepts, and implementing changes using valid Markdown.
 175. **review_design**: Reviews and analyzes architecture design, focusing on clarity, component design, system integrations, security, performance, scalability, and data management.
 176. **sanitize_broken_html_to_markdown**: Converts messy HTML into clean, properly formatted Markdown, applying custom styling and ensuring compatibility with Vite.
-177. **solve_with_cot**: Provides detailed, step-by-step responses with chain of thought reasoning, using structured thinking, reflection, and output sections.
-178. **suggest_pattern**: Suggests appropriate fabric patterns or commands based on user input, providing clear explanations and options for users.
-179. **summarize**: Summarizes content into a 20-word sentence, main points, and takeaways, formatted with numbered lists in Markdown.
-180. **summarize_board_meeting**: Creates formal meeting notes from board meeting transcripts for corporate governance documentation.
-181. **summarize_debate**: Summarizes debates, identifies primary disagreement, extracts arguments, and provides analysis of evidence and argument strength to predict outcomes.
-182. **summarize_git_changes**: Summarizes recent project updates from the last 7 days, focusing on key changes with enthusiasm.
-183. **summarize_git_diff**: Summarizes and organizes Git diff changes with clear, succinct commit messages and bullet points.
-184. **summarize_lecture**: Extracts relevant topics, definitions, and tools from lecture transcripts, providing structured summaries with timestamps and key takeaways.
-185. **summarize_legislation**: Summarizes complex political proposals and legislation by analyzing key points, proposed changes, and providing balanced, positive, and cynical characterizations.
-186. **summarize_meeting**: Analyzes meeting transcripts to extract a structured summary, including an overview, key points, tasks, decisions, challenges, timeline, references, and next steps.
-187. **summarize_micro**: Summarizes content into a 20-word sentence, 3 main points, and 3 takeaways, formatted in clear, concise Markdown.
-188. **summarize_newsletter**: Extracts the most meaningful, interesting, and useful content from a newsletter, summarizing key sections such as content, opinions, tools, companies, and follow-up items in clear, structured Markdown.
-189. **summarize_paper**: Summarizes an academic paper by detailing its title, authors, technical approach, distinctive features, experimental setup, results, advantages, limitations, and conclusion in a clear, structured format using human-readable Markdown.
-190. **summarize_prompt**: Summarizes AI chat prompts by describing the primary function, unique approach, and expected output in a concise paragraph. The summary is focused on the prompt's purpose without unnecessary details or formatting.
-191. **summarize_pull-requests**: Summarizes pull requests for a coding project by providing a summary and listing the top PRs with human-readable descriptions.
-192. **summarize_rpg_session**: Summarizes a role-playing game session by extracting key events, combat stats, character changes, quotes, and more.
-193. **t_analyze_challenge_handling**: Provides 8-16 word bullet points evaluating how well challenges are being addressed, calling out any lack of effort.
-194. **t_check_metrics**: Analyzes deep context from the TELOS file and input instruction, then provides a wisdom-based output while considering metrics and KPIs to assess recent improvements.
-195. **t_create_h3_career**: Summarizes context and produces wisdom-based output by deeply analyzing both the TELOS File and the input instruction, considering the relationship between the two.
-196. **t_create_opening_sentences**: Describes from TELOS file the person's identity, goals, and actions in 4 concise, 32-word bullet points, humbly.
-197. **t_describe_life_outlook**: Describes from TELOS file a person's life outlook in 5 concise, 16-word bullet points.
-198. **t_extract_intro_sentences**: Summarizes from TELOS file a person's identity, work, and current projects in 5 concise and grounded bullet points.
-199. **t_extract_panel_topics**: Creates 5 panel ideas with titles and descriptions based on deep context from a TELOS file and input.
-200. **t_find_blindspots**: Identify potential blindspots in thinking, frames, or models that may expose the individual to error or risk.
-201. **t_find_negative_thinking**: Analyze a TELOS file and input to identify negative thinking in documents or journals, followed by tough love encouragement.
-202. **t_find_neglected_goals**: Analyze a TELOS file and input instructions to identify goals or projects that have not been worked on recently.
-203. **t_give_encouragement**: Analyze a TELOS file and input instructions to evaluate progress, provide encouragement, and offer recommendations for continued effort.
-204. **t_red_team_thinking**: Analyze a TELOS file and input instructions to red-team thinking, models, and frames, then provide recommendations for improvement.
-205. **t_threat_model_plans**: Analyze a TELOS file and input instructions to create threat models for a life plan and recommend improvements.
-206. **t_visualize_mission_goals_projects**: Analyze a TELOS file and input instructions to create an ASCII art diagram illustrating the relationship of missions, goals, and projects.
-207. **t_year_in_review**: Analyze a TELOS file to create insights about a person or entity, then summarize accomplishments and visualizations in bullet points.
-208. **to_flashcards**: Create Anki flashcards from a given text, focusing on concise, optimized questions and answers without external context.
-209. **transcribe_minutes**: Extracts (from meeting transcription) meeting minutes, identifying actionables, insightful ideas, decisions, challenges, and next steps in a structured format.
-210. **translate**: Translates sentences or documentation into the specified language code while maintaining the original formatting and tone.
-211. **tweet**: Provides a step-by-step guide on crafting engaging tweets with emojis, covering Twitter basics, account creation, features, and audience targeting.
-212. **write_essay**: Writes essays in the style of a specified author, embodying their unique voice, vocabulary, and approach. Uses `author_name` variable.
-213. **write_essay_pg**: Writes concise, clear essays in the style of Paul Graham, focusing on simplicity, clarity, and illumination of the provided topic.
-214. **write_hackerone_report**: Generates concise, clear, and reproducible bug bounty reports, detailing vulnerability impact, steps to reproduce, and exploit details for triagers.
-215. **write_latex**: Generates syntactically correct LaTeX code for a new.tex document, ensuring proper formatting and compatibility with pdflatex.
-216. **write_micro_essay**: Writes concise, clear, and illuminating essays on the given topic in the style of Paul Graham.
-217. **write_nuclei_template_rule**: Generates Nuclei YAML templates for detecting vulnerabilities using HTTP requests, matchers, extractors, and dynamic data extraction.
-218. **write_pull-request**: Drafts detailed pull request descriptions, explaining changes, providing reasoning, and identifying potential bugs from the git diff command output.
-219. **write_semgrep_rule**: Creates accurate and working Semgrep rules based on input, following syntax guidelines and specific language considerations.
-220. **youtube_summary**: Create concise, timestamped Youtube video summaries that highlight key points.
+177. **suggest_pattern**: Suggests appropriate fabric patterns or commands based on user input, providing clear explanations and options for users.
+178. **summarize**: Summarizes content into a 20-word sentence, main points, and takeaways, formatted with numbered lists in Markdown.
+179. **summarize_board_meeting**: Creates formal meeting notes from board meeting transcripts for corporate governance documentation.
+180. **summarize_debate**: Summarizes debates, identifies primary disagreement, extracts arguments, and provides analysis of evidence and argument strength to predict outcomes.
+181. **summarize_git_changes**: Summarizes recent project updates from the last 7 days, focusing on key changes with enthusiasm.
+182. **summarize_git_diff**: Summarizes and organizes Git diff changes with clear, succinct commit messages and bullet points.
+183. **summarize_lecture**: Extracts relevant topics, definitions, and tools from lecture transcripts, providing structured summaries with timestamps and key takeaways.
+184. **summarize_legislation**: Summarizes complex political proposals and legislation by analyzing key points, proposed changes, and providing balanced, positive, and cynical characterizations.
+185. **summarize_meeting**: Analyzes meeting transcripts to extract a structured summary, including an overview, key points, tasks, decisions, challenges, timeline, references, and next steps.
+186. **summarize_micro**: Summarizes content into a 20-word sentence, 3 main points, and 3 takeaways, formatted in clear, concise Markdown.
+187. **summarize_newsletter**: Extracts the most meaningful, interesting, and useful content from a newsletter, summarizing key sections such as content, opinions, tools, companies, and follow-up items in clear, structured Markdown.
+188. **summarize_paper**: Summarizes an academic paper by detailing its title, authors, technical approach, distinctive features, experimental setup, results, advantages, limitations, and conclusion in a clear, structured format using human-readable Markdown.
+189. **summarize_prompt**: Summarizes AI chat prompts by describing the primary function, unique approach, and expected output in a concise paragraph. The summary is focused on the prompt's purpose without unnecessary details or formatting.
+190. **summarize_pull-requests**: Summarizes pull requests for a coding project by providing a summary and listing the top PRs with human-readable descriptions.
+191. **summarize_rpg_session**: Summarizes a role-playing game session by extracting key events, combat stats, character changes, quotes, and more.
+192. **t_analyze_challenge_handling**: Provides 8-16 word bullet points evaluating how well challenges are being addressed, calling out any lack of effort.
+193. **t_check_metrics**: Analyzes deep context from the TELOS file and input instruction, then provides a wisdom-based output while considering metrics and KPIs to assess recent improvements.
+194. **t_create_h3_career**: Summarizes context and produces wisdom-based output by deeply analyzing both the TELOS File and the input instruction, considering the relationship between the two.
+195. **t_create_opening_sentences**: Describes from TELOS file the person's identity, goals, and actions in 4 concise, 32-word bullet points, humbly.
+196. **t_describe_life_outlook**: Describes from TELOS file a person's life outlook in 5 concise, 16-word bullet points.
+197. **t_extract_intro_sentences**: Summarizes from TELOS file a person's identity, work, and current projects in 5 concise and grounded bullet points.
+198. **t_extract_panel_topics**: Creates 5 panel ideas with titles and descriptions based on deep context from a TELOS file and input.
+199. **t_find_blindspots**: Identify potential blindspots in thinking, frames, or models that may expose the individual to error or risk.
+200. **t_find_negative_thinking**: Analyze a TELOS file and input to identify negative thinking in documents or journals, followed by tough love encouragement.
+201. **t_find_neglected_goals**: Analyze a TELOS file and input instructions to identify goals or projects that have not been worked on recently.
+202. **t_give_encouragement**: Analyze a TELOS file and input instructions to evaluate progress, provide encouragement, and offer recommendations for continued effort.
+203. **t_red_team_thinking**: Analyze a TELOS file and input instructions to red-team thinking, models, and frames, then provide recommendations for improvement.
+204. **t_threat_model_plans**: Analyze a TELOS file and input instructions to create threat models for a life plan and recommend improvements.
+205. **t_visualize_mission_goals_projects**: Analyze a TELOS file and input instructions to create an ASCII art diagram illustrating the relationship of missions, goals, and projects.
+206. **t_year_in_review**: Analyze a TELOS file to create insights about a person or entity, then summarize accomplishments and visualizations in bullet points.
+207. **to_flashcards**: Create Anki flashcards from a given text, focusing on concise, optimized questions and answers without external context.
+208. **transcribe_minutes**: Extracts (from meeting transcription) meeting minutes, identifying actionables, insightful ideas, decisions, challenges, and next steps in a structured format.
+209. **translate**: Translates sentences or documentation into the specified language code while maintaining the original formatting and tone.
+210. **tweet**: Provides a step-by-step guide on crafting engaging tweets with emojis, covering Twitter basics, account creation, features, and audience targeting.
+211. **write_essay**: Writes essays in the style of a specified author, embodying their unique voice, vocabulary, and approach. Uses `author_name` variable.
+212. **write_essay_pg**: Writes concise, clear essays in the style of Paul Graham, focusing on simplicity, clarity, and illumination of the provided topic.
+213. **write_hackerone_report**: Generates concise, clear, and reproducible bug bounty reports, detailing vulnerability impact, steps to reproduce, and exploit details for triagers.
+214. **write_latex**: Generates syntactically correct LaTeX code for a new.tex document, ensuring proper formatting and compatibility with pdflatex.
+215. **write_micro_essay**: Writes concise, clear, and illuminating essays on the given topic in the style of Paul Graham.
+216. **write_nuclei_template_rule**: Generates Nuclei YAML templates for detecting vulnerabilities using HTTP requests, matchers, extractors, and dynamic data extraction.
+217. **write_pull-request**: Drafts detailed pull request descriptions, explaining changes, providing reasoning, and identifying potential bugs from the git diff command output.
+218. **write_semgrep_rule**: Creates accurate and working Semgrep rules based on input, following syntax guidelines and specific language considerations.
+219. **youtube_summary**: Create concise, timestamped Youtube video summaries that highlight key points.

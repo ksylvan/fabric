@@ -78,10 +78,6 @@ Assess AI outputs against criteria, providing scores and feedback.
 
 Process direct queries by interpreting intent.
 
-### solve_with_cot
-
-Solve problems using chain-of-thought reasoning.
-
 ### suggest_pattern
 
 Recommend Fabric patterns based on user requirements.
