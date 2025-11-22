@@ -1,0 +1,7 @@
+### PR [#1839](https://github.com/danielmiessler/Fabric/pull/1839) by [ksylvan](https://github.com/ksylvan): Add GitHub Models Provider and Refactor Fetching Fallback Logic
+
+- Add GitHub Models to supported OpenAI-compatible providers configuration
+- Centralize direct model fetching logic within the OpenAI package
+- Implement fallback strategy for listing models via raw HTTP
+- Upgrade OpenAI Go SDK dependency to version 1.12.0
+- Remove redundant fetching code from openai_compatible package

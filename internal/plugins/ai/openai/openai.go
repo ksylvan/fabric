@@ -8,6 +8,7 @@ import (
 
 	"github.com/danielmiessler/fabric/internal/chat"
 	"github.com/danielmiessler/fabric/internal/domain"
+	debuglog "github.com/danielmiessler/fabric/internal/log"
 	"github.com/danielmiessler/fabric/internal/plugins"
 	openai "github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -83,13 +84,24 @@ func (o *Client) configure() (ret error) {
 
 func (o *Client) ListModels() (ret []string, err error) {
 	var page *pagination.Page[openai.Model]
-	if page, err = o.ApiClient.Models.List(context.Background()); err != nil {
-		return
+	if page, err = o.ApiClient.Models.List(context.Background()); err == nil {
+		for _, mod := range page.Data {
+			ret = append(ret, mod.ID)
+		}
+
+		if len(ret) > 0 {
+			return
+		}
+		// SDK returned empty list - fall back to direct API fetch.
+		// Some providers (e.g., GitHub Models) return non-standard response formats
+		// that the SDK fails to parse, resulting in an empty list even when models exist.
+		debuglog.Debug(debuglog.Basic, "SDK returned empty model list for %s, falling back to direct API fetch\n", o.GetName())
+	} else {
+		// SDK returned an error - fall back to direct API fetch
+		debuglog.Debug(debuglog.Basic, "SDK Models.List failed for %s: %v, falling back to direct API fetch\n", o.GetName(), err)
 	}
-	for _, mod := range page.Data {
-		ret = append(ret, mod.ID)
-	}
-	return
+
+	return FetchModelsDirectly(context.Background(), o.ApiBaseURL.Value, o.ApiKey.Value, o.GetName())
 }
 
 func (o *Client) SendStream(

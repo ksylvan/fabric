@@ -62,6 +62,11 @@ var ProviderMap = map[string]ProviderConfig{
 		BaseURL:             "https://api.deepseek.com",
 		ImplementsResponses: false,
 	},
+	"GitHub": {
+		Name:                "GitHub",
+		BaseURL:             "https://models.inference.ai.azure.com",
+		ImplementsResponses: false,
+	},
 	"GrokAI": {
 		Name:                "GrokAI",
 		BaseURL:             "https://api.x.ai/v1",
