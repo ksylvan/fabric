@@ -15,6 +15,7 @@ import (
 	"github.com/danielmiessler/fabric/internal/plugins/ai/anthropic"
 	"github.com/danielmiessler/fabric/internal/plugins/ai/azure"
 	"github.com/danielmiessler/fabric/internal/plugins/ai/bedrock"
+	"github.com/danielmiessler/fabric/internal/plugins/ai/copilot"
 	"github.com/danielmiessler/fabric/internal/plugins/ai/dryrun"
 	"github.com/danielmiessler/fabric/internal/plugins/ai/exolab"
 	"github.com/danielmiessler/fabric/internal/plugins/ai/gemini"
@@ -104,6 +105,7 @@ func NewPluginRegistry(db *fsdb.Db) (ret *PluginRegistry, err error) {
 		lmstudio.NewClient(),
 		exolab.NewClient(),
 		perplexity.NewClient(), // Added Perplexity client
+		copilot.NewClient(),    // Added Microsoft Copilot client
 	)
 
 	if hasAWSCredentials() {
