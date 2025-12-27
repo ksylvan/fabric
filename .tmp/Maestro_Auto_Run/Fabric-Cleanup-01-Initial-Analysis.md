@@ -1388,7 +1388,28 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
     - `internal/cli/cli_test.go:13` - Permanently skipped test due to flag `-t` collision (should be fixed or removed)
   - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Flaky-Tests-Race-Conditions-Analysis.md`
   - **Recommendation:** No action required - test suite is robust and race-free
-- [ ] Review mock usage for consistency
+- [x] Review mock usage for consistency
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all test doubles in codebase
+  - **Test Doubles Found:** 3 struct-based mocks implementing `ai.Vendor` interface + 1 HTTP mock server
+  - **Files Analyzed:** 6 test files with mock/test double usage
+  - **Overall Assessment:** GOOD (Grade: A-) - Consistent patterns with minor naming inconsistencies
+  - **Key Findings:**
+    - All test doubles properly implement `ai.Vendor` interface (100% compliance)
+    - No external mocking frameworks used (appropriate for project scale)
+    - Naming inconsistency: Mix of "mock", "stub", and "test" prefixes
+    - Complexity appropriately matched to testing requirements
+  - **Mock Inventory:**
+    - `mockVendor` (chatter_test.go) - Configurable mock with error injection and behavior customization
+    - `stubVendor` (vendors_test.go) - Minimal stub for manager testing
+    - `testVendor` (plugin_registry_test.go) - Mock with model list support
+    - `mockTokenServer` (oauth_test.go) - HTTP test server for OAuth flow testing
+  - **Risk Assessment:** VERY LOW - All implementations are simple, focused, and functionally correct
+  - **Recommendations:**
+    - **Priority 1:** Standardize naming (rename `stubVendor` → `mockVendor`, `testVendor` → `mockVendor`)
+    - **Priority 2:** Add docstrings to explain mock purpose and configuration
+    - **Priority 3:** (Optional/Deferred) Consider shared test helper package if vendor testing grows
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Mock-Usage-Consistency-Analysis.md`
+  - **Implementation Impact:** Naming changes are pure refactoring (10 min effort, ZERO functional risk)
 - [ ] Check for proper test cleanup
 
 ## Step 5: Performance Analysis
