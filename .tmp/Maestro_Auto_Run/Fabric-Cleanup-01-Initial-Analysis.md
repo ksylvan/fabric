@@ -1728,8 +1728,63 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
   - **Testing Strategy:** Verify all affected tests pass (cli, util, fsdb, tools, domain)
   - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Modern-Error-Handling-Analysis.md`
   - **Recommendation:** Implement as quick-win refactoring task - high value, very low risk
-- [ ] Review for opportunities to use errors.Join (Go 1.20+)
-- [ ] Look for fmt.Errorf with %w (error wrapping)
+- [x] Review for opportunities to use errors.Join (Go 1.20+)
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review for errors.Join usage opportunities
+  - **Overall Assessment:** MINIMAL OPPORTUNITIES (Grade: B+)
+  - **Findings:**
+    - **Files with multiple defer Close():** 6 files found, but all have closes in separate functions (not within same scope)
+    - **Error collection patterns:** 0 instances of collecting errors in slices/arrays
+    - **Validation functions accumulating errors:** 0 instances found
+    - **Batch operations with error accumulation:** 0 instances found
+  - **Only Marginal Candidate:** `internal/i18n/i18n.go:124-141` (downloadLocale function)
+    - Has 2 defer Close() calls (HTTP response + file)
+    - Currently ignores Close() errors (standard Go practice for response bodies)
+    - Could use errors.Join to capture both Close() errors, but NOT RECOMMENDED
+    - Reason: Complexity outweighs benefit; HTTP body Close() errors rarely actionable
+  - **Why Limited Applicability:**
+    - Codebase follows fail-fast philosophy with early returns (Go idiom)
+    - No patterns of error accumulation or collection
+    - Clean error propagation with fmt.Errorf wrapping
+    - Appropriate use of defer without error checking (standard for HTTP responses)
+  - **Recommendation:** NO ACTION REQUIRED - Current error handling patterns are excellent and more idiomatic than forcing errors.Join
+  - **Code Quality:** Fabric demonstrates mature Go error handling (early returns, proper wrapping, clean separation)
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Errors-Join-Analysis.md`
+  - **Conclusion:** errors.Join has very limited applicability in this codebase - this is a GOOD sign, not a deficiency
+- [x] Look for fmt.Errorf with %w (error wrapping)
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of error wrapping patterns across entire codebase
+  - **Overall Grade:** B+ (Good but inconsistent adoption of modern error wrapping)
+  - **Statistics:**
+    - Total `fmt.Errorf` calls: 370
+    - With `%w` error wrapping: 107 (28.9%)
+    - Without `%w`: 263 (71.1%)
+    - `errors.Is` usage: 2 instances only
+    - `errors.As` usage: 0 instances
+    - Legacy `os.IsNotExist`: 24 instances (should be `errors.Is(err, fs.ErrNotExist)`)
+  - **Key Findings:**
+    - ✅ Newer modules show excellent adoption (OAuth, template system, LMStudio, Bedrock: 100% %w usage)
+    - ⚠️ fsdb package: 0/37 instances use %w (all use %v) - HIGH PRIORITY
+    - ⚠️ i18n error patterns (~70 instances) lose error chain - MEDIUM PRIORITY
+    - ⚠️ 24 legacy `os.IsNotExist` calls need modernization - HIGH PRIORITY
+  - **High Priority Opportunities (73 changes, very low risk):**
+    - Modernize all 24 `os.IsNotExist` → `errors.Is(err, fs.ErrNotExist)`
+    - Change %v to %w in fsdb package (37 instances)
+    - Change %v to %w in core packages: chatter.go, server/chat.go, plugins/template/sys.go (12 instances)
+  - **Medium Priority Opportunities (~70 changes):**
+    - Refactor i18n error patterns in cli/, tools/youtube.go, tools/patterns_loader.go
+    - Current pattern `fmt.Errorf("%s", fmt.Sprintf(i18n.T("key"), err))` loses error chain
+    - Proposed: `fmt.Errorf(i18n.T("key")+": %w", err)` to preserve error wrapping
+  - **Benefits of Improvements:**
+    - Enables programmatic error inspection with `errors.Is` and `errors.As`
+    - Better error debugging and logging
+    - Aligns with modern Go 1.13+ best practices
+    - Zero functional changes or breaking changes
+  - **Risk Assessment:** LOW - All changes maintain functional equivalence, error messages remain identical
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Error-Wrapping-Analysis.md`
+  - **Implementation Strategy:**
+    - Phase 1: Quick wins (73 changes) - os.IsNotExist modernization + %v→%w in fsdb/core
+    - Phase 2: i18n pattern refactor (70 changes)
+    - Phase 3: Documentation and guidelines
+  - **Recommendation:** Proceed with Phase 1 immediately (very low risk, high value)
 - [ ] Check for modern time.Time methods
 - [ ] Review for use of any vs interface{}
 
