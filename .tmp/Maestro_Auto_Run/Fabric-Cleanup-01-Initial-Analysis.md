@@ -983,7 +983,44 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
     - ChatOptions: No tags on definition (embedded in server DTOs which have tags)
   - **Server DTOs:** server/chat.go defines its own ChatRequest with proper JSON tags, embeds domain.ChatOptions
   - **Verdict:** 100% appropriate JSON tag coverage - tags only where needed
-- [ ] Look for validation that could be added
+- [x] Look for validation that could be added
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive validation analysis of all domain structs
+  - **Overall Grade:** C+ (Significant validation opportunities identified)
+  - **Findings:** 33 validation opportunities across 4 domain structs
+  - **Critical Issues:** 5 security vulnerabilities (path traversal, DOS, memory exhaustion)
+  - **Struct Grades:**
+    - ChatRequest (10 fields): Grade F - ZERO validation, 10 missing validations (4 HIGH priority security issues)
+    - ChatOptions (24 fields): Grade D- - ZERO validation, 18 missing validations (10 HIGH priority range checks)
+    - Attachment (5 fields): Grade C - Partial validation, 4 missing validations (2 HIGH priority: size limit, URL validation)
+    - FileChange (3 fields): Grade B+ - GOOD validation in ParseFileChanges(), only 1 minor improvement
+  - **Critical Security Issues:**
+    - ❌ **Path Traversal:** ContextName, SessionName, PatternName, StrategyName have NO validation - can access arbitrary files
+    - ❌ **DOS Vulnerability:** No size limits on Attachment.Content or URL downloads (io.ReadAll with no limit)
+    - ❌ **Memory Exhaustion:** No validation on Meta, PatternVariables size
+    - ❌ **Invalid Parameters:** No range validation on Temperature, TopP, Penalties (API providers will reject)
+    - ⚠️ **Dead Code:** AudioFormat field in ChatOptions is assigned but NEVER read (cleanup needed)
+  - **Current State:** Validation is **scattered** across CLI and Server layers instead of centralized in Domain
+  - **Key Recommendations:**
+    1. IMMEDIATE: Add ChatRequest.Validate() with name field path traversal prevention (regex: `^[a-zA-Z0-9_-]+$`)
+    2. IMMEDIATE: Add Attachment size limits (MaxAttachmentSize = 50MB) to prevent DOS
+    3. HIGH: Add ChatOptions.Validate() with numeric range validation (Temperature, TopP, Penalties)
+    4. HIGH: Move image validation from CLI to Domain layer (consolidate duplicated logic)
+    5. MEDIUM: Remove AudioFormat dead code field
+  - **Implementation Plan:** 4 phases (10 hours total)
+    - Phase 1 (Immediate - 2h): Critical security fixes (path traversal, size limits)
+    - Phase 2 (Week 1 - 4h): Comprehensive parameter validation, move CLI validation to Domain
+    - Phase 3 (Week 2 - 3h): Server integration, standardize error responses
+    - Phase 4 (Week 3 - 1h): Documentation and validation guide
+  - **Benefits:**
+    - ✅ Centralized validation (DRY principle - single source of truth)
+    - ✅ Security improvements (prevent path traversal, DOS, memory exhaustion)
+    - ✅ Better error messages (validate at domain layer before business logic)
+    - ✅ Reduced code duplication (validation in one place)
+    - ✅ Consistent validation across CLI and API
+  - **Risk Assessment:** LOW - All changes are pure validation additions, 100% backwards compatible
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Domain-Validation-Analysis.md`
+  - **Estimated Total Effort:** 10 hours for complete validation implementation
+  - **Recommendation:** Implement Phase 1 (security fixes) as IMMEDIATE priority task
 - [x] Review for proper use of pointers vs values
   - ✅ **ANALYSIS COMPLETE** - Excellent pointer usage throughout domain package
   - **Pointer Usage (Attachment struct):**
