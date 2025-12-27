@@ -632,7 +632,38 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
     5. HIGH: Standardize error response format
     6. Create validation helper library and constants file
     7. Add comprehensive unit tests for all validation functions
-- [ ] Check for proper context usage
+- [x] Check for proper context usage
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 12 server files
+  - **Overall Grade:** C (Needs Improvement)
+  - **Findings:** 7 issues identified across 3 priority tiers (2 critical, 3 high, 2 medium)
+  - **Critical Issues:** 2 instances requiring immediate attention:
+    - **ollama.go:193** - Uses `context.Background()` instead of request context (CRITICAL - breaks cancellation chain)
+    - **chat.go:89,102** - Uses deprecated CloseNotify API, goroutine doesn't respect context cancellation (HIGH)
+  - **High Priority Issues:** 3 instances needing context propagation:
+    - Storage operations (storage.go, patterns.go, etc.) - No context in database/file I/O
+    - Configuration operations (configuration.go) - No context in .env file operations
+    - YouTube API calls (youtube.go) - No context in external API calls
+  - **Medium Priority:** 2 instances (AI model operations, models handler)
+  - **Context Usage Gaps:**
+    - ❌ HTTP handler uses context.Background() (breaks cancellation)
+    - ⚠️ Goroutines don't respect request cancellation
+    - ⚠️ No context propagation to storage/database layer
+    - ⚠️ External API calls can't be cancelled or timed out
+    - ⚠️ Uses deprecated CloseNotify instead of modern context.Done()
+  - **Risk Assessment:** MEDIUM - Missing context can lead to resource leaks and wasted operations
+  - **Estimated Fix Effort:** 9 hours total across 4 phases
+    - Phase 1 (Immediate - 1h): Fix critical context.Background() bug and CloseNotify deprecation
+    - Phase 2 (Week 1 - 4h): Add context to storage, YouTube, configuration layers
+    - Phase 3 (Week 2 - 3h): Add context to core Chatter APIs
+    - Phase 4 (Week 3 - 1h): Documentation and best practices
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Server-Context-Usage-Analysis.md`
+  - **Key Recommendations:**
+    1. IMMEDIATE: Fix ollama.go context.Background() bug (replace with c.Request.Context())
+    2. IMMEDIATE: Replace CloseNotify with ctx.Done() in chat.go
+    3. HIGH: Add context parameter to storage interface (affects multiple packages)
+    4. HIGH: Add context to YouTube API operations
+    5. MEDIUM: Add context to core Chatter.Send() method
+    6. Create context usage best practices guide for future development
 
 ### 2.4 Plugins - AI Providers (`/internal/plugins/ai`)
 
