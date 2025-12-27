@@ -1272,7 +1272,34 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
     - FSDB Storage: 52% → 80%
   - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Critical-Paths-Without-Tests-Analysis.md`
   - **Recommendation:** Implement Phase 1 (server tests) IMMEDIATELY before any refactoring - critical security and stability risks present
-- [ ] Check for outdated test patterns
+- [x] Check for outdated test patterns
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 48 test files in `/internal`
+  - **Key Findings:**
+    - **High Priority (5 files):** Using `os.Setenv()` instead of `t.Setenv()` - affects test isolation
+    - **Medium Priority (8 files):** Using `os.MkdirTemp()` instead of `t.TempDir()` - less reliable cleanup
+    - **Low Priority (42 files):** Missing `t.Parallel()` - slower test execution (87.5% of tests)
+    - **Helper Functions (2 files):** Missing `t.Helper()` markers
+    - **Global State Issues (2 files):** locale_test.go and plugin_registry_test.go have potential race conditions
+  - **Positive Findings:**
+    - Excellent table-driven test patterns throughout
+    - Good use of testify/assert in 8+ files
+    - Many files already using modern `t.TempDir()`
+    - Comprehensive error case coverage
+    - Platform-specific test guards properly implemented
+  - **Overall Assessment:** GOOD (Grade: B+) - Fundamentally sound test suite with mostly modern practices
+  - **Risk Assessment:** LOW - Recommended improvements are mostly low-risk refactorings
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Outdated-Test-Patterns-Analysis.md`
+  - **Metrics:**
+    - Tests using t.TempDir(): ~35/48 (73%)
+    - Tests using t.Setenv(): 0/5 files with env vars (0%)
+    - Tests using t.Parallel(): ~0/48 (0%)
+    - Tests using t.Helper(): ~0/12 helpers (0%)
+    - Tests using testify: ~8/48 (17%)
+  - **Top Recommendations:**
+    1. Replace `os.Setenv` with `t.Setenv()` in 5 files (HIGH priority - test isolation)
+    2. Replace `os.MkdirTemp` with `t.TempDir()` in 8 files (MEDIUM priority - cleanup reliability)
+    3. Add `t.Parallel()` to independent tests (LOW priority - performance)
+    4. Add `t.Helper()` to test utility functions (LOW priority - error reporting)
 
 ### 4.2 Test Quality
 
