@@ -1594,7 +1594,34 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
   - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/HTTP-Response-Body-Analysis.md`
   - **Risk Assessment:** ZERO risk - no issues found
   - **Recommendation:** NO CHANGES NEEDED - codebase demonstrates exemplary HTTP resource management
-- [ ] Look for file descriptors not being closed
+- [x] Look for file descriptors not being closed
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 9 files with file operations
+  - **Overall Grade:** A- (Excellent with 2 minor issues)
+  - **Findings:** 2 file descriptor leaks identified out of 11 file operations (81.8% compliance)
+  - **Critical Issue:** `internal/tools/patterns_loader.go:206` - File created but NEVER closed
+    - Empty marker file created with `os.Create()` but no `defer file.Close()`
+    - Impact: LOW (infrequent operation, single file)
+    - Fix: Replace with `os.WriteFile()` or add defer (2 min, ZERO risk)
+  - **Medium Issue:** `internal/plugins/ai/openai/openai_audio.go:80-89` - Non-deferred file close
+    - File opened in loop, closed WITHOUT defer before error check
+    - Vulnerable to panic, though unlikely with stable OpenAI SDK
+    - Impact: MEDIUM (loop operation, multiple files)
+    - Fix: Add `defer chunk.Close()` or extract to helper function (5-15 min, VERY LOW risk)
+  - **Excellent Patterns Found:** 9/11 operations use perfect defer pattern
+    - `internal/cli/output.go` - 2 operations ✓
+    - `internal/tools/youtube/youtube.go` - CSV file ✓
+    - `internal/plugins/template/*` - 3 operations ✓
+    - `internal/i18n/i18n.go` - Language file ✓
+    - `internal/tools/githelper/githelper.go` - Git blob ✓
+  - **Comparison:** Better than HTTP (100%) but still excellent at 81.8%
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/File-Descriptor-Cleanup-Analysis.md`
+  - **Risk Assessment:** LOW overall - both leaks in infrequent operations, no security/data risks
+  - **Recommendations:**
+    1. IMMEDIATE: Fix patterns_loader.go (2 min, ZERO risk)
+    2. HIGH: Add defer to openai_audio.go (5 min, VERY LOW risk)
+    3. OPTIONAL: Add linting rule to catch future unclosed files (30 min)
+  - **Testing:** Unit tests for both fixes (30 min total)
+  - **Total Effort:** 37 minutes (fixes + tests)
 - [ ] Check for proper use of defer for cleanup
 - [ ] Review context propagation in long-running operations
 
