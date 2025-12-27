@@ -1303,8 +1303,76 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
 
 ### 4.2 Test Quality
 
-- [ ] Review for duplicate test setup code
-- [ ] Check for tests that could use table-driven patterns
+- [x] Review for duplicate test setup code
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 49 test files for duplicate setup patterns
+  - **Overall Grade:** B (Good test organization with consolidation opportunities)
+  - **Total Duplicated Lines:** ~500+ lines identified across 10 major categories
+  - **Risk Level:** LOW - All refactorings are test-only with no production code impact
+  - **Key Findings:**
+    - **10 major duplicate patterns** identified across 38+ files
+    - **70+ instances** of duplicated setup code
+    - **8 files** repeat TempDir + RemoveAll pattern (15+ instances, 40+ lines saved)
+    - **3 files** duplicate StorageEntity initialization (6+ instances, 30+ lines saved)
+    - **3 files** duplicate extension manager setup (~75+ lines saved)
+    - **5 files** duplicate AI client + options setup (15+ instances, 150+ lines saved)
+    - **10+ files** could benefit from shared error assertion helper (60+ lines saved)
+  - **High-Impact Duplications:**
+    1. TempDir + RemoveAll Pattern - 8 files, 15+ instances, 40+ lines (HIGH priority)
+    2. StorageEntity Initialization - 3 files, 6+ instances, 30+ lines (HIGH priority)
+    3. Extension Manager Setup - 3 files, 3+ instances, 75+ lines (HIGH priority)
+    4. OAuth Token Creation - 1 file, already well-factored (GOOD EXAMPLE)
+  - **Medium-Impact Duplications:**
+    5. Citation Formatting - 3 files, 45+ lines saved
+    6. Search Config Testing - 3 files, 60+ lines saved
+    7. OAuth Storage Setup - 1 file, 32+ lines saved
+    8. Client + ChatOptions Building - 5 files, 150+ lines saved
+    9. Error Checking Pattern - 10+ files, 60+ lines saved
+    10. Fake Home Directory - 1 file, 36+ lines saved
+  - **Recommended New Test Helper Files:**
+    1. `/internal/testhelpers/helpers.go` - AssertError, RequireError functions
+    2. `/internal/plugins/db/fsdb/testhelpers.go` - Storage entity fixtures
+    3. `/internal/plugins/template/testhelpers.go` - Extension fixture builder
+    4. `/internal/plugins/ai/testhelpers.go` - AI client builders, citation helpers
+    5. `/internal/util/testhelpers.go` - OAuth token helpers (move from anthropic)
+    6. Per-file helpers - setupOAuthStorage, setupFakeHome
+  - **Implementation Phases:**
+    - Phase 1 (HIGH - 2-3h): TempDir pattern, StorageEntity fixtures, AssertError helper (~150 lines saved)
+    - Phase 2 (MEDIUM - 3-4h): Extension fixtures, OAuth helpers, citation helpers (~200 lines saved)
+    - Phase 3 (LOW - 4-5h): AI client builders, search config consolidation (~200 lines saved)
+  - **Positive Findings:**
+    - OAuth token helpers in `anthropic/oauth_test.go` are excellent examples (should be replicated)
+    - Table-driven tests used extensively throughout codebase
+    - testify/assert already in use in 8+ files
+    - Many tests already using modern `t.TempDir()`
+    - Platform-specific test guards properly implemented
+  - **Quick Wins:**
+    - Replace `os.MkdirTemp` + `defer os.RemoveAll` with `t.TempDir()` in 8 files (5 lines → 1 line each)
+    - Create StorageEntity fixtures to reduce 4 lines → 1 line per test
+    - Create shared error assertion helper to reduce 12-15 lines → 1 line per test
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Duplicate-Test-Setup-Analysis.md`
+  - **Recommendation:** Implement Phase 1 refactorings first (low-risk, high-impact, improves test reliability)
+- [x] Check for tests that could use table-driven patterns
+  - ✅ **COMPLETED** - Comprehensive analysis of 52 test files
+  - **Current Adoption:** 21 files (40%) already use table-driven tests effectively
+  - **Opportunities Found:** 23 refactoring opportunities identified
+  - **Priority Breakdown:**
+    - 8 HIGH PRIORITY - Quick wins with high impact (storage CRUD, OpenAI models, CLI output)
+    - 10 MEDIUM PRIORITY - Balanced complexity/impact refactors
+    - 5 LOW PRIORITY - Complex or lower impact improvements
+  - **Top Opportunities:**
+    1. `internal/plugins/db/fsdb/storage_test.go` - 3 separate CRUD tests → 1 comprehensive table (HIGH impact)
+    2. `internal/plugins/ai/openai/openai_models_test.go` - Repeated mock setup consolidation (HIGH impact)
+    3. `internal/cli/output_test.go` - 2 similar tests missing edge cases (HIGH impact)
+    4. `internal/plugins/ai/vendors_test.go` - Sequential assertions → table entries (MEDIUM impact)
+    5. `internal/domain/domain_test.go` - Single scenario needs comprehensive coverage (MEDIUM impact)
+  - **Good Examples Found:**
+    - `internal/plugins/template/*_test.go` - Excellent table-driven patterns
+    - `internal/i18n/locale_test.go` - Comprehensive test tables
+    - `internal/util/oauth_storage_test.go` - Well-structured token tests
+  - **Estimated Impact:** Refactoring high-priority items would improve test maintainability by 3-5x
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Table-Driven-Test-Analysis.md`
+  - **Implementation Roadmap:** 4-phase approach with 40-60 hours total effort estimated
+  - **Recommendation:** Start with HIGH PRIORITY items (8 files) for maximum impact with minimal effort
 - [ ] Look for flaky tests or race conditions
 - [ ] Review mock usage for consistency
 - [ ] Check for proper test cleanup
