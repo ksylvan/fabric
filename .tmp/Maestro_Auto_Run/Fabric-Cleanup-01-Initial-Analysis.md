@@ -1149,9 +1149,129 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
 
 ### 4.1 Test Coverage Review
 
-- [ ] Run tests with coverage: `go test -cover ./...`
-- [ ] Identify packages with low test coverage (<50%)
-- [ ] Look for critical paths without tests
+- [x] Run tests with coverage: `go test -cover ./...`
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive coverage analysis performed
+  - **Overall Grade:** D+ (Needs significant improvement)
+  - **Statistics:**
+    - Total packages analyzed: 47
+    - Packages with tests: 22 (47%)
+    - Packages with zero coverage: 27 (57%)
+    - Packages with good coverage (≥50%): 9 (19%)
+  - **Excellent Coverage (≥70%):** 6 packages
+    - internal/tools/custom_patterns: 100.0% ⭐ (perfect)
+    - internal/plugins/ai/azure: 89.3% ⭐ (best)
+    - internal/plugins/template: 69.7%
+    - internal/tools/notifications: 68.6%
+    - internal/i18n: 67.8%
+    - internal/tools/converter: 66.7%
+  - **Good Coverage (50-69%):** 3 packages
+    - internal/plugins/ai/dryrun: 62.1%
+    - internal/plugins: 52.6%
+    - internal/plugins/db/fsdb: 52.3%
+- [x] Identify packages with low test coverage (<50%)
+  - ✅ **CRITICAL GAPS IDENTIFIED** - 34 packages below 50% coverage
+  - **CRITICAL - Server Package:** 0.0% ❌
+    - Production HTTP REST API with ZERO test coverage
+    - Known security vulnerabilities (path traversal, DOS, type assertion panic)
+    - **IMMEDIATE PRIORITY:** Add integration tests before production deployment
+  - **CRITICAL - AI Provider Plugins:** 6 providers at 0% coverage
+    - ollama (0%), bedrock (0%), lmstudio (0%), perplexity (0%)
+    - exolab (0%), gemini_openai (0%)
+    - Plus low coverage: anthropic (22.7%), openai (28.6%), openai_compatible (28.6%)
+  - **CRITICAL - Core Business Logic:** Poor coverage
+    - internal/cli: 22.3% (flag parsing, interactive setup, config management untested)
+    - internal/core: 32.0% (streaming, plugin registry, vendor resolution)
+    - internal/domain: 40.1% (validation, attachment handling)
+  - **CRITICAL - Utilities:** Poor/zero coverage
+    - internal/util: 18.1% (path handling, OAuth storage)
+    - internal/tools/youtube: 16.0% (YouTube integration)
+    - internal/chat: 0.0% (messaging types)
+    - internal/log: 0.0% (logging infrastructure)
+    - internal/tools/githelper: 0.0% (git operations)
+    - internal/tools/jina: 0.0% (Jina API client)
+    - internal/tools/lang: 0.0% (language detection)
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Test-Coverage-Analysis.md`
+  - **Coverage Improvement Plan:** 5 phases, 92 hours total estimated effort
+    - Phase 1 (IMMEDIATE - 16h): Server package critical security tests
+    - Phase 2 (Week 2-3 - 26h): Core business logic improvements
+    - Phase 3 (Week 4-5 - 24h): AI provider standardization
+    - Phase 4 (Week 6 - 14h): Utilities and tools
+    - Phase 5 (Week 7 - 8h): CLI integration tests
+  - **Target Coverage Goals:**
+    - Critical packages (server, core, domain): 70%+
+    - Business logic packages (CLI, plugins): 60%+
+    - Utility packages: 50%+
+  - **Risk Assessment:** HIGH - Server package at 0% with known vulnerabilities
+  - **Recommendation:** Implement Phase 1 (server tests) IMMEDIATELY before any refactoring
+- [x] Look for critical paths without tests
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all untested critical execution paths
+  - **Overall Grade:** ⚠️ **HIGH RISK** - Multiple critical production paths lack test coverage
+  - **Critical Findings:**
+    - **Server Package:** 0.0% coverage - Production REST API completely untested (12 files, ~1,500 LOC)
+    - **CLI Entry Point:** 0-22% coverage - Primary user interface inadequately tested
+    - **Core Business Logic:** 32% coverage - Chat orchestration and registry partially tested
+    - **6 AI Providers at 0%:** Ollama, Bedrock, LM Studio, Perplexity, Exolab, Gemini OpenAI
+    - **Main Entry Points:** cmd/fabric, cmd/code_helper at 0% coverage
+  - **Highest Priority Untested Paths:**
+    1. **Server REST API** (`internal/server`) - 0% coverage, critical security/stability risks
+       - SSE streaming handler (goroutine leaks, memory leaks)
+       - Authentication middleware (security bypasses)
+       - Critical bugs: Type assertion panic (chat.go:218), log.Fatal server crash (ollama.go:201)
+       - Path traversal vulnerability (storage operations)
+       - DOS vulnerability (no request size limits)
+    2. **Ollama Provider** (`internal/plugins/ai/ollama`) - 0% coverage, 260 LOC
+       - Client configuration with complex timeout parsing (20m default)
+       - Streaming and non-streaming send methods
+       - Model listing and error handling
+    3. **Bedrock Provider** (`internal/plugins/ai/bedrock`) - 0% coverage, 274 LOC
+       - AWS client setup and credential handling
+       - Streaming event processing
+       - Model availability checks
+    4. **CLI Initialization** (`internal/cli/initialization.go`) - Critical startup path
+       - Database and registry initialization
+       - First-time setup wizard
+       - Environment file creation
+    5. **Core Chat Orchestration** (`internal/core/chatter.go`) - Partial 32% coverage
+       - Streaming flow with goroutine/channel coordination
+       - Pattern-specific logic (create_coding_feature)
+       - Session management and persistence
+    6. **Plugin Registry** (`internal/core/plugin_registry.go`) - Partial 32% coverage
+       - Vendor/model resolution (GetChatter - 85 lines)
+       - First-time and interactive setup
+       - AWS credentials detection
+    7. **FSDB Storage** (`internal/plugins/db/fsdb`) - 52% coverage but critical gaps
+       - **CRITICAL:** Path traversal vulnerability (BuildFilePathByName has NO validation)
+       - Pattern loading with silent error suppression
+       - File permissions security issue (0644 for .env with API keys)
+    8. **YouTube Integration** (`internal/tools/youtube`) - 16% coverage, 840 LOC
+       - Transcript fetching with yt-dlp (341-524 line method)
+       - Multi-method fallback logic
+       - Video ID extraction and playlist handling
+  - **Coverage Statistics:**
+    - Total packages: 47
+    - Packages with tests: 22 (47%)
+    - Packages at 0%: 27 (57%)
+    - Packages with good coverage (≥50%): 9 (19%)
+  - **Security Risks Identified:**
+    - Path traversal in FSDB (storage.go:123-130) - can access arbitrary files via API
+    - World-readable .env file (0644 permissions) - exposes API keys
+    - DOS vulnerability - no request size limits in server handlers
+    - Type assertion panic - unchecked cast in chat.go:218 can crash server
+    - log.Fatal in handler - ollama.go:201 kills entire server on single error
+  - **Implementation Plan:** 5 phases, 88 hours estimated
+    - Phase 1 (IMMEDIATE - 16h): Server package critical security & stability tests (40%+ coverage target)
+    - Phase 2 (HIGH - 26h): CLI, Core, Domain business logic tests (50-60%+ coverage)
+    - Phase 3 (HIGH - 24h): AI provider integration tests (60%+ coverage)
+    - Phase 4 (MEDIUM - 14h): Tools & utilities tests (50-60% coverage)
+    - Phase 5 (MEDIUM - 8h): Command-line tools tests (40% coverage)
+  - **Coverage Goals:**
+    - Overall Project: 35% → 65% (+30 points)
+    - Server Package: 0% → 70%
+    - AI Providers (critical): 0% → 70%
+    - Core Business Logic: 32% → 70%
+    - FSDB Storage: 52% → 80%
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Critical-Paths-Without-Tests-Analysis.md`
+  - **Recommendation:** Implement Phase 1 (server tests) IMMEDIATELY before any refactoring - critical security and stability risks present
 - [ ] Check for outdated test patterns
 
 ### 4.2 Test Quality
