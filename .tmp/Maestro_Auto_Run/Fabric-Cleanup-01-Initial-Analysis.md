@@ -1521,12 +1521,49 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
   - **Total Optimization Effort:** ~20 minutes for all high-priority fixes
   - **Expected Performance Gain:** 10-30% in affected hot paths (streaming responses, i18n lookups)
   - **Risk Assessment:** LOW - All optimizations are pure performance improvements with no functional changes
-- [ ] Look for opportunities to use sync.Pool
-  - ℹ️ **Note:** Analyzed as part of JSON optimization review above - not currently needed
+- [x] Look for opportunities to use sync.Pool
+  - ✅ **Analysis Complete:** Reviewed as part of JSON optimization analysis (see lines 568-582 of JSON report)
+  - **Finding:** sync.Pool usage NOT NEEDED for current codebase
+  - **Rationale:**
+    - Codebase shows low to moderate throughput patterns
+    - No high-frequency JSON encoding/decoding in tight loops
+    - No profiling evidence of GC pressure from buffer allocations
+    - Simplicity and maintainability preferred over micro-optimization
+  - **Recommendation:** Only consider sync.Pool if future profiling shows:
+    - Handling very high request rates (1000+ req/s)
+    - Significant GC pressure from JSON/buffer allocations
+    - Large JSON payloads being marshaled repeatedly in hot paths
+  - **Decision:** ACCEPTED AS-IS - No changes needed
 
 ### 5.2 Resource Management
 
-- [ ] Check for goroutine leaks (missing context cancellation)
+- [x] Check for goroutine leaks (missing context cancellation)
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 6 goroutines in codebase
+  - **Overall Grade:** B+ (Good with one critical issue)
+  - **Findings Summary:**
+    - Total goroutines: 6 instances across 4 files
+    - ❌ **CRITICAL:** `server/chat.go:102` - Goroutine leak on client disconnect (no context cancellation)
+    - ⚠️ **MEDIUM:** `perplexity.go:172,184` - Missing WaitGroup wait, potential early return
+    - ✅ **EXCELLENT:** `core/chatter.go:72` - Perfect synchronization with done channel
+    - ✅ **EXCELLENT:** `vendors.go:86,95` - Gold standard context usage with proper cancellation
+    - ✅ **ACCEPTABLE:** Test goroutines properly synchronized
+  - **Critical Issue Details (HIGH PRIORITY FIX NEEDED):**
+    - Location: `internal/server/chat.go:102`
+    - Problem: Chat handler spawns goroutine to process requests, but has no context cancellation
+    - Impact: When client disconnects, parent returns but goroutine continues running
+    - Consequences: Memory leak, wasted AI API calls (real money), resource accumulation
+    - Fix Required: Add cancellable context, propagate to GetChatter() and Send() calls
+    - Estimated Effort: 4-6 hours (requires API changes to accept context)
+    - Test Requirements: Integration test for client disconnect mid-request
+  - **Best Examples to Follow:**
+    - `vendors.go:86-127` - Exemplary context usage with WithCancel, proper propagation, WaitGroup sync
+    - `chatter.go:72-103` - Excellent goroutine synchronization with done channel and error handling
+  - **Statistics:**
+    - Using context properly: 2/6 (33%)
+    - Missing context: 2/6 (33%)
+    - Not applicable (test/synchronous): 2/6 (33%)
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Goroutine-Leaks-Analysis.md`
+  - **Recommendation:** Fix server/chat.go goroutine leak as HIGH PRIORITY - production stability issue
 - [ ] Review for unclosed HTTP response bodies
 - [ ] Look for file descriptors not being closed
 - [ ] Check for proper use of defer for cleanup
