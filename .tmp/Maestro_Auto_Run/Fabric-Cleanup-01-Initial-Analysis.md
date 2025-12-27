@@ -667,12 +667,49 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
 
 ### 2.4 Plugins - AI Providers (`/internal/plugins/ai`)
 
-- [ ] Review each AI provider implementation for common patterns
-- [ ] Identify code that could be abstracted to a shared base
-- [ ] Check for inconsistent error messages
-- [ ] Look for duplicate HTTP client configuration
-- [ ] Review timeout and retry logic consistency
-- [ ] Check for proper API key handling and validation
+- [x] Review each AI provider implementation for common patterns
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 12 AI provider implementations
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/AI-Providers-Analysis.md`
+  - **Overall Grade:** C+ (Needs significant improvement)
+- [x] Identify code that could be abstracted to a shared base
+  - ✅ **10+ PATTERNS IDENTIFIED** for extraction to shared base
+  - **High Priority:** HTTP client factory, message conversion interface, error handling standardization
+  - **Medium Priority:** API key validation, citation formatting, timeout configuration
+  - **Low Priority:** Thinking budget parsing, auth transport, streaming consistency
+- [x] Check for inconsistent error messages
+  - ✅ **7 DIFFERENT ERROR PATTERNS** found across providers
+  - **Critical Issues:**
+    - Zero usage of proper Go 1.13+ `%w` error wrapping in most providers
+    - Inconsistent HTTP status code handling (some read body, some don't)
+    - Mix of stderr prints, debug logs, and error returns
+    - i18n conflict prevents proper error wrapping in OpenAI family
+  - **Recommendation:** Create custom error types and standardize across all providers
+- [x] Look for duplicate HTTP client configuration
+  - ✅ **3 DUPLICATE IMPLEMENTATIONS** found with critical inconsistencies
+  - **Issues Identified:**
+    - OpenAI: Hard-coded 10s timeout (too short for large contexts)
+    - Ollama: Configurable 20m timeout with complex parsing logic
+    - LM Studio: No timeout (infinite wait risk)
+    - SDK-based providers: Unknown defaults
+  - **Recommendation:** Create shared `http_client.go` factory with configurable timeouts
+- [x] Review timeout and retry logic consistency
+  - ✅ **HIGHLY INCONSISTENT** timeout defaults across providers
+  - **Findings:**
+    - Timeout range: 10s to 20m to none (infinite)
+    - Only Ollama supports configurable timeout
+    - Only Anthropic has retry logic (beta feature fallback)
+    - Only OpenAI has fallback strategy (SDK → direct API)
+    - No exponential backoff anywhere
+  - **Recommendation:** Make all timeouts configurable, add basic retry logic
+- [x] Check for proper API key handling and validation
+  - ✅ **ZERO API KEY VALIDATION** found across all providers
+  - **Issues Identified:**
+    - No format validation (length, characters, prefixes)
+    - No validation at initialization time (fails late on first request)
+    - Inconsistent `Configure()` behavior (some check env vars, some don't)
+    - Required vs optional fields not enforced (e.g., Azure needs both key AND deployments)
+    - Inconsistent setup question naming ("API Key" vs "API key" vs "API_KEY")
+  - **Recommendation:** Add validation interface, validate in `Configure()`, standardize naming
 
 ### 2.5 Database Package (`/internal/plugins/db`)
 
