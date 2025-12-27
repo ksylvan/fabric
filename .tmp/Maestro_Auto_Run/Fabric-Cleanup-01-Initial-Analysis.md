@@ -1696,7 +1696,38 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
 
 ### 6.1 Go Version Features
 
-- [ ] Check if errors.Is/errors.As are used instead of type assertions
+- [x] Check if errors.Is/errors.As are used instead of type assertions
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of modern error handling patterns
+  - **Overall Grade:** D (Needs Significant Improvement)
+  - **Findings:**
+    - **errors.Is usage:** 1 instance (GOOD - internal/cli/flags.go:323 checking io.EOF)
+    - **errors.As usage:** 0 instances (acceptable - not needed in current code)
+    - **Legacy os.IsNotExist():** 18 instances across 14 files (should modernize to errors.Is)
+    - **Type assertions on errors:** 1 instance (acceptable - third-party flags library)
+  - **Critical Gap:** Codebase primarily uses legacy `os.IsNotExist()` instead of modern `errors.Is(err, os.ErrNotExist)`
+  - **Modernization Score:** 5% (1 of 19 error checks use modern pattern)
+  - **High Priority Recommendation:**
+    - Replace all 18 `os.IsNotExist(err)` calls with `errors.Is(err, os.ErrNotExist)`
+    - Benefits: Works with wrapped errors, consistent with Go 1.13+ best practices
+    - Risk: VERY LOW - Functionally equivalent refactoring
+    - Effort: ~30 minutes (batch find-replace with verification)
+  - **Files Requiring Updates:** 14 total
+    - internal/tools/patterns_loader.go (2), custom_patterns/custom_patterns.go (1)
+    - internal/util/utils.go (2), oauth_storage.go (2)
+    - internal/plugins/template/extension_registry.go (1), db/fsdb/patterns.go (1), db/fsdb/db.go (1), db/fsdb/storage.go (1)
+    - internal/plugins/strategy/strategy.go (2)
+    - internal/server/serve.go (1), cli/flags.go (1), cli/initialization.go (1)
+    - internal/i18n/i18n.go (1), domain/attachment.go (1)
+  - **Optional Enhancement:** Convert flags.go:156 type assertion to `errors.As()` for consistency (5 min, LOW risk)
+  - **Benefits of Modernization:**
+    - ✅ Aligns with Go 1.13+ best practices
+    - ✅ Works seamlessly with `%w` error wrapping (already identified as needed)
+    - ✅ Future-proof and recommended for all new Go code
+    - ✅ More explicit about checking specific error values
+    - ✅ Better compatibility with wrapped error chains
+  - **Testing Strategy:** Verify all affected tests pass (cli, util, fsdb, tools, domain)
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Modern-Error-Handling-Analysis.md`
+  - **Recommendation:** Implement as quick-win refactoring task - high value, very low risk
 - [ ] Review for opportunities to use errors.Join (Go 1.20+)
 - [ ] Look for fmt.Errorf with %w (error wrapping)
 - [ ] Check for modern time.Time methods
