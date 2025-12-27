@@ -1064,11 +1064,62 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
 
 ### 3.2 Utilities (`/internal/util`)
 
-- [ ] Identify duplicate utility functions
-- [ ] Review for functions that could use Go stdlib instead
-- [ ] Check for overly complex helper functions
-- [ ] Look for utilities that are no longer used
-- [ ] Review for proper documentation
+- [x] Identify duplicate utility functions
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 3 util source files
+  - **Overall Grade:** B (Good structure with significant duplication opportunities)
+  - **Findings:** 44+ duplicate code instances identified across 5 categories
+  - **Critical Issues:** 2 bugs in server package using `os.Getenv("HOME")` instead of `os.UserHomeDir()`
+  - **High Priority:** 7 duplicate tilde expansion implementations (should use `GetAbsolutePath()`)
+  - **High Priority:** 15+ hardcoded `.config/fabric` paths (should use new `GetFabricConfigDir()` utility)
+  - **High Priority:** 22 inconsistent `os.MkdirAll` usages (should use new `EnsureDir()` utility)
+  - **Medium Priority:** Template utils uses deprecated `user.Current()` (should use `os.UserHomeDir()`)
+  - **Dead Code:** ZERO - All utilities actively used (GetAbsolutePath: 4 callers, IsSymlinkToDir: 1 caller, GroupsItemsSelector: 3 callers, OAuthStorage: 1 caller)
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Util-Package-Analysis.md`
+  - **Key Recommendations:**
+    1. IMMEDIATE: Fix server/chat.go and server/strategies.go HOME env var bugs
+    2. HIGH: Create `GetFabricConfigDir()` utility (eliminates 15+ duplicates)
+    3. HIGH: Create `EnsureDir()` utility (standardizes 22 directory creation calls)
+    4. HIGH: Consolidate 7 tilde expansion implementations to use `GetAbsolutePath()`
+    5. MEDIUM: Replace `user.Current()` with `os.UserHomeDir()` in template utils
+  - **Files Requiring Changes:** 33 total (2 critical, 31 consolidation/standardization)
+  - **Risk Assessment:** LOW overall - All changes pure refactoring with 100% functional equivalence (except 2 critical bug fixes: MEDIUM risk)
+  - **Estimated Effort:** 4.5 hours implementation + testing
+  - **Benefits:** Fixes 2 critical bugs, eliminates 44+ duplicates, improves maintainability
+- [x] Review for functions that could use Go stdlib instead
+  - ✅ **ANALYSIS COMPLETE** - Stdlib usage is appropriate
+  - **Using Stdlib Correctly:** GetAbsolutePath uses filepath.Abs/EvalSymlinks ✅, OAuthStorage uses json.Marshal/Unmarshal ✅, GroupsItemsSelector uses sort.SliceStable ✅
+  - **Should Change:** Template package uses deprecated `user.Current()` instead of `os.UserHomeDir()` (Go 1.12+ best practice)
+  - **Issue:** `user.Current()` fails in containers without `/etc/passwd`, `os.UserHomeDir()` is more reliable
+  - **Location:** `plugins/template/utils.go:21`
+  - **Recommendation:** Replace with `os.UserHomeDir()` or use existing `util.GetAbsolutePath()`
+- [x] Check for overly complex helper functions
+  - ✅ **ANALYSIS COMPLETE** - No overly complex functions found
+  - **GroupsItemsSelector:** Well-designed generic type with appropriate complexity
+  - **Usage:** 3 callers (plugin setup UI, vendor/model selection, model listing)
+  - **Features:** Sorting, filtering, formatted output with case-insensitive comparison
+  - **Assessment:** Complexity is justified by functionality - exemplary use of Go generics
+  - **Recommendation:** Keep as-is - this is production-quality code
+- [x] Look for utilities that are no longer used
+  - ✅ **ANALYSIS COMPLETE** - ZERO dead code found, all utilities actively used
+  - **GetAbsolutePath():** 4 direct callers (patterns.go, storage.go, flags.go, utils.go)
+  - **IsSymlinkToDir():** 1 caller (fsdb/storage.go for symlinked pattern directories) - specialized but legitimate use case
+  - **GetDefaultConfigPath():** 1 caller (cli/initialization.go for config setup)
+  - **GroupsItemsSelector:** 3 callers (plugin registry, model selection)
+  - **OAuthStorage:** 1 caller (Anthropic OAuth token management)
+  - **Verdict:** All functions serve legitimate purposes, no cleanup needed
+  - **Note:** IsSymlinkToDir could be moved to fsdb package (single caller) but current location acceptable for potential reuse
+- [x] Review for proper documentation
+  - ✅ **ANALYSIS COMPLETE** - Documentation is good with minor improvements needed
+  - **GetAbsolutePath():** ✅ Excellent godoc comment explaining functionality
+  - **IsSymlinkToDir():** ✅ Has comment but could clarify it's for directory symlinks specifically
+  - **GetDefaultConfigPath():** ✅ Clear godoc comment
+  - **GroupsItemsSelector:** ⚠️ Missing godoc comments on exported types and methods
+  - **OAuthStorage:** ✅ Excellent documentation on all exported types and methods
+  - **Recommendations:**
+    1. LOW PRIORITY: Add godoc comments to GroupsItemsSelector exported types (20 min)
+    2. OPTIONAL: Enhance IsSymlinkToDir comment to explain pattern directory use case (5 min)
+    3. OPTIONAL: Add package-level documentation for util package (10 min)
+  - **Overall:** Documentation quality is B+ (good but could be excellent with minor additions)
 
 ### 3.3 Internationalization (`/internal/i18n`)
 
