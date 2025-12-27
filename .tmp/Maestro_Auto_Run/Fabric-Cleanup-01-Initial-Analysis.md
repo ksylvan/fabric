@@ -1564,7 +1564,36 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
     - Not applicable (test/synchronous): 2/6 (33%)
   - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Goroutine-Leaks-Analysis.md`
   - **Recommendation:** Fix server/chat.go goroutine leak as HIGH PRIORITY - production stability issue
-- [ ] Review for unclosed HTTP response bodies
+- [x] Review for unclosed HTTP response bodies
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 9 files with HTTP client code
+  - **Overall Grade:** A+ (Perfect implementation)
+  - **Findings Summary:**
+    - Total HTTP response operations: 15
+    - Properly closed responses: 15 (100%)
+    - Resource leaks found: 0
+    - Missing defer statements: 0
+  - **Files Reviewed:**
+    - `internal/plugins/ai/openai/direct_models.go` - 1 operation ✓
+    - `internal/tools/jina/jina.go` - 1 operation ✓
+    - `internal/plugins/ai/lmstudio/lmstudio.go` - 5 operations ✓
+    - `internal/plugins/ai/ollama/ollama.go` - 1 operation ✓
+    - `internal/i18n/i18n.go` - 1 operation ✓
+    - `internal/plugins/ai/anthropic/oauth.go` - 2 operations ✓
+    - `internal/plugins/template/fetch.go` - 1 operation ✓
+    - `internal/domain/attachment.go` - 3 operations ✓
+  - **Pattern Analysis:**
+    - ✅ 100% compliance with Go HTTP resource management best practices
+    - ✅ All response bodies closed with `defer resp.Body.Close()` immediately after error check
+    - ✅ Consistent pattern across all files (both `client.Do()` and convenience functions)
+    - ✅ Proper placement: defer always immediately follows error check
+    - ✅ Works correctly with all HTTP methods: GET, POST, HEAD, Do()
+  - **Best Practice Examples:**
+    - Standard pattern: `resp, err := client.Do(req); if err != nil { return }; defer resp.Body.Close()`
+    - Named returns: `var resp *http.Response; if resp, err = client.Do(req); err != nil { return }; defer resp.Body.Close()`
+    - Convenience functions: `resp, err := http.Get(url); if err != nil { return }; defer resp.Body.Close()`
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/HTTP-Response-Body-Analysis.md`
+  - **Risk Assessment:** ZERO risk - no issues found
+  - **Recommendation:** NO CHANGES NEEDED - codebase demonstrates exemplary HTTP resource management
 - [ ] Look for file descriptors not being closed
 - [ ] Check for proper use of defer for cleanup
 - [ ] Review context propagation in long-running operations
