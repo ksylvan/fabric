@@ -1,6 +1,7 @@
 package changelog
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -179,12 +180,12 @@ func (g *Generator) CreateNewChangelogEntry(version string) error {
 // aggregateIncomingPRFiles reads and combines content from all incoming PR files
 func (g *Generator) aggregateIncomingPRFiles(files []string) (*strings.Builder, error) {
 	var content strings.Builder
-	var processingErrors []string
+	var errs []error
 
 	for i, file := range files {
 		data, err := os.ReadFile(file)
 		if err != nil {
-			processingErrors = append(processingErrors, fmt.Sprintf("failed to read %s: %v", file, err))
+			errs = append(errs, fmt.Errorf("failed to read %s: %w", file, err))
 			continue
 		}
 		content.WriteString(string(data))
@@ -193,8 +194,8 @@ func (g *Generator) aggregateIncomingPRFiles(files []string) (*strings.Builder, 
 		}
 	}
 
-	if len(processingErrors) > 0 {
-		return nil, fmt.Errorf("encountered errors while processing incoming files: %s", strings.Join(processingErrors, "; "))
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
 	}
 
 	return &content, nil
