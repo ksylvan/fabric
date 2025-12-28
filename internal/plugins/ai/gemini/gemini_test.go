@@ -1,6 +1,7 @@
 package gemini
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -196,7 +197,10 @@ func TestConvertMessagesRoles(t *testing.T) {
 		{Role: chat.ChatMessageRoleSystem, Content: "system"},
 	}
 
-	contents := client.convertMessages(msgs)
+	contents, err := client.convertMessages(context.Background(), msgs)
+	if err != nil {
+		t.Fatalf("convertMessages failed: %v", err)
+	}
 
 	expected := []string{"user", "model", "user"}
 

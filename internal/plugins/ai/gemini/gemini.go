@@ -3,8 +3,11 @@ package gemini
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"io"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -105,7 +108,10 @@ func (o *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, o
 	}
 
 	// Convert messages to new SDK format
-	contents := o.convertMessages(msgs)
+	contents, err := o.convertMessages(ctx, msgs)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert messages: %w", err)
+	}
 
 	cfg, err := o.buildGenerateContentConfig(opts)
 	if err != nil {
@@ -133,7 +139,10 @@ func (o *Client) SendStream(msgs []*chat.ChatCompletionMessage, opts *domain.Cha
 	}
 
 	// Convert messages to new SDK format
-	contents := o.convertMessages(msgs)
+	contents, err := o.convertMessages(ctx, msgs)
+	if err != nil {
+		return fmt.Errorf("failed to convert messages: %w", err)
+	}
 
 	cfg, err := o.buildGenerateContentConfig(opts)
 	if err != nil {
@@ -428,7 +437,7 @@ func (o *Client) generateWAVFile(pcmData []byte) ([]byte, error) {
 }
 
 // convertMessages converts fabric chat messages to genai Content format
-func (o *Client) convertMessages(msgs []*chat.ChatCompletionMessage) []*genai.Content {
+func (o *Client) convertMessages(ctx context.Context, msgs []*chat.ChatCompletionMessage) ([]*genai.Content, error) {
 	var contents []*genai.Content
 
 	for _, msg := range msgs {
@@ -457,15 +466,84 @@ func (o *Client) convertMessages(msgs []*chat.ChatCompletionMessage) []*genai.Co
 			case chat.ChatMessagePartTypeText:
 				content.Parts = append(content.Parts, &genai.Part{Text: part.Text})
 			case chat.ChatMessagePartTypeImageURL:
-				// TODO: Handle image URLs if needed
-				// This would require downloading and converting to inline data
+				// Handle image URLs by loading the image data
+				if part.ImageURL != nil && part.ImageURL.URL != "" {
+					imageData, mimeType, err := o.loadImageBytes(ctx, part.ImageURL.URL)
+					if err != nil {
+						return nil, fmt.Errorf("failed to load image from %s: %w", part.ImageURL.URL, err)
+					}
+					content.Parts = append(content.Parts, &genai.Part{
+						InlineData: &genai.Blob{
+							Data:     imageData,
+							MIMEType: mimeType,
+						},
+					})
+				}
 			}
 		}
 
 		contents = append(contents, content)
 	}
 
-	return contents
+	return contents, nil
+}
+
+// loadImageBytes loads image data from a URL (either data URL or HTTP URL)
+// and returns the raw bytes and MIME type for use with genai.Blob.
+func (o *Client) loadImageBytes(ctx context.Context, imageURL string) (imageData []byte, mimeType string, err error) {
+	// Handle data URLs (base64 encoded inline images)
+	if strings.HasPrefix(imageURL, "data:") {
+		// Format: data:image/jpeg;base64,<base64data>
+		parts := strings.SplitN(imageURL, ",", 2)
+		if len(parts) != 2 {
+			err = fmt.Errorf("invalid data URL format")
+			return
+		}
+
+		// Extract MIME type from the first part
+		// Example: "data:image/jpeg;base64" -> "image/jpeg"
+		headerParts := strings.Split(parts[0], ";")
+		if len(headerParts) > 0 {
+			mimeType = strings.TrimPrefix(headerParts[0], "data:")
+		}
+
+		if mimeType == "" {
+			err = fmt.Errorf("missing MIME type in data URL")
+			return
+		}
+
+		if imageData, err = base64.StdEncoding.DecodeString(parts[1]); err != nil {
+			err = fmt.Errorf("failed to decode data URL: %w", err)
+		}
+		return
+	}
+
+	// Handle HTTP/HTTPS URLs by downloading the image
+	var req *http.Request
+	if req, err = http.NewRequestWithContext(ctx, http.MethodGet, imageURL, nil); err != nil {
+		return
+	}
+
+	var resp *http.Response
+	if resp, err = http.DefaultClient.Do(req); err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		err = fmt.Errorf("failed to fetch image %s: %s", imageURL, resp.Status)
+		return
+	}
+
+	// Get MIME type from Content-Type header
+	mimeType = resp.Header.Get("Content-Type")
+	if mimeType == "" {
+		// Default to image/jpeg if not specified
+		mimeType = "image/jpeg"
+	}
+
+	imageData, err = io.ReadAll(resp.Body)
+	return
 }
 
 // extractTextFromResponse extracts text content from the response and appends
