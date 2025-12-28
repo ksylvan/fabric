@@ -2179,8 +2179,22 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
 
 ### 9.1 Go Dependencies
 
-- [ ] Run `go mod tidy` to clean up dependencies
-- [ ] Check for indirect dependencies that could be direct
+- [x] Run `go mod tidy` to clean up dependencies
+  - ✅ **RESULT:** No changes needed - `go.mod` and `go.sum` are already clean and up-to-date
+  - ✅ All tests passing (46 packages, all cached/passed)
+  - **Verification:** git status shows working tree clean (no changes made)
+  - **Assessment:** Excellent dependency hygiene - no unused or missing dependencies detected
+- [x] Check for indirect dependencies that could be direct
+  - ✅ **ANALYSIS COMPLETED:** Systematically analyzed all 94 indirect dependencies
+  - **Method:** Used `go mod why` to trace dependency chains for each indirect package
+  - **Key Finding:** Discovered `google.golang.org/genai v1.40.0` was directly imported by `internal/plugins/ai/gemini` but incorrectly placed in the indirect dependencies section
+  - **Root Cause:** Package was in the second `require` block without `// indirect` comment, indicating a go.mod inconsistency
+  - **Action Taken:**
+    - Moved `google.golang.org/genai v1.40.0` from indirect section to direct dependencies (line 37)
+    - Verified with `go mod tidy` - no additional changes needed
+    - Confirmed all tests pass (46 packages, cached)
+  - **Other Dependencies Verified:** All other 93 indirect dependencies are correctly marked as indirect - they are transitive dependencies pulled in by our direct dependencies (e.g., AWS SDK internals, Gin dependencies, git libraries)
+  - **Result:** ✅ go.mod now accurately reflects dependency usage - 1 package corrected from indirect to direct
 - [ ] Look for dependencies with known vulnerabilities
 - [ ] Review for duplicate functionality across dependencies
 - [ ] Check for deprecated packages
