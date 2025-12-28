@@ -209,6 +209,7 @@ func (f APIConvert) ollamaChat(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
+	defer fabricRes.Body.Close()
 	body, err = io.ReadAll(fabricRes.Body)
 	if err != nil {
 		log.Printf("Error reading body: %v", err)
