@@ -12,8 +12,6 @@ export default {
 			// Use CDN-hosted worker to avoid bundling third-party minified code in the repo
 			const workerSrc = `https://unpkg.com/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
 			GlobalWorkerOptions.workerSrc = workerSrc;
-
-			console.log(`PDF.js worker v${version} initialized from CDN`);
 		}
 	},
 };

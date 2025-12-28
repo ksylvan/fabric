@@ -21,26 +21,23 @@ export const saveNotification = writable<string>('');
 // Keep existing update function with notification enhancement
 export function updateObsidianSettings(settings: Partial<ObsidianSettings>) {
   const enabled = get(featureFlags).enableObsidianIntegration;
-  console.log('Updating Obsidian settings:', settings, 'Integration enabled:', enabled);
-  
+
   if (!enabled) {
-    console.log('Obsidian integration disabled, not updating settings');
     return;
   }
-  
+
   obsidianSettings.update(current => {
     const updated = {
       ...current,
       ...settings
     };
-    
+
     // Add notification after successful save
     if (settings.saveToObsidian === false && current.noteName) {
       saveNotification.set('Note saved to Obsidian!');
       setTimeout(() => saveNotification.set(''), 3000);
     }
-    
-    console.log('Updated Obsidian settings:', updated);
+
     return updated;
   });
 }

@@ -46,7 +46,6 @@
       }
 
       const data = await response.json();
-      console.log('Parsed response data:', data);
 
       transcript = data.transcript;
       title = data.title;

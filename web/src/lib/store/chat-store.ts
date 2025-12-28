@@ -81,14 +81,6 @@ export async function sendMessage(
 	isSystem: boolean = false,
 ) {
 	try {
-		console.log("\n=== Message Processing Start ===");
-		console.log("1. Initial state:", {
-			isSystem,
-			hasSystemPrompt: !!systemPromptText,
-			currentLanguage: get(languageStore),
-			pattern: get(selectedPatternName),
-		});
-
 		const $streaming = get(streamingStore);
 		if ($streaming) {
 			throw new ChatError(
@@ -109,20 +101,8 @@ export async function sendMessage(
 			},
 		]);
 
-		console.log("2. Message added:", {
-			role: isSystem ? "system" : "user",
-			language: get(languageStore),
-		});
-
 		if (!isSystem) {
-			console.log("3. Preparing chat stream:", {
-				language: get(languageStore),
-				pattern: get(selectedPatternName),
-				hasSystemPrompt: !!systemPromptText,
-			});
-
 			const stream = await chatService.streamChat(content, systemPromptText);
-			console.log("4. Stream created");
 
 			await chatService.processStream(
 				stream,
@@ -134,10 +114,6 @@ export async function sendMessage(
 						if (lastMessage?.role === "assistant") {
 							lastMessage.content = content;
 							lastMessage.format = response?.format;
-							console.log("Message updated:", {
-								role: "assistant",
-								format: lastMessage.format,
-							});
 						} else {
 							newMessages.push({
 								role: "assistant",

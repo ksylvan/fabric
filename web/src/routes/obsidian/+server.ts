@@ -29,14 +29,6 @@ export const POST: RequestHandler = async ({ request }) => {
       );
     }
 
-    console.log('\n=== Obsidian Request ===');
-    console.log('1. Pattern:', body.pattern);
-    console.log('2. Note name:', body.noteName);
-    console.log('3. Content length:', body.content.length);
-
-  
-
-
     
 
     // Format content with markdown code blocks
@@ -49,25 +41,15 @@ export const POST: RequestHandler = async ({ request }) => {
     const obsidianDir = 'myfiles/Fabric_obsidian';
     const filePath = `${obsidianDir}/${fileName}`;
     await execAsync(`mkdir -p "${obsidianDir}"`);
-    console.log('4. Ensured Obsidian directory exists');
-
 
     // Create temp file
     tempFile = `/tmp/fabric-${Date.now()}.txt`;
 
     // Write formatted content to temp file
     await execAsync(`echo ${escapedFormattedContent} > "${tempFile}"`);
-    console.log('5. Wrote formatted content to temp file');
 
     // Copy from temp file to final location (safer than direct write)
     await execAsync(`cp "${tempFile}" "${filePath}"`);
-    console.log('6. Copied content to final location:', filePath);
-
-    // Verify file was created and has content
-    const { stdout: lsOutput } = await execAsync(`ls -l "${filePath}"`);
-    const { stdout: wcOutput } = await execAsync(`wc -l "${filePath}"`);
-    console.log('7. File verification:', lsOutput);
-    console.log('8. Line count:', wcOutput);
 
     // Return success response with file details
     return json({
@@ -96,7 +78,6 @@ export const POST: RequestHandler = async ({ request }) => {
     if (tempFile) {
       try {
         await execAsync(`rm -f "${tempFile}"`);
-        console.log('9. Cleaned up temp file');
       } catch (cleanupError) {
         console.error('Failed to clean up temp file:', cleanupError);
       }

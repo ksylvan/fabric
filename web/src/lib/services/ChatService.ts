@@ -47,19 +47,6 @@ export class ChatService {
 		request: ChatRequest,
 	): Promise<ReadableStream<StreamResponse>> {
 		try {
-			console.log("\n=== ChatService Request Start ===");
-			console.log("1. Request details:", {
-				language: get(languageStore),
-				pattern: get(selectedPatternName),
-				promptCount: request.prompts?.length,
-				messageCount: request.messages?.length,
-			});
-			// NEW: Log the full payload before sending to backend
-			console.log(
-				"Final ChatRequest payload:",
-				JSON.stringify(request, null, 2),
-			);
-
 			const response = await fetch("/api/chat", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },

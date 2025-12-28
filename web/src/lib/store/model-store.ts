@@ -18,7 +18,6 @@ export const availableModels = writable<VendorModel[]>([]);
 export async function loadAvailableModels() {
   try {
     const models = await modelsApi.getAvailable();
-    console.log('Load models:', models);
     const uniqueModels = [...new Map(models.map(model => [model.name, model])).values()];
     availableModels.set(uniqueModels);
   } catch (error) {

@@ -4,7 +4,6 @@
   import PostMeta from '$lib/components/posts/PostMeta.svelte';
 
   export let data: PageData;
-  console.log('Page data:', data);
 </script>
 
 <PostContent post={{

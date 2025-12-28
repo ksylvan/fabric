@@ -33,16 +33,10 @@
   function detectYouTubeURL(input: string): boolean {
     const youtubePattern = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)/i;
     const isYoutube = youtubePattern.test(input);
-    if (isYoutube) {
-      console.log('YouTube URL detected:', input);
-      console.log('Current system prompt:', $systemPrompt?.length);
-      console.log('Selected pattern:', $selectedPatternName);
-    }
     return isYoutube;
   }
 
   function handleInput(event: Event) {
-    console.log('\n=== Handle Input ===');
     const target = event.target as HTMLTextAreaElement;
     userInput = target.value;
     
@@ -67,19 +61,7 @@
       }
     }
 
-    console.log('2. Language state:', {
-      previousLanguage: currentLanguage,
-      currentLanguage: get(languageStore),
-      detectedOverride: detectedLang,
-      inputAfterLangRemoval: userInput
-    });
-
     isYouTubeURL = detectYouTubeURL(userInput);
-    console.log('3. URL detection:', {
-      isYouTube: isYouTubeURL,
-      pattern: $selectedPatternName,
-      systemPromptLength: $systemPrompt?.length
-    });
   }
 
   async function handleFileUpload(e: Event) {
@@ -147,26 +129,11 @@
 
 
 async function readFileContent(file: File): Promise<string> {
-  // Log initial file metadata
-  console.log('Reading file:', {
-    name: file.name,
-    type: file.type,
-    size: file.size,
-    lastModified: new Date(file.lastModified).toISOString()
-  });
-
   // Handle PDF files
   if (file.type === 'application/pdf') {
     try {
       // Start PDF processing
-      console.log('Starting PDF conversion process');
       const markdown = await pdfService.convertToMarkdown(file);
-      
-      // Validate conversion result
-      console.log('PDF conversion completed:', {
-        resultLength: markdown.length,
-        preview: markdown.substring(0, 100)
-      });
 
       // Ensure we have valid content
       if (!markdown || markdown.trim().length === 0) {
@@ -210,12 +177,6 @@ async function readFileContent(file: File): Promise<string> {
     
     reader.onload = async (e) => {
       const content = e.target?.result as string;
-      console.log('Text file processed:', {
-        fileName: file.name,
-        contentLength: content.length,
-        preview: content.substring(0, 100)
-      });
-      // resolve(content);
       const enhancedPrompt = `${$systemPrompt}\nAnalyze and process the provided content according to these instructions.`;
       const finalContent = `${userInput}\n\nFile Contents (Text):\n${content}`;
       await sendMessage(finalContent, enhancedPrompt);
@@ -241,7 +202,6 @@ async function readFileContent(file: File): Promise<string> {
 
   async function saveToObsidian(content: string) {
     if (!$obsidianSettings.saveToObsidian) {
-      console.log('Obsidian saving is disabled');
       return;
     }
     
@@ -307,10 +267,9 @@ async function readFileContent(file: File): Promise<string> {
 
   // Centralized language instruction logic in ChatService.ts; YouTube flow now passes plain transcript and system prompt
   async function processYouTubeURL(input: string) {
-      console.log('\n=== YouTube Flow Start ===');
       const originalLanguage = get(languageStore);
 
-      try {
+      try{
           // Add processing message first
           messageStore.update(messages => [...messages, {
               role: 'system',
@@ -377,15 +336,11 @@ async function readFileContent(file: File): Promise<string> {
   if (!userInput.trim()) return;
 
   try {
-    console.log('\n=== Submit Handler Start ===');
-    
     // Store the user input before any processing
     const inputText = userInput.trim();
-    console.log('Captured user input:', inputText);
-    
+
     // Handle YouTube URLs with the existing flow
     if (isYouTubeURL) {
-      console.log('2a. Starting YouTube flow');
       await processYouTubeURL(inputText);
       return;
     }
@@ -417,16 +372,10 @@ async function readFileContent(file: File): Promise<string> {
       : inputText;
     
     // Get the enhanced prompt
-    const enhancedPrompt = contentsForProcessing.length > 0 
+    const enhancedPrompt = contentsForProcessing.length > 0
       ? `${$systemPrompt}\nAnalyze and process the provided content according to these instructions.`
       : $systemPrompt;
-    
-    console.log('Content to send:', {
-      text: contentWithFiles.substring(0, 100) + '...',
-      length: contentWithFiles.length,
-      hasFiles: contentsForProcessing.length > 0
-    });
-    
+
     try {
       // Get the chat stream
       const stream = await chatService.streamChat(contentWithFiles, enhancedPrompt);
@@ -491,59 +440,11 @@ async function readFileContent(file: File): Promise<string> {
     }]);
   } finally {
     // As a final safety measure, ensure loading message is removed
-    messageStore.update(messages => 
+    messageStore.update(messages =>
       messages.filter(m => m.format !== 'loading')
     );
   }
 }
-
-  
-/* async function handleSubmit() {
-  if (!userInput.trim()) return;
-
-  try {
-    console.log('\n=== Submit Handler Start ===');
-    
-    if (isYouTubeURL) {
-      console.log('2a. Starting YouTube flow');
-      await processYouTubeURL(userInput);
-      return;
-    }
-    
-    const enhancedPrompt = fileContents.length > 0 
-      ? `${$systemPrompt}\nAnalyze and process the provided content according to these instructions.`
-      : $systemPrompt;
-    
-    // Hide raw content from display but keep it for processing
-    messageStore.update(messages => [...messages, {
-      role: 'system',
-      content: 'Processing content...',
-      format: 'loading'
-    }]);
-    
-    // Store the user input before clearing it
-    const inputText = userInput;
-    
-    // Construct finalContent BEFORE clearing userInput
-    const finalContent = fileContents.length > 0 
-      ? `${inputText}\n\nFile Contents (${uploadedFiles.map(f => f.endsWith('.pdf') ? 'PDF' : 'Text').join(', ')}):\n${fileContents.join('\n\n---\n\n')}`
-      : inputText;
-    
-    // Now clear the input fields
-    userInput = ""; 
-    uploadedFiles = []; 
-    fileContents = []; 
-    fileButtonKey = !fileButtonKey; 
-     
-    await sendMessage(finalContent, enhancedPrompt);
-    
-  } catch (error) {
-    console.error('Chat submission error:', error);
-  }
-} */
-
- 
-
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -553,7 +454,6 @@ async function readFileContent(file: File): Promise<string> {
   }
 
   onMount(() => {
-    console.log('ChatInput mounted, current system prompt:', $systemPrompt);
   });
 </script>
 

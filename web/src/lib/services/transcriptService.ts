@@ -15,14 +15,6 @@ function decodeHtmlEntities(text: string): string {
 export async function getTranscript(url: string): Promise<TranscriptResponse> {
   try {
     const originalLanguage = get(languageStore);
-    console.log('\n=== YouTube Transcript Service Start ===');
-    console.log('1. Request details:', {
-      url,
-      endpoint: '/api/youtube/transcript',
-      method: 'POST',
-      isYouTubeURL: url.includes('youtube.com') || url.includes('youtu.be'),
-      originalLanguage
-    });
 
     const response = await fetch('/api/youtube/transcript', {
       method: 'POST',
@@ -33,14 +25,6 @@ export async function getTranscript(url: string): Promise<TranscriptResponse> {
         url,
         language: originalLanguage // Pass original language to server
       })
-    });
-
-    console.log('2. Server response:', {
-      status: response.status,
-      ok: response.ok,
-      type: response.type,
-      originalLanguage,
-      currentLanguage: get(languageStore)
     });
 
     if (!response.ok) {
@@ -58,19 +42,8 @@ export async function getTranscript(url: string): Promise<TranscriptResponse> {
 
     // Ensure language is preserved
     if (get(languageStore) !== originalLanguage) {
-      console.log('3a. Restoring original language:', originalLanguage);
       languageStore.set(originalLanguage);
     }
-
-    console.log('3b. Processed transcript:', {
-      status: response.status,
-      transcriptLength: data.transcript.length,
-      firstChars: data.transcript.substring(0, 100),
-      hasError: !!data.error,
-      videoId: data.title,
-      originalLanguage,
-      currentLanguage: get(languageStore)
-    });
 
     return data;
   } catch (error) {
