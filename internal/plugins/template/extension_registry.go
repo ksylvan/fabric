@@ -77,18 +77,18 @@ func (e *ExtensionDefinition) IsCleanupEnabled() bool {
 }
 
 func NewExtensionRegistry(configDir string) *ExtensionRegistry {
-	r := &ExtensionRegistry{
+	registry := &ExtensionRegistry{
 		configDir: configDir,
 	}
-	r.registry.Extensions = make(map[string]*RegistryEntry)
+	registry.registry.Extensions = make(map[string]*RegistryEntry)
 
-	r.ensureConfigDir()
+	registry.ensureConfigDir()
 
-	if err := r.loadRegistry(); err != nil {
+	if err := registry.loadRegistry(); err != nil {
 		debuglog.Log("Warning: could not load extension registry: %v\n", err)
 	}
 
-	return r
+	return registry
 }
 
 func (r *ExtensionRegistry) ensureConfigDir() error {

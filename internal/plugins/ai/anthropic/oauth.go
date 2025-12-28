@@ -121,11 +121,11 @@ func NewOAuthTransport(client *Client, base http.RoundTripper) *OAuthTransport {
 
 // generatePKCE generates PKCE code verifier and challenge
 func generatePKCE() (verifier, challenge string, err error) {
-	b := make([]byte, pkceVerifierSize)
-	if _, err = rand.Read(b); err != nil {
+	randomBytes := make([]byte, pkceVerifierSize)
+	if _, err = rand.Read(randomBytes); err != nil {
 		return
 	}
-	verifier = base64.RawURLEncoding.EncodeToString(b)
+	verifier = base64.RawURLEncoding.EncodeToString(randomBytes)
 	sum := sha256.Sum256([]byte(verifier))
 	challenge = base64.RawURLEncoding.EncodeToString(sum[:])
 	return

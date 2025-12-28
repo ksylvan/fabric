@@ -131,13 +131,13 @@ func (o *Client) SendStream(msgs []*chat.ChatCompletionMessage, opts *domain.Cha
 }
 
 func (o *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, opts *domain.ChatOptions) (ret string, err error) {
-	bf := false
+	streamingDisabled := false
 
 	var req ollamaapi.ChatRequest
 	if req, err = o.createChatRequest(ctx, msgs, opts); err != nil {
 		return
 	}
-	req.Stream = &bf
+	req.Stream = &streamingDisabled
 
 	respFunc := func(resp ollamaapi.ChatResponse) (streamErr error) {
 		ret = resp.Message.Content

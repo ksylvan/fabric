@@ -32,20 +32,20 @@ const (
 // @in header
 // @name X-API-Key
 func Serve(registry *core.PluginRegistry, address string, apiKey string) (err error) {
-	r := gin.New()
+	router := gin.New()
 
 	// Middleware
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
 
 	if apiKey != "" {
-		r.Use(APIKeyMiddleware(apiKey))
+		router.Use(APIKeyMiddleware(apiKey))
 	} else {
 		slog.Warn("Starting REST API server without API key authentication. This may pose security risks.")
 	}
 
 	// Swagger UI and documentation endpoint with custom YAML handler
-	r.GET("/swagger/*any", func(c *gin.Context) {
+	router.GET("/swagger/*any", func(c *gin.Context) {
 		// Check if request is for swagger.yaml
 		if c.Param("any") == "/swagger.yaml" {
 			// Try to find swagger.yaml relative to current directory or executable
@@ -72,17 +72,17 @@ func Serve(registry *core.PluginRegistry, address string, apiKey string) (err er
 
 	// Register routes
 	fabricDb := registry.Db
-	NewPatternsHandler(r, fabricDb.Patterns)
-	NewContextsHandler(r, fabricDb.Contexts)
-	NewSessionsHandler(r, fabricDb.Sessions)
-	NewChatHandler(r, registry, fabricDb)
-	NewYouTubeHandler(r, registry)
-	NewConfigHandler(r, fabricDb)
-	NewModelsHandler(r, registry.VendorManager)
-	NewStrategiesHandler(r)
+	NewPatternsHandler(router, fabricDb.Patterns)
+	NewContextsHandler(router, fabricDb.Contexts)
+	NewSessionsHandler(router, fabricDb.Sessions)
+	NewChatHandler(router, registry, fabricDb)
+	NewYouTubeHandler(router, registry)
+	NewConfigHandler(router, fabricDb)
+	NewModelsHandler(router, registry.VendorManager)
+	NewStrategiesHandler(router)
 
 	// Start server
-	err = r.Run(address)
+	err = router.Run(address)
 	if err != nil {
 		return err
 	}

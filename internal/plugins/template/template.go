@@ -42,11 +42,11 @@ func debugf(format string, a ...any) {
 func matchTriple(r *regexp.Regexp, full string) (string, string, string, bool) {
 	parts := r.FindStringSubmatch(full)
 	if len(parts) >= 3 {
-		v := ""
+		optionalPart := ""
 		if len(parts) == 4 {
-			v = parts[3]
+			optionalPart = parts[3]
 		}
-		return parts[1], parts[2], v, true
+		return parts[1], parts[2], optionalPart, true
 	}
 	return "", "", "", false
 }

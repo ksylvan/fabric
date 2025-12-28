@@ -121,9 +121,9 @@ func Init() (ret *Flags, err error) {
 
 	// Create mapping from flag names (both short and long) to yaml tag names
 	flagToYamlTag := make(map[string]string)
-	t := reflect.TypeFor[Flags]()
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	flagsType := reflect.TypeFor[Flags]()
+	for i := 0; i < flagsType.NumField(); i++ {
+		field := flagsType.Field(i)
 		yamlTag := field.Tag.Get("yaml")
 		if yamlTag != "" {
 			longTag := field.Tag.Get("long")

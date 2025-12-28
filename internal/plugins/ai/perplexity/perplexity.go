@@ -30,14 +30,14 @@ type Client struct {
 }
 
 func NewClient() *Client {
-	c := &Client{}
-	c.PluginBase = &plugins.PluginBase{
+	client := &Client{}
+	client.PluginBase = &plugins.PluginBase{
 		Name:            providerName,
 		EnvNamePrefix:   plugins.BuildEnvVariablePrefix(providerName),
-		ConfigureCustom: c.Configure, // Assign the Configure method
+		ConfigureCustom: client.Configure, // Assign the Configure method
 	}
-	c.APIKey = c.AddSetupQuestion("API_KEY", true)
-	return c
+	client.APIKey = client.AddSetupQuestion("API_KEY", true)
+	return client
 }
 
 func (c *Client) Configure() error {

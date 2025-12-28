@@ -178,13 +178,13 @@ func parseThinkingConfig(level domain.ThinkingLevel) (*genai.ThinkingConfig, boo
 		return nil, false
 	case domain.ThinkingLow, domain.ThinkingMedium, domain.ThinkingHigh:
 		if budget, ok := domain.ThinkingBudgets[domain.ThinkingLevel(lower)]; ok {
-			b := int32(budget)
-			return &genai.ThinkingConfig{IncludeThoughts: true, ThinkingBudget: &b}, true
+			budgetValue := int32(budget)
+			return &genai.ThinkingConfig{IncludeThoughts: true, ThinkingBudget: &budgetValue}, true
 		}
 	default:
 		if tokens, err := strconv.ParseInt(lower, 10, 32); err == nil && tokens > 0 {
-			t := int32(tokens)
-			return &genai.ThinkingConfig{IncludeThoughts: true, ThinkingBudget: &t}, true
+			tokenValue := int32(tokens)
+			return &genai.ThinkingConfig{IncludeThoughts: true, ThinkingBudget: &tokenValue}, true
 		}
 	}
 	return nil, false

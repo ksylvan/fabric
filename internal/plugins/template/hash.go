@@ -17,17 +17,17 @@ func ComputeHash(path string) (string, error) {
 	}
 	defer f.Close()
 
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, f); err != nil {
 		return "", fmt.Errorf("read file: %w", err)
 	}
 
-	return hex.EncodeToString(h.Sum(nil)), nil
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
 // ComputeStringHash returns hex-encoded SHA-256 hash of the given string
 func ComputeStringHash(s string) string {
-	h := sha256.New()
-	h.Write([]byte(s))
-	return hex.EncodeToString(h.Sum(nil))
+	hasher := sha256.New()
+	hasher.Write([]byte(s))
+	return hex.EncodeToString(hasher.Sum(nil))
 }

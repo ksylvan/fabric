@@ -179,8 +179,8 @@ func (o *YouTube) GrabTranscriptWithTimestampsWithArgs(videoId string, language 
 func detectError(ytOutput io.Reader) error {
 	scanner := bufio.NewScanner(ytOutput)
 	for scanner.Scan() {
-		curLine := scanner.Text()
-		debuglog.Debug(debuglog.Trace, "%s\n", curLine)
+		currentLine := scanner.Text()
+		debuglog.Debug(debuglog.Trace, "%s\n", currentLine)
 		errorMessages := map[string]string{
 			"429":                                 i18n.T("youtube_rate_limit_exceeded"),
 			"Too Many Requests":                   i18n.T("youtube_rate_limit_exceeded"),
@@ -189,7 +189,7 @@ func detectError(ytOutput io.Reader) error {
 		}
 
 		for key, message := range errorMessages {
-			if strings.Contains(curLine, key) {
+			if strings.Contains(currentLine, key) {
 				return fmt.Errorf("%s", message)
 			}
 		}

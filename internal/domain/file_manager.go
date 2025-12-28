@@ -111,13 +111,13 @@ func fixInvalidEscapes(jsonStr string) string {
 
 	var result strings.Builder
 	inQuotes := false
-	i := 0
+	position := 0
 
-	for i < len(jsonStr) {
-		ch := jsonStr[i]
+	for position < len(jsonStr) {
+		ch := jsonStr[position]
 
 		// Track whether we're inside a JSON string
-		if ch == '"' && (i == 0 || jsonStr[i-1] != '\\') {
+		if ch == '"' && (position == 0 || jsonStr[position-1] != '\\') {
 			inQuotes = !inQuotes
 		}
 
@@ -126,40 +126,40 @@ func fixInvalidEscapes(jsonStr string) string {
 			// Convert literal control characters to proper JSON escape sequences
 			if ch == '\n' {
 				result.WriteString("\\n")
-				i++
+				position++
 				continue
 			} else if ch == '\r' {
 				result.WriteString("\\r")
-				i++
+				position++
 				continue
 			} else if ch == '\t' {
 				result.WriteString("\\t")
-				i++
+				position++
 				continue
 			} else if ch < 32 {
 				// Handle other control characters
 				fmt.Fprintf(&result, "\\u%04x", ch)
-				i++
+				position++
 				continue
 			}
 		}
 
 		// Check for escape sequences only inside strings
-		if inQuotes && ch == '\\' && i+1 < len(jsonStr) {
-			nextChar := jsonStr[i+1]
+		if inQuotes && ch == '\\' && position+1 < len(jsonStr) {
+			nextChar := jsonStr[position+1]
 			isValid := slices.Contains(validEscapes, nextChar)
 
 			if !isValid {
 				// Invalid escape sequence - add an extra backslash
 				result.WriteByte('\\')
 				result.WriteByte('\\')
-				i++
+				position++
 				continue
 			}
 		}
 
 		result.WriteByte(ch)
-		i++
+		position++
 	}
 
 	return result.String()
