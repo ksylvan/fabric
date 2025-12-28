@@ -61,7 +61,8 @@ func (o *Chatter) Send(request *domain.ChatRequest, opts *domain.ChatOptions) (s
 		opts.ModelContextLength = o.modelContextLength
 	}
 
-	message := ""
+	var message string
+	var messageBuilder strings.Builder
 
 	if o.Stream {
 		responseChan := make(chan string)
@@ -77,13 +78,14 @@ func (o *Chatter) Send(request *domain.ChatRequest, opts *domain.ChatOptions) (s
 		}()
 
 		for response := range responseChan {
-			message += response
+			messageBuilder.WriteString(response)
 			if !opts.SuppressThink {
 				fmt.Print(response)
 				printedStream = true
 			}
 		}
 
+		message = messageBuilder.String()
 		if printedStream && !opts.SuppressThink && !strings.HasSuffix(message, "\n") {
 			fmt.Println()
 		}

@@ -404,7 +404,7 @@ func (an *Client) toMessages(msgs []*chat.ChatCompletionMessage) (ret []anthropi
 	// - Skip empty messages.
 
 	var anthropicMessages []anthropic.MessageParam
-	var systemContent string
+	var systemContentBuilder strings.Builder
 
 	// Note: Claude Code spoofing is now handled in buildMessageParams
 
@@ -419,13 +419,13 @@ func (an *Client) toMessages(msgs []*chat.ChatCompletionMessage) (ret []anthropi
 		switch msg.Role {
 		case chat.ChatMessageRoleSystem:
 			// Accumulate system content. It will be prepended to the first user message.
-			if systemContent != "" {
-				systemContent += "\\n" + msg.Content
-			} else {
-				systemContent = msg.Content
+			if systemContentBuilder.Len() > 0 {
+				systemContentBuilder.WriteString("\\n")
 			}
+			systemContentBuilder.WriteString(msg.Content)
 		case chat.ChatMessageRoleUser:
 			userContent := msg.Content
+			systemContent := systemContentBuilder.String()
 			if isFirstUserMessage && systemContent != "" {
 				userContent = systemContent + "\\n\\n" + userContent
 				isFirstUserMessage = false // System content now consumed
@@ -440,6 +440,7 @@ func (an *Client) toMessages(msgs []*chat.ChatCompletionMessage) (ret []anthropi
 		case chat.ChatMessageRoleAssistant:
 			// If the first message is an assistant message, and we have system content,
 			// prepend a user message with the system content.
+			systemContent := systemContentBuilder.String()
 			if isFirstUserMessage && systemContent != "" {
 				anthropicMessages = append(anthropicMessages, anthropic.NewUserMessage(anthropic.NewTextBlock(systemContent)))
 				lastRoleWasUser = true
@@ -459,6 +460,7 @@ func (an *Client) toMessages(msgs []*chat.ChatCompletionMessage) (ret []anthropi
 	}
 
 	// If only system content was provided, create a user message with it.
+	systemContent := systemContentBuilder.String()
 	if len(anthropicMessages) == 0 && systemContent != "" {
 		anthropicMessages = append(anthropicMessages, anthropic.NewUserMessage(anthropic.NewTextBlock(systemContent)))
 	}
