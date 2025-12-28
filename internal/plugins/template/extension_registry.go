@@ -1,10 +1,7 @@
 package template
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -287,21 +284,6 @@ func (r *ExtensionRegistry) ListExtensions() ([]*ExtensionDefinition, error) {
 	}
 
 	return exts, nil
-}
-
-func (r *ExtensionRegistry) calculateFileHash(path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 func (r *ExtensionRegistry) saveRegistry() error {
