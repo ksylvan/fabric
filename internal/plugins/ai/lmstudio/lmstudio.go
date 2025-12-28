@@ -11,9 +11,9 @@ import (
 	"net/http"
 
 	"github.com/danielmiessler/fabric/internal/chat"
-
 	"github.com/danielmiessler/fabric/internal/domain"
 	"github.com/danielmiessler/fabric/internal/plugins"
+	"github.com/danielmiessler/fabric/internal/plugins/ai/helpers"
 )
 
 const (
@@ -50,9 +50,9 @@ type Client struct {
 	HttpClient *http.Client
 }
 
-// configure sets up the HTTP client.
+// configure sets up the HTTP client with default timeout.
 func (c *Client) configure() error {
-	c.HttpClient = &http.Client{}
+	c.HttpClient = helpers.NewHTTPClient(helpers.DefaultHTTPTimeout, nil)
 	return nil
 }
 
@@ -71,8 +71,9 @@ func (c *Client) ListModels() ([]string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	// Check HTTP status using shared helper
+	if err := helpers.CheckHTTPStatus(resp, helpers.DefaultErrorBodyLimit); err != nil {
+		return nil, err
 	}
 
 	var result struct {

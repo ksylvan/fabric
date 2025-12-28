@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 
 	"github.com/danielmiessler/fabric/internal/i18n"
 	debuglog "github.com/danielmiessler/fabric/internal/log"
+	"github.com/danielmiessler/fabric/internal/plugins/ai/helpers"
 )
 
 // modelResponse represents a minimal model returned by the API.
@@ -18,12 +18,6 @@ import (
 type modelResponse struct {
 	ID string `json:"id"`
 }
-
-// errorResponseLimit defines the maximum length of error response bodies for truncation.
-const errorResponseLimit = 1024
-
-// maxResponseSize defines the maximum size of response bodies to prevent memory exhaustion.
-const maxResponseSize = 10 * 1024 * 1024 // 10MB
 
 // FetchModelsDirectly is used to fetch models directly from the API when the
 // standard OpenAI SDK method fails due to a nonstandard format. This is useful
@@ -65,26 +59,15 @@ func FetchModelsDirectly(ctx context.Context, baseURL, apiKey, providerName stri
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		// Read the response body for debugging, but limit the number of bytes read
-		bodyBytes, readErr := io.ReadAll(io.LimitReader(resp.Body, errorResponseLimit))
-		if readErr != nil {
-			return nil, fmt.Errorf(i18n.T("openai_unexpected_status_code_read_error"),
-				resp.StatusCode, providerName, readErr)
-		}
-		bodyString := string(bodyBytes)
-		return nil, fmt.Errorf(i18n.T("openai_unexpected_status_code_with_body"),
-			resp.StatusCode, providerName, bodyString)
+	// Check HTTP status and get error details if not successful
+	if err := helpers.CheckHTTPStatus(resp, helpers.DefaultErrorBodyLimit); err != nil {
+		return nil, fmt.Errorf("%s: %w", providerName, err)
 	}
 
-	// Read the response body once, with a size limit to prevent memory exhaustion
-	// Read up to maxResponseSize + 1 bytes to detect truncation
-	bodyBytes, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseSize+1))
+	// Read the response body with size validation to prevent memory exhaustion
+	bodyBytes, err := helpers.ValidateResponseSize(resp.Body, helpers.DefaultMaxResponseSize)
 	if err != nil {
-		return nil, err
-	}
-	if len(bodyBytes) > maxResponseSize {
-		return nil, fmt.Errorf(i18n.T("openai_models_response_too_large"), providerName, maxResponseSize)
+		return nil, fmt.Errorf("%s: %w", providerName, err)
 	}
 
 	// Try to parse as an object with data field (OpenAI format)
@@ -104,9 +87,10 @@ func FetchModelsDirectly(ctx context.Context, baseURL, apiKey, providerName stri
 		return extractModelIDs(directArray), nil
 	}
 
+	// Truncate error body for readability
 	var truncatedBody string
-	if len(bodyBytes) > errorResponseLimit {
-		truncatedBody = string(bodyBytes[:errorResponseLimit]) + "..."
+	if len(bodyBytes) > helpers.DefaultErrorBodyLimit {
+		truncatedBody = string(bodyBytes[:helpers.DefaultErrorBodyLimit]) + "..."
 	} else {
 		truncatedBody = string(bodyBytes)
 	}
