@@ -77,95 +77,147 @@ func (g *Generator) Generate() (string, error) {
 }
 
 func (g *Generator) collectData() error {
-	if g.cache != nil && !g.cfg.RebuildCache {
-		cachedTag, err := g.cache.GetLastProcessedTag()
-		if err != nil {
-			return fmt.Errorf("failed to get last processed tag: %w", err)
+	// Try to use cached data if available
+	if g.shouldUseCachedData() {
+		if err := g.loadFromCache(); err == nil {
+			return nil
 		}
+		// Fall through to full history walk on cache error
+	}
 
-		if cachedTag != "" {
-			// Get the current latest tag from git
-			currentTag, err := g.gitWalker.GetLatestTag()
-			if err == nil {
-				// Load cached data - we can use it even if there are new tags
-				cachedVersions, err := g.cache.GetVersions()
-				if err == nil && len(cachedVersions) > 0 {
-					g.versions = cachedVersions
+	// Load from git history when cache is unavailable or unusable
+	return g.loadFromGitHistory()
+}
 
-					// Load cached PRs
-					for _, version := range g.versions {
-						for _, prNum := range version.PRNumbers {
-							if pr, err := g.cache.GetPR(prNum); err == nil && pr != nil {
-								g.prs[prNum] = pr
-							}
-						}
-					}
+// shouldUseCachedData checks if we can use cached data
+func (g *Generator) shouldUseCachedData() bool {
+	return g.cache != nil && !g.cfg.RebuildCache
+}
 
-					// If we have new tags since cache, process the new versions only
-					if currentTag != cachedTag {
-						fmt.Fprintf(os.Stderr, "Processing new versions since %s...\n", cachedTag)
-						newVersions, err := g.gitWalker.WalkHistorySinceTag(cachedTag)
-						if err != nil {
-							fmt.Fprintf(os.Stderr, "Warning: Failed to walk history since tag %s: %v\n", cachedTag, err)
-						} else {
-							// Merge new versions into cached versions (only add if not already cached)
-							for name, version := range newVersions {
-								if name != "Unreleased" { // Handle Unreleased separately
-									if existingVersion, exists := g.versions[name]; !exists {
-										g.versions[name] = version
-									} else {
-										// Update existing version with new PR numbers if they're missing
-										if len(existingVersion.PRNumbers) == 0 && len(version.PRNumbers) > 0 {
-											existingVersion.PRNumbers = version.PRNumbers
-										}
-									}
-								}
-							}
-						}
-					}
+// loadFromCache attempts to load data from cache and returns error if unsuccessful
+func (g *Generator) loadFromCache() error {
+	cachedTag, err := g.cache.GetLastProcessedTag()
+	if err != nil {
+		return fmt.Errorf("failed to get last processed tag: %w", err)
+	}
 
-					// Always update Unreleased section with latest commits
-					unreleasedVersion, err := g.gitWalker.WalkCommitsSinceTag(currentTag)
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Warning: Failed to walk commits since tag %s: %v\n", currentTag, err)
-					} else if unreleasedVersion != nil {
-						// Preserve existing AI summary if available
-						if existingUnreleased, exists := g.versions["Unreleased"]; exists {
-							unreleasedVersion.AISummary = existingUnreleased.AISummary
-						}
-						// Replace or add the unreleased version
-						g.versions["Unreleased"] = unreleasedVersion
-					}
+	if cachedTag == "" {
+		return fmt.Errorf("no cached tag found")
+	}
 
-					// Save any new versions to cache (after potential AI processing)
-					if currentTag != cachedTag {
-						for _, version := range g.versions {
-							// Skip versions that were already cached and Unreleased
-							if version.Name != "Unreleased" {
-								if err := g.cache.SaveVersion(version); err != nil {
-									fmt.Fprintf(os.Stderr, "Warning: Failed to save version to cache: %v\n", err)
-								}
+	currentTag, err := g.gitWalker.GetLatestTag()
+	if err != nil {
+		return fmt.Errorf("failed to get current tag: %w", err)
+	}
 
-								for _, commit := range version.Commits {
-									if err := g.cache.SaveCommit(commit, version.Name); err != nil {
-										fmt.Fprintf(os.Stderr, "Warning: Failed to save commit to cache: %v\n", err)
-									}
-								}
-							}
-						}
+	cachedVersions, err := g.cache.GetVersions()
+	if err != nil || len(cachedVersions) == 0 {
+		return fmt.Errorf("no cached versions available")
+	}
 
-						// Update the last processed tag
-						if err := g.cache.SetLastProcessedTag(currentTag); err != nil {
-							fmt.Fprintf(os.Stderr, "Warning: Failed to update last processed tag: %v\n", err)
-						}
-					}
+	g.versions = cachedVersions
+	g.loadCachedPRs()
 
-					return nil
-				}
-			}
+	// Process new versions if tags have changed
+	if currentTag != cachedTag {
+		g.mergeNewVersions(cachedTag)
+		g.saveNewVersionsToCache()
+	}
+
+	// Always update Unreleased section
+	g.updateUnreleasedSection(currentTag)
+
+	// Update cache with current tag if changed
+	if currentTag != cachedTag {
+		if err := g.cache.SetLastProcessedTag(currentTag); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to update last processed tag: %v\n", err)
 		}
 	}
 
+	return nil
+}
+
+// loadCachedPRs loads PRs from cache for all versions
+func (g *Generator) loadCachedPRs() {
+	for _, version := range g.versions {
+		for _, prNum := range version.PRNumbers {
+			if pr, err := g.cache.GetPR(prNum); err == nil && pr != nil {
+				g.prs[prNum] = pr
+			}
+		}
+	}
+}
+
+// mergeNewVersions merges new versions from git into cached versions
+func (g *Generator) mergeNewVersions(cachedTag string) {
+	fmt.Fprintf(os.Stderr, "Processing new versions since %s...\n", cachedTag)
+
+	newVersions, err := g.gitWalker.WalkHistorySinceTag(cachedTag)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to walk history since tag %s: %v\n", cachedTag, err)
+		return
+	}
+
+	for name, version := range newVersions {
+		if name == "Unreleased" {
+			continue // Handle Unreleased separately
+		}
+
+		existingVersion, exists := g.versions[name]
+		if !exists {
+			g.versions[name] = version
+			continue
+		}
+
+		// Update existing version with new PR numbers if missing
+		if len(existingVersion.PRNumbers) == 0 && len(version.PRNumbers) > 0 {
+			existingVersion.PRNumbers = version.PRNumbers
+		}
+	}
+}
+
+// updateUnreleasedSection updates the Unreleased section with latest commits
+func (g *Generator) updateUnreleasedSection(currentTag string) {
+	unreleasedVersion, err := g.gitWalker.WalkCommitsSinceTag(currentTag)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to walk commits since tag %s: %v\n", currentTag, err)
+		return
+	}
+
+	if unreleasedVersion == nil {
+		return
+	}
+
+	// Preserve existing AI summary if available
+	if existingUnreleased, exists := g.versions["Unreleased"]; exists {
+		unreleasedVersion.AISummary = existingUnreleased.AISummary
+	}
+
+	g.versions["Unreleased"] = unreleasedVersion
+}
+
+// saveNewVersionsToCache saves new versions to cache
+func (g *Generator) saveNewVersionsToCache() {
+	for _, version := range g.versions {
+		if version.Name == "Unreleased" {
+			continue
+		}
+
+		if err := g.cache.SaveVersion(version); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to save version to cache: %v\n", err)
+			continue
+		}
+
+		for _, commit := range version.Commits {
+			if err := g.cache.SaveCommit(commit, version.Name); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to save commit to cache: %v\n", err)
+			}
+		}
+	}
+}
+
+// loadFromGitHistory loads data directly from git history
+func (g *Generator) loadFromGitHistory() error {
 	versions, err := g.gitWalker.WalkHistory()
 	if err != nil {
 		return fmt.Errorf("failed to walk history: %w", err)
@@ -174,27 +226,39 @@ func (g *Generator) collectData() error {
 	g.versions = versions
 
 	if g.cache != nil {
-		for _, version := range versions {
-			if err := g.cache.SaveVersion(version); err != nil {
-				return fmt.Errorf("failed to save version to cache: %w", err)
-			}
-
-			for _, commit := range version.Commits {
-				if err := g.cache.SaveCommit(commit, version.Name); err != nil {
-					return fmt.Errorf("failed to save commit to cache: %w", err)
-				}
-			}
-		}
-
-		// Save the latest tag as our cache anchor point
-		if latestTag, err := g.gitWalker.GetLatestTag(); err == nil && latestTag != "" {
-			if err := g.cache.SetLastProcessedTag(latestTag); err != nil {
-				return fmt.Errorf("failed to save last processed tag: %w", err)
-			}
-		}
+		g.cacheVersionsAndCommits(versions)
+		g.cacheLatestTag()
 	}
 
 	return nil
+}
+
+// cacheVersionsAndCommits saves versions and commits to cache
+func (g *Generator) cacheVersionsAndCommits(versions map[string]*git.Version) {
+	for _, version := range versions {
+		if err := g.cache.SaveVersion(version); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to save version to cache: %v\n", err)
+			continue
+		}
+
+		for _, commit := range version.Commits {
+			if err := g.cache.SaveCommit(commit, version.Name); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to save commit to cache: %v\n", err)
+			}
+		}
+	}
+}
+
+// cacheLatestTag saves the latest tag to cache
+func (g *Generator) cacheLatestTag() {
+	latestTag, err := g.gitWalker.GetLatestTag()
+	if err != nil || latestTag == "" {
+		return
+	}
+
+	if err := g.cache.SetLastProcessedTag(latestTag); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to save last processed tag: %v\n", err)
+	}
 }
 
 func (g *Generator) fetchPRs(forcePRSync bool) error {
@@ -336,82 +400,110 @@ func (g *Generator) getSortedVersions() []*git.Version {
 }
 
 func (g *Generator) formatVersion(version *git.Version) string {
-	var sb strings.Builder
-
-	// Generate raw content
 	rawContent := g.generateRawVersionContent(version)
 	if rawContent == "" {
 		return ""
 	}
 
-	header := g.formatVersionHeader(version)
-	sb.WriteString(("\n"))
-	sb.WriteString(header)
+	var sb strings.Builder
+	sb.WriteString("\n")
+	sb.WriteString(g.formatVersionHeader(version))
 
-	// If AI summarization is enabled, enhance with AI
-	if g.cfg.EnableAISummary {
-		// For "Unreleased", check if content has changed since last AI summary
-		if version.Name == "Unreleased" && version.AISummary != "" && g.cache != nil {
-			// Get cached content hash
-			cachedHash, err := g.cache.GetUnreleasedContentHash()
-			if err == nil {
-				// Calculate current content hash
-				currentHash := hashContent(rawContent)
-				if cachedHash == currentHash {
-					// Content unchanged, use cached summary
-					fmt.Fprintf(os.Stderr, "✅ %s content unchanged (skipping AI)\n", version.Name)
-					sb.WriteString(version.AISummary)
-					return fixMarkdown(sb.String())
-				}
-			}
-		}
-
-		// For released versions, if we have cached AI summary, use it!
-		if version.Name != "Unreleased" && version.AISummary != "" {
-			fmt.Fprintf(os.Stderr, "✅ %s already summarized (skipping)\n", version.Name)
-			sb.WriteString(version.AISummary)
-			return fixMarkdown(sb.String())
-		}
-
-		fmt.Fprintf(os.Stderr, "🤖 AI summarizing %s...", version.Name)
-
-		aiSummary, err := SummarizeVersionContent(rawContent)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, " Failed: %v\n", err)
-			sb.WriteString((rawContent))
-			return fixMarkdown(sb.String())
-		}
-		if checkForAIError(aiSummary) {
-			fmt.Fprintf(os.Stderr, " AI error detected, using raw content instead\n")
-			sb.WriteString(rawContent)
-			fmt.Fprintf(os.Stderr, "Raw Content was: (%d bytes) %s \n", len(rawContent), rawContent)
-			fmt.Fprintf(os.Stderr, "AI Summary was: (%d bytes) %s\n", len(aiSummary), aiSummary)
-			return fixMarkdown(sb.String())
-		}
-
-		fmt.Fprintf(os.Stderr, " Done!\n")
-		aiSummary = strings.TrimSpace(aiSummary)
-
-		// Cache the AI summary and content hash
-		version.AISummary = aiSummary
-		if g.cache != nil {
-			if err := g.cache.UpdateVersionAISummary(version.Name, aiSummary); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Failed to cache AI summary: %v\n", err)
-			}
-			// Cache content hash for "Unreleased" to detect changes
-			if version.Name == "Unreleased" {
-				if err := g.cache.SetUnreleasedContentHash(hashContent(rawContent)); err != nil {
-					fmt.Fprintf(os.Stderr, "Warning: Failed to cache content hash: %v\n", err)
-				}
-			}
-		}
-
-		sb.WriteString(aiSummary)
+	if !g.cfg.EnableAISummary {
+		sb.WriteString(rawContent)
 		return fixMarkdown(sb.String())
 	}
 
-	sb.WriteString(rawContent)
+	// Try to use cached AI summary
+	if cachedSummary := g.getCachedAISummary(version, rawContent); cachedSummary != "" {
+		sb.WriteString(cachedSummary)
+		return fixMarkdown(sb.String())
+	}
+
+	// Generate new AI summary
+	aiSummary := g.generateAISummary(version, rawContent)
+	sb.WriteString(aiSummary)
 	return fixMarkdown(sb.String())
+}
+
+// getCachedAISummary returns cached AI summary if available and still valid
+func (g *Generator) getCachedAISummary(version *git.Version, rawContent string) string {
+	if version.AISummary == "" {
+		return ""
+	}
+
+	// For Unreleased, check if content has changed
+	if version.Name == "Unreleased" && g.cache != nil {
+		if g.isUnreleasedContentUnchanged(rawContent) {
+			fmt.Fprintf(os.Stderr, "✅ %s content unchanged (skipping AI)\n", version.Name)
+			return version.AISummary
+		}
+		return ""
+	}
+
+	// For released versions, always use cached summary
+	if version.Name != "Unreleased" {
+		fmt.Fprintf(os.Stderr, "✅ %s already summarized (skipping)\n", version.Name)
+		return version.AISummary
+	}
+
+	return ""
+}
+
+// isUnreleasedContentUnchanged checks if Unreleased content matches cached hash
+func (g *Generator) isUnreleasedContentUnchanged(rawContent string) bool {
+	cachedHash, err := g.cache.GetUnreleasedContentHash()
+	if err != nil {
+		return false
+	}
+
+	currentHash := hashContent(rawContent)
+	return cachedHash == currentHash
+}
+
+// generateAISummary creates a new AI summary and caches it
+func (g *Generator) generateAISummary(version *git.Version, rawContent string) string {
+	fmt.Fprintf(os.Stderr, "🤖 AI summarizing %s...", version.Name)
+
+	aiSummary, err := SummarizeVersionContent(rawContent)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, " Failed: %v\n", err)
+		return rawContent
+	}
+
+	if checkForAIError(aiSummary) {
+		fmt.Fprintf(os.Stderr, " AI error detected, using raw content instead\n")
+		fmt.Fprintf(os.Stderr, "Raw Content was: (%d bytes) %s \n", len(rawContent), rawContent)
+		fmt.Fprintf(os.Stderr, "AI Summary was: (%d bytes) %s\n", len(aiSummary), aiSummary)
+		return rawContent
+	}
+
+	fmt.Fprintf(os.Stderr, " Done!\n")
+	aiSummary = strings.TrimSpace(aiSummary)
+
+	// Cache the summary
+	version.AISummary = aiSummary
+	g.cacheAISummary(version, rawContent)
+
+	return aiSummary
+}
+
+// cacheAISummary saves AI summary to cache
+func (g *Generator) cacheAISummary(version *git.Version, rawContent string) {
+	if g.cache == nil {
+		return
+	}
+
+	if err := g.cache.UpdateVersionAISummary(version.Name, version.AISummary); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to cache AI summary: %v\n", err)
+	}
+
+	// Cache content hash for Unreleased to detect future changes
+	if version.Name == "Unreleased" {
+		if err := g.cache.SetUnreleasedContentHash(hashContent(rawContent)); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to cache content hash: %v\n", err)
+		}
+	}
 }
 
 func checkForAIError(summary string) bool {

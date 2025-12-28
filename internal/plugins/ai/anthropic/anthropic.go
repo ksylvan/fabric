@@ -68,34 +68,44 @@ func NewClient() (ret *Client) {
 
 // IsConfigured returns true if either the API key or OAuth is configured
 func (an *Client) IsConfigured() bool {
-	// Check if API key is configured
 	if an.ApiKey.Value != "" {
 		return true
 	}
 
-	// Check if OAuth is enabled and has a valid token
-	if plugins.ParseBoolElseFalse(an.UseOAuth.Value) {
-		storage, err := util.NewOAuthStorage()
-		if err != nil {
-			return false
-		}
+	return an.checkOAuthConfiguration()
+}
 
-		// If no valid token exists, automatically run OAuth flow
-		if !storage.HasValidToken(authTokenIdentifier, 5) {
-			fmt.Println("OAuth enabled but no valid token found. Starting authentication...")
-			_, err := RunOAuthFlow(authTokenIdentifier)
-			if err != nil {
-				fmt.Printf("OAuth authentication failed: %v\n", err)
-				return false
-			}
-			// After successful OAuth flow, check again
-			return storage.HasValidToken(authTokenIdentifier, 5)
-		}
+// checkOAuthConfiguration checks if OAuth is configured and has a valid token
+func (an *Client) checkOAuthConfiguration() bool {
+	if !plugins.ParseBoolElseFalse(an.UseOAuth.Value) {
+		return false
+	}
 
+	storage, err := util.NewOAuthStorage()
+	if err != nil {
+		return false
+	}
+
+	// If valid token exists, we're configured
+	if storage.HasValidToken(authTokenIdentifier, 5) {
 		return true
 	}
 
-	return false
+	// Try to authenticate via OAuth flow
+	return an.runOAuthAuthentication(storage)
+}
+
+// runOAuthAuthentication runs the OAuth flow and validates the result
+func (an *Client) runOAuthAuthentication(storage *util.OAuthStorage) bool {
+	fmt.Println("OAuth enabled but no valid token found. Starting authentication...")
+
+	_, err := RunOAuthFlow(authTokenIdentifier)
+	if err != nil {
+		fmt.Printf("OAuth authentication failed: %v\n", err)
+		return false
+	}
+
+	return storage.HasValidToken(authTokenIdentifier, 5)
 }
 
 type Client struct {
@@ -291,59 +301,100 @@ func (an *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, 
 	var message *anthropic.Message
 	params := an.buildMessageParams(messages, opts)
 	betas := an.modelBetas[opts.Model]
-	var reqOpts []option.RequestOption
-	if len(betas) > 0 {
-		reqOpts = append(reqOpts, option.WithHeader(headerAnthropicBeta, strings.Join(betas, ",")))
-	}
-	if message, err = an.client.Messages.New(ctx, params, reqOpts...); err != nil {
-		if len(betas) > 0 {
-			debuglog.Debug(debuglog.Basic, "Anthropic beta feature %s failed: %v\n", strings.Join(betas, ","), err)
-			if message, err = an.client.Messages.New(ctx, params); err != nil {
-				return
-			}
-		} else {
-			return
-		}
+
+	message, err = an.sendMessageWithBetaFallback(ctx, params, betas)
+	if err != nil {
+		return
 	}
 
+	textParts, citations := an.extractTextAndCitations(message.Content)
+	ret = an.formatResponseWithCitations(textParts, citations)
+
+	return
+}
+
+// extractTextAndCitations extracts text content and citations from message blocks
+func (an *Client) extractTextAndCitations(contentBlocks []anthropic.ContentBlockUnion) ([]string, []string) {
 	var textParts []string
 	var citations []string
-	citationMap := make(map[string]bool) // To avoid duplicate citations
+	citationMap := make(map[string]bool)
 
-	for _, block := range message.Content {
-		if block.Type == "text" && block.Text != "" {
-			textParts = append(textParts, block.Text)
-
-			// Extract citations from this text block
-			for _, citation := range block.Citations {
-				if citation.Type == "web_search_result_location" {
-					citationKey := citation.URL + "|" + citation.Title
-					if !citationMap[citationKey] {
-						citationMap[citationKey] = true
-						citationText := fmt.Sprintf("- [%s](%s)", citation.Title, citation.URL)
-						if citation.CitedText != "" {
-							citationText += fmt.Sprintf(" - \"%s\"", citation.CitedText)
-						}
-						citations = append(citations, citationText)
-					}
-				}
-			}
+	for _, block := range contentBlocks {
+		if !an.isTextBlock(block) {
+			continue
 		}
+
+		textParts = append(textParts, block.Text)
+		citations = an.extractCitationsFromBlock(block, citationMap, citations)
 	}
 
+	return textParts, citations
+}
+
+// isTextBlock checks if a content block is a non-empty text block
+func (an *Client) isTextBlock(block anthropic.ContentBlockUnion) bool {
+	return block.Type == "text" && block.Text != ""
+}
+
+// extractCitationsFromBlock extracts unique citations from a content block
+func (an *Client) extractCitationsFromBlock(block anthropic.ContentBlockUnion, citationMap map[string]bool, citations []string) []string {
+	for _, citation := range block.Citations {
+		if citation.Type != "web_search_result_location" {
+			continue
+		}
+
+		citations = an.addUniqueCitation(citation, citationMap, citations)
+	}
+	return citations
+}
+
+// addUniqueCitation adds a citation if it hasn't been seen before
+func (an *Client) addUniqueCitation(citation anthropic.TextCitationUnion, citationMap map[string]bool, citations []string) []string {
+	citationKey := citation.URL + "|" + citation.Title
+	if citationMap[citationKey] {
+		return citations
+	}
+
+	citationMap[citationKey] = true
+	citationText := fmt.Sprintf("- [%s](%s)", citation.Title, citation.URL)
+	if citation.CitedText != "" {
+		citationText += fmt.Sprintf(" - \"%s\"", citation.CitedText)
+	}
+
+	return append(citations, citationText)
+}
+
+// formatResponseWithCitations formats the response text with optional citations section
+func (an *Client) formatResponseWithCitations(textParts []string, citations []string) string {
 	var resultBuilder strings.Builder
 	resultBuilder.WriteString(strings.Join(textParts, ""))
 
-	// Append citations if any were found
 	if len(citations) > 0 {
 		resultBuilder.WriteString("\n\n")
 		resultBuilder.WriteString(sourcesHeader)
 		resultBuilder.WriteString("\n\n")
 		resultBuilder.WriteString(strings.Join(citations, "\n"))
 	}
-	ret = resultBuilder.String()
 
-	return
+	return resultBuilder.String()
+}
+
+// sendMessageWithBetaFallback sends a message with beta features, falling back to standard API on failure
+func (an *Client) sendMessageWithBetaFallback(ctx context.Context, params anthropic.MessageNewParams, betas []string) (*anthropic.Message, error) {
+	// Try with beta features if available
+	if len(betas) > 0 {
+		reqOpts := []option.RequestOption{option.WithHeader(headerAnthropicBeta, strings.Join(betas, ","))}
+		message, err := an.client.Messages.New(ctx, params, reqOpts...)
+		if err != nil {
+			debuglog.Debug(debuglog.Basic, "Anthropic beta feature %s failed: %v\n", strings.Join(betas, ","), err)
+			// Fall back to standard API without beta features
+			return an.client.Messages.New(ctx, params)
+		}
+		return message, nil
+	}
+
+	// No beta features, use standard API
+	return an.client.Messages.New(ctx, params)
 }
 
 func (an *Client) toMessages(msgs []*chat.ChatCompletionMessage) (ret []anthropic.MessageParam) {

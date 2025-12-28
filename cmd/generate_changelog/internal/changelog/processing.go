@@ -151,29 +151,7 @@ func (g *Generator) CreateNewChangelogEntry(version string) error {
 	}
 
 	// Extract PR numbers and their commit SHAs from processed files to avoid including their commits as "direct"
-	processedPRs := make(map[int]bool)
-	processedCommitSHAs := make(map[string]bool)
-	var fetchedPRs []*github.PR
-	var prNumbers []int
-
-	for _, file := range files {
-		// Extract PR number from filename (e.g., "1640.txt" -> 1640)
-		filename := filepath.Base(file)
-		if prNumStr, ok := strings.CutSuffix(filename, ".txt"); ok {
-			if prNum, err := strconv.Atoi(prNumStr); err == nil {
-				processedPRs[prNum] = true
-				prNumbers = append(prNumbers, prNum)
-
-				// Fetch the PR to get its commit SHAs
-				if pr, err := g.ghClient.GetPRWithCommits(prNum); err == nil {
-					fetchedPRs = append(fetchedPRs, pr)
-					for _, commit := range pr.Commits {
-						processedCommitSHAs[commit.SHA] = true
-					}
-				}
-			}
-		}
-	}
+	processedPRs, processedCommitSHAs, fetchedPRs, prNumbers := g.extractPRDataFromFiles(files)
 
 	// Now add direct commits since the last release, excluding commits from processed PRs
 	directCommitsContent, err := g.getDirectCommitsSinceLastRelease(processedPRs, processedCommitSHAs)
@@ -292,6 +270,59 @@ func (g *Generator) CreateNewChangelogEntry(version string) error {
 	return nil
 }
 
+// extractPRDataFromFiles extracts PR numbers and commit data from incoming files
+func (g *Generator) extractPRDataFromFiles(files []string) (map[int]bool, map[string]bool, []*github.PR, []int) {
+	processedPRs := make(map[int]bool)
+	processedCommitSHAs := make(map[string]bool)
+	var fetchedPRs []*github.PR
+	var prNumbers []int
+
+	for _, file := range files {
+		prNum, pr := g.processSinglePRFile(file)
+		if prNum == 0 {
+			continue // Invalid file, skip
+		}
+
+		processedPRs[prNum] = true
+		prNumbers = append(prNumbers, prNum)
+
+		if pr != nil {
+			fetchedPRs = append(fetchedPRs, pr)
+			g.recordCommitSHAs(pr, processedCommitSHAs)
+		}
+	}
+
+	return processedPRs, processedCommitSHAs, fetchedPRs, prNumbers
+}
+
+// processSinglePRFile extracts PR number from filename and fetches PR data
+func (g *Generator) processSinglePRFile(file string) (int, *github.PR) {
+	filename := filepath.Base(file)
+	prNumStr, ok := strings.CutSuffix(filename, ".txt")
+	if !ok {
+		return 0, nil
+	}
+
+	prNum, err := strconv.Atoi(prNumStr)
+	if err != nil {
+		return 0, nil
+	}
+
+	pr, err := g.ghClient.GetPRWithCommits(prNum)
+	if err != nil {
+		return prNum, nil // Return PR number even if fetch fails
+	}
+
+	return prNum, pr
+}
+
+// recordCommitSHAs records all commit SHAs from a PR
+func (g *Generator) recordCommitSHAs(pr *github.PR, processedCommitSHAs map[string]bool) {
+	for _, commit := range pr.Commits {
+		processedCommitSHAs[commit.SHA] = true
+	}
+}
+
 // getDirectCommitsSinceLastRelease gets all direct commits (not part of PRs) since the last release
 func (g *Generator) getDirectCommitsSinceLastRelease(processedPRs map[int]bool, processedCommitSHAs map[string]bool) (string, error) {
 	// Get the latest tag to determine what commits are unreleased
@@ -312,29 +343,7 @@ func (g *Generator) getDirectCommitsSinceLastRelease(processedPRs map[int]bool, 
 
 	// Filter out commits that are part of PRs (we already have those from incoming files)
 	// and format the direct commits
-	var directCommits []*git.Commit
-	for _, commit := range unreleasedVersion.Commits {
-		// Skip version bump commits
-		if commit.IsVersion {
-			continue
-		}
-
-		// Skip commits that belong to PRs we've already processed from incoming files (by PR number)
-		if commit.PRNumber > 0 && processedPRs[commit.PRNumber] {
-			continue
-		}
-
-		// Skip commits whose SHA is already included in processed PRs (this catches commits
-		// that might not have been detected as part of a PR but are actually in the PR)
-		if processedCommitSHAs[commit.SHA] {
-			continue
-		}
-
-		// Only include commits that are NOT part of any PR (direct commits)
-		if commit.PRNumber == 0 {
-			directCommits = append(directCommits, commit)
-		}
-	}
+	directCommits := g.filterDirectCommits(unreleasedVersion.Commits, processedPRs, processedCommitSHAs)
 
 	if len(directCommits) == 0 {
 		return "", nil // No direct commits
@@ -357,6 +366,41 @@ func (g *Generator) getDirectCommitsSinceLastRelease(processedPRs map[int]bool, 
 	}
 
 	return sb.String(), nil
+}
+
+// filterDirectCommits filters commits to only include direct commits (not part of PRs)
+func (g *Generator) filterDirectCommits(commits []*git.Commit, processedPRs map[int]bool, processedCommitSHAs map[string]bool) []*git.Commit {
+	var directCommits []*git.Commit
+
+	for _, commit := range commits {
+		if !g.isDirectCommit(commit, processedPRs, processedCommitSHAs) {
+			continue
+		}
+		directCommits = append(directCommits, commit)
+	}
+
+	return directCommits
+}
+
+// isDirectCommit checks if a commit is a direct commit (not part of a PR)
+func (g *Generator) isDirectCommit(commit *git.Commit, processedPRs map[int]bool, processedCommitSHAs map[string]bool) bool {
+	// Skip version bump commits
+	if commit.IsVersion {
+		return false
+	}
+
+	// Skip commits that belong to already-processed PRs
+	if commit.PRNumber > 0 && processedPRs[commit.PRNumber] {
+		return false
+	}
+
+	// Skip commits whose SHA is in processed PRs
+	if processedCommitSHAs[commit.SHA] {
+		return false
+	}
+
+	// Only include commits that are NOT part of any PR
+	return commit.PRNumber == 0
 }
 
 // validatePRState validates that a PR is in the correct state for processing
