@@ -162,6 +162,8 @@ func processYoutubeVideo(
 	return
 }
 
+// WriteOutput prints the message to stdout and optionally writes it to a file if outputFile
+// is specified. Returns an error if file creation fails.
 func WriteOutput(message string, outputFile string) (err error) {
 	fmt.Println(message)
 	if outputFile != "" {

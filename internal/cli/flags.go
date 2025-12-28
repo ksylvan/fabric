@@ -422,6 +422,9 @@ func validateImageParameters(imagePath, size, quality, background string, compre
 	return nil
 }
 
+// BuildChatOptions constructs a ChatOptions instance from the current flag values, validating
+// image parameters and setting appropriate defaults for thinking tags if not specified.
+// Returns an error if image file or parameter validation fails.
 func (o *Flags) BuildChatOptions() (ret *domain.ChatOptions, err error) {
 	// Validate image file if specified
 	if err = validateImageFile(o.ImageFile); err != nil {
@@ -469,6 +472,10 @@ func (o *Flags) BuildChatOptions() (ret *domain.ChatOptions, err error) {
 	return
 }
 
+// BuildChatRequest constructs a ChatRequest from the current flag values and provided metadata.
+// It processes attachments, combines the message with any language-specific content, and builds
+// the request with all configured options. Returns an error if attachment processing or option
+// building fails.
 func (o *Flags) BuildChatRequest(Meta string) (ret *domain.ChatRequest, err error) {
 	ret = &domain.ChatRequest{
 		ContextName:           o.Context,
@@ -545,6 +552,8 @@ func (o *Flags) IsChatRequest() (ret bool) {
 	return
 }
 
+// WriteOutput prints the message to stdout and optionally writes it to a file if the Output
+// flag is set. Returns an error if file creation fails.
 func (o *Flags) WriteOutput(message string) (err error) {
 	fmt.Println(message)
 	if o.Output != "" {

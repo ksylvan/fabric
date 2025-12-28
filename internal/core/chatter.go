@@ -148,6 +148,11 @@ func (o *Chatter) Send(request *domain.ChatRequest, opts *domain.ChatOptions) (s
 	return
 }
 
+// BuildSession constructs a chat session from a ChatRequest, loading or creating the session,
+// applying template variables, loading pattern and context content, and populating messages
+// based on the mode (raw or normal). In raw mode, it builds multi-content messages with
+// attachments. In normal mode, it processes user messages and applies pattern system prompts.
+// Returns the fully populated session ready for AI interaction, or an error if any step fails.
 func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *fsdb.Session, err error) {
 	session, err = o.loadOrCreateSession(request)
 	if err != nil {

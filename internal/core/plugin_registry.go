@@ -70,6 +70,10 @@ func hasAWSCredentials() bool {
 	return false
 }
 
+// NewPluginRegistry creates and initializes a new plugin registry with the given database.
+// It configures all available AI vendors (OpenAI, Anthropic, Gemini, Ollama, Azure, etc.),
+// sets up template extensions, pattern loaders, and utility tools. The registry is returned
+// fully initialized and ready for use. Returns an error if initialization fails.
 func NewPluginRegistry(db *fsdb.Db) (ret *PluginRegistry, err error) {
 	ret = &PluginRegistry{
 		Db:             db,
@@ -128,6 +132,9 @@ func NewPluginRegistry(db *fsdb.Db) (ret *PluginRegistry, err error) {
 	return
 }
 
+// ListVendors writes a formatted list of all available AI vendors to the provided writer.
+// The output includes a header followed by vendor names, one per line. Returns nil on success
+// or an error if writing to the output fails.
 func (o *PluginRegistry) ListVendors(out io.Writer) error {
 	vendors := lo.Map(o.VendorsAll.Vendors, func(vendor ai.Vendor, _ int) string {
 		return vendor.GetName()
@@ -154,6 +161,10 @@ type PluginRegistry struct {
 	Strategies         *strategy.StrategiesManager
 }
 
+// SaveEnvFile generates and persists the environment configuration file (.env) containing
+// settings for all configured plugins, vendors, and tools. The file includes default settings,
+// pattern loader configurations, custom patterns, strategies, vendor credentials, and optional
+// tool configurations (YouTube, Jina, Language). Returns an error if file save fails.
 func (o *PluginRegistry) SaveEnvFile() (err error) {
 	// Now create the .env with all configured VendorsController info
 	var envFileContent bytes.Buffer
@@ -175,6 +186,11 @@ func (o *PluginRegistry) SaveEnvFile() (err error) {
 	return
 }
 
+// Setup runs the interactive setup wizard to configure the plugin registry. For first-time users,
+// it automatically downloads required patterns and strategies, then guides through AI provider
+// configuration. For existing setups, it presents an interactive menu to configure additional
+// plugins and vendors. After completion, it validates the configuration and provides next steps.
+// Returns an error if any setup step fails.
 func (o *PluginRegistry) Setup() (err error) {
 	// Check if this is a first-time setup
 	isFirstRun := o.isFirstTimeSetup()
@@ -438,6 +454,9 @@ func (o *PluginRegistry) validateSetup() {
 	}
 }
 
+// SetupVendor configures a specific AI vendor by name, running its setup wizard and saving
+// the configuration to the environment file. The vendor must be available in VendorsAll.
+// Returns an error if the vendor is not found or configuration fails.
 func (o *PluginRegistry) SetupVendor(vendorName string) (err error) {
 	if err = o.VendorsAll.SetupVendor(vendorName, o.VendorManager.VendorsByName); err != nil {
 		return
@@ -446,6 +465,9 @@ func (o *PluginRegistry) SetupVendor(vendorName string) (err error) {
 	return
 }
 
+// ConfigureVendors initializes and validates all available AI vendors based on their environment
+// configuration. Vendors that successfully configure and validate are added to the active
+// VendorManager. Invalid or unconfigured vendors are skipped.
 func (o *PluginRegistry) ConfigureVendors() {
 	o.VendorManager.Clear()
 	for _, vendor := range o.VendorsAll.Vendors {
@@ -455,6 +477,10 @@ func (o *PluginRegistry) ConfigureVendors() {
 	}
 }
 
+// GetModels retrieves all available AI models from configured vendors. It first re-configures
+// vendors to ensure the latest environment settings are applied, then queries each vendor for
+// their available models. Returns a VendorsModels collection organized by vendor, or an error
+// if model retrieval fails.
 func (o *PluginRegistry) GetModels() (ret *ai.VendorsModels, err error) {
 	o.ConfigureVendors()
 	ret, err = o.VendorManager.GetModels()
@@ -490,6 +516,11 @@ func (o *PluginRegistry) Configure() (err error) {
 	return
 }
 
+// GetChatter creates and configures a Chatter instance for AI interactions with the specified
+// parameters. If model is empty, uses default model. If vendorName is provided, ensures that
+// vendor supports the requested model. When multiple vendors support a model, uses the first
+// available or the specified vendor. In dry-run mode, uses a mock vendor. Returns an error if
+// the requested model/vendor combination is unavailable or configuration is incomplete.
 func (o *PluginRegistry) GetChatter(model string, modelContextLength int, vendorName string, strategy string, stream bool, dryRun bool) (ret *Chatter, err error) {
 	ret = &Chatter{
 		db:     o.Db,
