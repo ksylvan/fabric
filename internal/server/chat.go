@@ -210,11 +210,11 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 func writeSSEResponse(w gin.ResponseWriter, response StreamResponse) error {
 	data, err := json.Marshal(response)
 	if err != nil {
-		return fmt.Errorf("error marshaling response: %v", err)
+		return fmt.Errorf("error marshaling response: %w", err)
 	}
 
 	if _, err := fmt.Fprintf(w, "data: %s\n\n", string(data)); err != nil {
-		return fmt.Errorf("error writing response: %v", err)
+		return fmt.Errorf("error writing response: %w", err)
 	}
 
 	w.(http.Flusher).Flush()

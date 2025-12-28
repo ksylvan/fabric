@@ -87,13 +87,13 @@ func (p *FetchPlugin) fetch(urlStr string) (string, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", urlStr, nil)
 	if err != nil {
-		return "", fmt.Errorf("fetch: error creating request: %v", err)
+		return "", fmt.Errorf("fetch: error creating request: %w", err)
 	}
 	req.Header.Set("User-Agent", UserAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("fetch: error fetching URL: %v", err)
+		return "", fmt.Errorf("fetch: error fetching URL: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -118,7 +118,7 @@ func (p *FetchPlugin) fetch(urlStr string) (string, error) {
 	limitReader := io.LimitReader(resp.Body, MaxContentSize+1)
 	content, err := io.ReadAll(limitReader)
 	if err != nil {
-		return "", fmt.Errorf("fetch: error reading response: %v", err)
+		return "", fmt.Errorf("fetch: error reading response: %w", err)
 	}
 
 	if len(content) > MaxContentSize {

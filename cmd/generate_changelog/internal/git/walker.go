@@ -1,6 +1,7 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -363,7 +364,7 @@ func (w *Walker) WalkHistorySinceTag(sinceTag string) (map[string]*Version, erro
 			prNumber, err := strconv.Atoi(matches[1])
 			if err != nil {
 				// Handle parsing error (e.g., log it or skip processing)
-				return fmt.Errorf("failed to parse PR number: %v", err)
+				return fmt.Errorf("failed to parse PR number: %w", err)
 			}
 			commit.PRNumber = prNumber
 
@@ -385,7 +386,7 @@ func (w *Walker) WalkHistorySinceTag(sinceTag string) (map[string]*Version, erro
 	})
 
 	// Handle the stop condition - storer.ErrStop is expected
-	if err == storer.ErrStop {
+	if errors.Is(err, storer.ErrStop) {
 		err = nil
 	}
 

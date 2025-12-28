@@ -153,7 +153,8 @@ func Init() (ret *Flags, err error) {
 	var args []string
 	if args, err = parser.Parse(); err != nil {
 		// Check if this is a help request and handle it with our custom help
-		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+		var flagsErr *flags.Error
+		if errors.As(err, &flagsErr) && flagsErr.Type == flags.ErrHelp {
 			CustomHelpHandler(parser, os.Stdout)
 			os.Exit(0)
 		}

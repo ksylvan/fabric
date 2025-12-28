@@ -30,13 +30,13 @@ func (o *StorageEntity) GetNames() (ret []string, err error) {
 	// Resolve the directory path to an absolute path
 	absDir, err := util.GetAbsolutePath(o.Dir)
 	if err != nil {
-		return nil, fmt.Errorf("could not resolve directory path: %v", err)
+		return nil, fmt.Errorf("could not resolve directory path: %w", err)
 	}
 
 	// Read the directory entries
 	var entries []os.DirEntry
 	if entries, err = os.ReadDir(absDir); err != nil {
-		return nil, fmt.Errorf("could not read items from directory: %v", err)
+		return nil, fmt.Errorf("could not read items from directory: %w", err)
 	}
 
 	for _, entry := range entries {
@@ -45,7 +45,7 @@ func (o *StorageEntity) GetNames() (ret []string, err error) {
 		// Get metadata for the entry, including symlink info
 		fileInfo, err := os.Lstat(entryPath)
 		if err != nil {
-			return nil, fmt.Errorf("could not stat entry %s: %v", entryPath, err)
+			return nil, fmt.Errorf("could not stat entry %s: %w", entryPath, err)
 		}
 
 		// Determine if the entry should be included
@@ -69,7 +69,7 @@ func (o *StorageEntity) GetNames() (ret []string, err error) {
 
 func (o *StorageEntity) Delete(name string) (err error) {
 	if err = os.RemoveAll(o.BuildFilePathByName(name)); err != nil {
-		err = fmt.Errorf("could not delete %s: %v", name, err)
+		err = fmt.Errorf("could not delete %s: %w", name, err)
 	}
 	return
 }
@@ -82,21 +82,21 @@ func (o *StorageEntity) Exists(name string) (ret bool) {
 
 func (o *StorageEntity) Rename(oldName, newName string) (err error) {
 	if err = os.Rename(o.BuildFilePathByName(oldName), o.BuildFilePathByName(newName)); err != nil {
-		err = fmt.Errorf("could not rename %s to %s: %v", oldName, newName, err)
+		err = fmt.Errorf("could not rename %s to %s: %w", oldName, newName, err)
 	}
 	return
 }
 
 func (o *StorageEntity) Save(name string, content []byte) (err error) {
 	if err = os.WriteFile(o.BuildFilePathByName(name), content, 0644); err != nil {
-		err = fmt.Errorf("could not save %s: %v", name, err)
+		err = fmt.Errorf("could not save %s: %w", name, err)
 	}
 	return
 }
 
 func (o *StorageEntity) Load(name string) (ret []byte, err error) {
 	if ret, err = os.ReadFile(o.BuildFilePathByName(name)); err != nil {
-		err = fmt.Errorf("could not load %s: %v", name, err)
+		err = fmt.Errorf("could not load %s: %w", name, err)
 	}
 	return
 }

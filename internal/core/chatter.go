@@ -150,7 +150,7 @@ func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *
 	if request.SessionName != "" {
 		var sess *fsdb.Session
 		if sess, err = o.db.Sessions.Get(request.SessionName); err != nil {
-			err = fmt.Errorf("could not find session %s: %v", request.SessionName, err)
+			err = fmt.Errorf("could not find session %s: %w", request.SessionName, err)
 			return
 		}
 		session = sess
@@ -167,7 +167,7 @@ func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *
 	if request.ContextName != "" {
 		var ctx *fsdb.Context
 		if ctx, err = o.db.Contexts.Get(request.ContextName); err != nil {
-			err = fmt.Errorf("could not find context %s: %v", request.ContextName, err)
+			err = fmt.Errorf("could not find context %s: %w", request.ContextName, err)
 			return
 		}
 		contextContent = ctx.Content
@@ -202,7 +202,7 @@ func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("could not get pattern %s: %v", request.PatternName, err)
+			return nil, fmt.Errorf("could not get pattern %s: %w", request.PatternName, err)
 		}
 		patternContent = pattern.Pattern
 		inputUsed = true
@@ -213,7 +213,7 @@ func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *
 	if request.StrategyName != "" {
 		strategy, err := strategy.LoadStrategy(request.StrategyName)
 		if err != nil {
-			return nil, fmt.Errorf("could not load strategy %s: %v", request.StrategyName, err)
+			return nil, fmt.Errorf("could not load strategy %s: %w", request.StrategyName, err)
 		}
 		if strategy != nil && strategy.Prompt != "" {
 			// prepend the strategy prompt to the system message

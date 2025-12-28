@@ -35,7 +35,7 @@ func (p *FilePlugin) safePath(path string) (string, error) {
 	if strings.HasPrefix(path, "~/") {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return "", fmt.Errorf("file: could not expand home directory: %v", err)
+			return "", fmt.Errorf("file: could not expand home directory: %w", err)
 		}
 		path = filepath.Join(home, path[2:])
 	}
@@ -93,7 +93,7 @@ func (p *FilePlugin) Apply(operation string, value string) (string, error) {
 
 		info, err := os.Stat(path)
 		if err != nil {
-			return "", fmt.Errorf("file: could not stat file: %v", err)
+			return "", fmt.Errorf("file: could not stat file: %w", err)
 		}
 
 		if info.Size() > MaxFileSize {
@@ -103,7 +103,7 @@ func (p *FilePlugin) Apply(operation string, value string) (string, error) {
 
 		content, err := os.ReadFile(path)
 		if err != nil {
-			return "", fmt.Errorf("file: could not read: %v", err)
+			return "", fmt.Errorf("file: could not read: %w", err)
 		}
 
 		debugf("File: read %d bytes", len(content))
@@ -128,7 +128,7 @@ func (p *FilePlugin) Apply(operation string, value string) (string, error) {
 
 		info, err := os.Stat(path)
 		if err != nil {
-			return "", fmt.Errorf("file: could not stat file: %v", err)
+			return "", fmt.Errorf("file: could not stat file: %w", err)
 		}
 
 		size := info.Size()
@@ -143,7 +143,7 @@ func (p *FilePlugin) Apply(operation string, value string) (string, error) {
 
 		info, err := os.Stat(path)
 		if err != nil {
-			return "", fmt.Errorf("file: could not stat file: %v", err)
+			return "", fmt.Errorf("file: could not stat file: %w", err)
 		}
 
 		mtime := info.ModTime().Format(time.RFC3339)
@@ -162,13 +162,13 @@ func (p *FilePlugin) lastNLines(path string, n int) ([]string, error) {
 
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("file: could not open: %v", err)
+		return nil, fmt.Errorf("file: could not open: %w", err)
 	}
 	defer file.Close()
 
 	info, err := file.Stat()
 	if err != nil {
-		return nil, fmt.Errorf("file: could not stat: %v", err)
+		return nil, fmt.Errorf("file: could not stat: %w", err)
 	}
 
 	if info.Size() > MaxFileSize {
@@ -189,7 +189,7 @@ func (p *FilePlugin) lastNLines(path string, n int) ([]string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("file: error reading: %v", err)
+		return nil, fmt.Errorf("file: error reading: %w", err)
 	}
 
 	debugf("File: read %d lines total, returning last %d", lineCount, len(lines))

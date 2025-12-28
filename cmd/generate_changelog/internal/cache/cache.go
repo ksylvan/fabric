@@ -3,6 +3,7 @@ package cache
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -97,7 +98,7 @@ func (c *Cache) createTables() error {
 func (c *Cache) GetLastProcessedTag() (string, error) {
 	var tag string
 	err := c.db.QueryRow("SELECT value FROM metadata WHERE key = 'last_processed_tag'").Scan(&tag)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return "", nil
 	}
 	return tag, err
@@ -166,7 +167,7 @@ func (c *Cache) GetPR(number int) (*github.PR, error) {
 		&pr.URL, &pr.MergedAt, &pr.MergeCommit, &commitsJSON,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
@@ -292,7 +293,7 @@ func (c *Cache) CommitExists(hash string) (bool, error) {
 func (c *Cache) GetLastPRSync() (time.Time, error) {
 	var timestamp string
 	err := c.db.QueryRow("SELECT value FROM metadata WHERE key = 'last_pr_sync'").Scan(&timestamp)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return time.Time{}, nil
 	}
 	if err != nil {
@@ -427,7 +428,7 @@ func (c *Cache) SaveCommitPRMappings(prs []*github.PR) error {
 func (c *Cache) GetPRNumberBySHA(sha string) (int, bool) {
 	var prNumber int
 	err := c.db.QueryRow("SELECT pr_number FROM commit_pr_mapping WHERE commit_sha = ?", sha).Scan(&prNumber)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return 0, false
 	}
 	if err != nil {
@@ -460,7 +461,7 @@ func (c *Cache) GetCommitSHAsForPR(prNumber int) ([]string, error) {
 func (c *Cache) GetUnreleasedContentHash() (string, error) {
 	var hash string
 	err := c.db.QueryRow("SELECT value FROM metadata WHERE key = 'unreleased_content_hash'").Scan(&hash)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return "", fmt.Errorf("no content hash found")
 	}
 	return hash, err

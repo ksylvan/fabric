@@ -94,7 +94,7 @@ func ScanDirectory(rootDir string, maxDepth int, instructions string, ignoreList
 			// Read file content
 			content, err := os.ReadFile(path)
 			if err != nil {
-				return fmt.Errorf("error reading file %s: %v", path, err)
+				return fmt.Errorf("error reading file %s: %w", path, err)
 			}
 
 			// Add file to appropriate parent directory
