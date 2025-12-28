@@ -157,6 +157,7 @@ func (o *GroupsItemsSelector[I]) FindGroupsByItemFirst(item I) (ret string) {
 
 func (o *GroupsItemsSelector[I]) FindGroupsByItem(item I) (groups []string) {
 	itemKey := o.GetItemKey(item)
+	groups = make([]string, 0, len(o.GroupsItems))
 
 	for _, groupItems := range o.GroupsItems {
 		if groupItems.ContainsItemBy(func(groupItem I) bool {

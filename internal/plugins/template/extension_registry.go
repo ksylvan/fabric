@@ -270,7 +270,7 @@ func (r *ExtensionRegistry) GetExtension(name string) (*ExtensionDefinition, err
 }
 
 func (r *ExtensionRegistry) ListExtensions() ([]*ExtensionDefinition, error) {
-	var exts []*ExtensionDefinition
+	exts := make([]*ExtensionDefinition, 0, len(r.registry.Extensions))
 
 	for name := range r.registry.Extensions {
 		ext, err := r.GetExtension(name)

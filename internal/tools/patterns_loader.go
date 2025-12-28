@@ -352,7 +352,7 @@ func (o *PatternsLoader) createUniquePatternsFile() (err error) {
 	}
 
 	// Convert map to sorted slice
-	var patternNames []string
+	patternNames := make([]string, 0, len(patternNamesMap))
 	for name := range patternNamesMap {
 		patternNames = append(patternNames, name)
 	}

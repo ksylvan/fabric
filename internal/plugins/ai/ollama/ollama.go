@@ -102,6 +102,7 @@ func (o *Client) ListModels() (ret []string, err error) {
 		return
 	}
 
+	ret = make([]string, 0, len(listResp.Models))
 	for _, mod := range listResp.Models {
 		ret = append(ret, mod.Model)
 	}

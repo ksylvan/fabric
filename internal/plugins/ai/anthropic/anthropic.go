@@ -403,7 +403,7 @@ func (an *Client) toMessages(msgs []*chat.ChatCompletionMessage) (ret []anthropi
 	// - Messages must alternate user/assistant.
 	// - Skip empty messages.
 
-	var anthropicMessages []anthropic.MessageParam
+	anthropicMessages := make([]anthropic.MessageParam, 0, len(msgs))
 	var systemContentBuilder strings.Builder
 
 	// Note: Claude Code spoofing is now handled in buildMessageParams
