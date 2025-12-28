@@ -147,35 +147,67 @@ func (o *Chatter) Send(request *domain.ChatRequest, opts *domain.ChatOptions) (s
 }
 
 func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *fsdb.Session, err error) {
-	if request.SessionName != "" {
-		var sess *fsdb.Session
-		if sess, err = o.db.Sessions.Get(request.SessionName); err != nil {
-			err = fmt.Errorf("could not find session %s: %w", request.SessionName, err)
-			return
-		}
-		session = sess
-	} else {
-		session = &fsdb.Session{}
+	session, err = o.loadOrCreateSession(request)
+	if err != nil {
+		return
 	}
 
 	if request.Meta != "" {
 		session.Append(&chat.ChatCompletionMessage{Role: domain.ChatMessageRoleMeta, Content: request.Meta})
 	}
 
-	// if a context name is provided, retrieve it from the database
-	var contextContent string
-	if request.ContextName != "" {
-		var ctx *fsdb.Context
-		if ctx, err = o.db.Contexts.Get(request.ContextName); err != nil {
-			err = fmt.Errorf("could not find context %s: %w", request.ContextName, err)
-			return
-		}
-		contextContent = ctx.Content
+	contextContent, err := o.loadContextContent(request)
+	if err != nil {
+		return nil, err
 	}
 
-	// Process template variables in message content
-	// Double curly braces {{variable}} indicate template substitution
-	// Ensure we have a message before processing
+	if err = o.processMessageTemplateVariables(request); err != nil {
+		return nil, err
+	}
+
+	patternContent, inputUsed, err := o.loadPatternContent(request)
+	if err != nil {
+		return nil, err
+	}
+
+	systemMessage, err := o.buildSystemMessage(request, contextContent, patternContent)
+	if err != nil {
+		return nil, err
+	}
+
+	o.populateSessionMessages(session, request, systemMessage, inputUsed, raw)
+
+	if session.IsEmpty() {
+		session = nil
+		err = errors.New(NoSessionPatternUserMessages)
+	}
+	return
+}
+
+func (o *Chatter) loadOrCreateSession(request *domain.ChatRequest) (*fsdb.Session, error) {
+	if request.SessionName != "" {
+		sess, err := o.db.Sessions.Get(request.SessionName)
+		if err != nil {
+			return nil, fmt.Errorf("could not find session %s: %w", request.SessionName, err)
+		}
+		return sess, nil
+	}
+	return &fsdb.Session{}, nil
+}
+
+func (o *Chatter) loadContextContent(request *domain.ChatRequest) (string, error) {
+	if request.ContextName == "" {
+		return "", nil
+	}
+
+	ctx, err := o.db.Contexts.Get(request.ContextName)
+	if err != nil {
+		return "", fmt.Errorf("could not find context %s: %w", request.ContextName, err)
+	}
+	return ctx.Content, nil
+}
+
+func (o *Chatter) processMessageTemplateVariables(request *domain.ChatRequest) error {
 	if request.Message == nil {
 		request.Message = &chat.ChatCompletionMessage{
 			Role:    chat.ChatMessageRoleUser,
@@ -183,103 +215,123 @@ func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *
 		}
 	}
 
-	// Now we know request.Message is not nil, process template variables
 	if request.InputHasVars && !request.NoVariableReplacement {
-		request.Message.Content, err = template.ApplyTemplate(request.Message.Content, request.PatternVariables, "")
+		content, err := template.ApplyTemplate(request.Message.Content, request.PatternVariables, "")
 		if err != nil {
-			return nil, err
+			return err
 		}
+		request.Message.Content = content
 	}
 
-	var patternContent string
-	inputUsed := false
-	if request.PatternName != "" {
-		var pattern *fsdb.Pattern
-		if request.NoVariableReplacement {
-			pattern, err = o.db.Patterns.GetWithoutVariables(request.PatternName, request.Message.Content)
-		} else {
-			pattern, err = o.db.Patterns.GetApplyVariables(request.PatternName, request.PatternVariables, request.Message.Content)
-		}
+	return nil
+}
 
-		if err != nil {
-			return nil, fmt.Errorf("could not get pattern %s: %w", request.PatternName, err)
-		}
-		patternContent = pattern.Pattern
-		inputUsed = true
+func (o *Chatter) loadPatternContent(request *domain.ChatRequest) (string, bool, error) {
+	if request.PatternName == "" {
+		return "", false, nil
 	}
 
+	var pattern *fsdb.Pattern
+	var err error
+
+	if request.NoVariableReplacement {
+		pattern, err = o.db.Patterns.GetWithoutVariables(request.PatternName, request.Message.Content)
+	} else {
+		pattern, err = o.db.Patterns.GetApplyVariables(request.PatternName, request.PatternVariables, request.Message.Content)
+	}
+
+	if err != nil {
+		return "", false, fmt.Errorf("could not get pattern %s: %w", request.PatternName, err)
+	}
+
+	return pattern.Pattern, true, nil
+}
+
+func (o *Chatter) buildSystemMessage(request *domain.ChatRequest, contextContent, patternContent string) (string, error) {
 	systemMessage := strings.TrimSpace(contextContent) + strings.TrimSpace(patternContent)
 
 	if request.StrategyName != "" {
 		strategy, err := strategy.LoadStrategy(request.StrategyName)
 		if err != nil {
-			return nil, fmt.Errorf("could not load strategy %s: %w", request.StrategyName, err)
+			return "", fmt.Errorf("could not load strategy %s: %w", request.StrategyName, err)
 		}
 		if strategy != nil && strategy.Prompt != "" {
-			// prepend the strategy prompt to the system message
 			systemMessage = fmt.Sprintf("%s\n%s", strategy.Prompt, systemMessage)
 		}
 	}
 
-	// Apply refined language instruction if specified
 	if request.Language != "" && request.Language != "en" {
-		// Refined instruction: Execute pattern using user input, then translate the entire response.
 		systemMessage = fmt.Sprintf("%s\n\nIMPORTANT: First, execute the instructions provided in this prompt using the user's input. Second, ensure your entire final response, including any section headers or titles generated as part of executing the instructions, is written ONLY in the %s language.", systemMessage, request.Language)
 	}
 
-	if raw {
-		var finalContent string
-		if systemMessage != "" {
-			if request.PatternName != "" {
-				finalContent = systemMessage
-			} else {
-				finalContent = fmt.Sprintf("%s\n\n%s", systemMessage, request.Message.Content)
-			}
+	return systemMessage, nil
+}
 
-			// Handle MultiContent properly in raw mode
-			if len(request.Message.MultiContent) > 0 {
-				// When we have attachments, add the text as a text part in MultiContent
-				newMultiContent := []chat.ChatMessagePart{
-					{
-						Type: chat.ChatMessagePartTypeText,
-						Text: finalContent,
-					},
-				}
-				// Add existing non-text parts (like images)
-				for _, part := range request.Message.MultiContent {
-					if part.Type != chat.ChatMessagePartTypeText {
-						newMultiContent = append(newMultiContent, part)
-					}
-				}
-				request.Message = &chat.ChatCompletionMessage{
-					Role:         chat.ChatMessageRoleUser,
-					MultiContent: newMultiContent,
-				}
-			} else {
-				// No attachments, use regular Content field
-				request.Message = &chat.ChatCompletionMessage{
-					Role:    chat.ChatMessageRoleUser,
-					Content: finalContent,
-				}
-			}
-		}
+func (o *Chatter) populateSessionMessages(session *fsdb.Session, request *domain.ChatRequest, systemMessage string, inputUsed, raw bool) {
+	if raw {
+		o.populateRawModeMessages(session, request, systemMessage)
+	} else {
+		o.populateNormalModeMessages(session, request, systemMessage, inputUsed)
+	}
+}
+
+func (o *Chatter) populateRawModeMessages(session *fsdb.Session, request *domain.ChatRequest, systemMessage string) {
+	if systemMessage == "" {
 		if request.Message != nil {
 			session.Append(request.Message)
 		}
+		return
+	}
+
+	finalContent := o.buildRawModeContent(request, systemMessage)
+
+	if len(request.Message.MultiContent) > 0 {
+		request.Message = o.buildMultiContentMessage(request, finalContent)
 	} else {
-		if systemMessage != "" {
-			session.Append(&chat.ChatCompletionMessage{Role: chat.ChatMessageRoleSystem, Content: systemMessage})
-		}
-		// If multi-part content, it is in the user message, and should be added.
-		// Otherwise, we should only add it if we have not already used it in the systemMessage.
-		if len(request.Message.MultiContent) > 0 || (request.Message != nil && !inputUsed) {
-			session.Append(request.Message)
+		request.Message = &chat.ChatCompletionMessage{
+			Role:    chat.ChatMessageRoleUser,
+			Content: finalContent,
 		}
 	}
 
-	if session.IsEmpty() {
-		session = nil
-		err = errors.New(NoSessionPatternUserMessages)
+	if request.Message != nil {
+		session.Append(request.Message)
 	}
-	return
+}
+
+func (o *Chatter) buildRawModeContent(request *domain.ChatRequest, systemMessage string) string {
+	if request.PatternName != "" {
+		return systemMessage
+	}
+	return fmt.Sprintf("%s\n\n%s", systemMessage, request.Message.Content)
+}
+
+func (o *Chatter) buildMultiContentMessage(request *domain.ChatRequest, finalContent string) *chat.ChatCompletionMessage {
+	newMultiContent := []chat.ChatMessagePart{
+		{
+			Type: chat.ChatMessagePartTypeText,
+			Text: finalContent,
+		},
+	}
+
+	for _, part := range request.Message.MultiContent {
+		if part.Type != chat.ChatMessagePartTypeText {
+			newMultiContent = append(newMultiContent, part)
+		}
+	}
+
+	return &chat.ChatCompletionMessage{
+		Role:         chat.ChatMessageRoleUser,
+		MultiContent: newMultiContent,
+	}
+}
+
+func (o *Chatter) populateNormalModeMessages(session *fsdb.Session, request *domain.ChatRequest, systemMessage string, inputUsed bool) {
+	if systemMessage != "" {
+		session.Append(&chat.ChatCompletionMessage{Role: chat.ChatMessageRoleSystem, Content: systemMessage})
+	}
+
+	if len(request.Message.MultiContent) > 0 || (request.Message != nil && !inputUsed) {
+		session.Append(request.Message)
+	}
 }
