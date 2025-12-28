@@ -2389,14 +2389,161 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
 
 ### 10.1 GitHub Actions Review
 
-- [ ] Review `.github/workflows/ci.yml` for optimization
-- [ ] Check for duplicate workflow steps
-- [ ] Look for caching opportunities
-- [ ] Review test matrix for completeness
+- [x] Review `.github/workflows/ci.yml` for optimization
+  - **Current workflow steps:**
+    1. Checkout code (actions/checkout@v6)
+    2. Set up Go (actions/setup-go@v6 with go-version-file)
+    3. Run tests (go test -v ./...)
+    4. Check for modernization opportunities (golang.org/x/tools/go/analysis/passes/modernize)
+    5. Install Nix (DeterminateSystems/nix-installer-action@v21)
+    6. Check formatting (nix flake check)
+  - **Optimization opportunities identified:**
+    1. ⚡ **Missing Go module caching** - No caching of `go mod download` artifacts (High impact)
+    2. ⚡ **Missing Go build cache** - Build artifacts not cached between runs (Medium impact)
+    3. 🔄 **Sequential execution** - Modernization check runs after tests but could be parallel job
+    4. ⏱️ **Nix installation overhead** - Installing full Nix environment just for formatting (consider native alternatives)
+    5. 📊 **No parallelization** - All checks run sequentially in single job
+  - **Recommended improvements:**
+    - Add `cache: true` to setup-go action (automatic Go module caching)
+    - Consider splitting into parallel jobs: test, modernize, format
+    - Evaluate if gofmt/goimports native can replace Nix-based formatting
+    - Add timing metrics to identify bottlenecks
+
+- [x] Check for duplicate workflow steps
+  - ✅ **Duplication found between ci.yml and release.yml:**
+    - Both checkout code with identical action
+    - Both set up Go with identical configuration
+    - Both run identical test command: `go test -v ./...`
+  - **Analysis:**
+    - release.yml duplicates entire test job from ci.yml
+    - Tags are created from main branch which already passed CI
+    - **Redundant testing** - release.yml test job unnecessary if tag is from tested main branch
+  - **Recommendation:**
+    - Consider removing test job from release.yml (rely on CI passing before tag)
+    - Or add check to skip tests if commit already passed CI
+    - Could save ~2-3 minutes per release
+
+- [x] Look for caching opportunities
+  - **Current state:** ZERO caching implemented in any workflow
+  - **Caching opportunities identified:**
+    1. 🚀 **Go modules** (High impact: ~30-60s savings)
+       - Enable with `cache: true` in setup-go@v6 action
+       - Caches `$GOPATH/pkg/mod` and `~/.cache/go-build`
+       - Built-in feature of setup-go action v4+
+    2. 🚀 **Nix store** (High impact: ~60-90s savings)
+       - Use `cachix/cachix-action` or built-in GitHub cache
+       - Nix installation + package fetching is expensive
+       - Caches `/nix/store` between runs
+    3. 💾 **GoReleaser cache** (Medium impact: ~15-30s savings)
+       - Cache GoReleaser binary download in release.yml
+       - Reusable across release builds
+  - **Implementation priority:**
+    1. Enable Go modules cache (one line change, immediate benefit)
+    2. Add Nix cache (if keeping Nix-based formatting)
+    3. Cache GoReleaser (smaller impact but easy win)
+  - **Expected cumulative savings:** 2-3 minutes per CI run
+
+- [x] Review test matrix for completeness
+  - **Current test matrix:**
+    - ❌ Single OS: ubuntu-latest only
+    - ❌ Single Go version: 1.25.1 (from go.mod)
+    - ❌ No matrix strategy defined
+  - **Target platforms (from .goreleaser.yaml):**
+    - Darwin (macOS): amd64, arm64
+    - Linux: amd64, arm64, 386
+    - Windows: amd64, arm64, 386
+  - **Gap analysis:**
+    - ⚠️ **Critical:** Building for Darwin/Windows but never testing on those platforms
+    - ⚠️ **Risk:** Platform-specific bugs only discovered after release
+    - ⚠️ **No ARM testing:** Building arm64 binaries without ARM CI validation
+  - **Recommendations:**
+    1. 🎯 **Add OS matrix** (High priority):
+       - ubuntu-latest (Linux - current)
+       - macos-latest (Darwin - missing)
+       - windows-latest (Windows - missing)
+    2. 🎯 **Consider Go version matrix** (Medium priority):
+       - Test on latest stable Go (currently 1.25.1)
+       - Test on Go 1.24.x for backward compatibility
+       - Or just test latest if no compatibility promises made
+    3. 📋 **ARM testing** (Low priority - GitHub doesn't provide native ARM runners):
+       - Could use QEMU for arm64 testing (adds significant time)
+       - Or rely on GoReleaser cross-compilation (current approach)
+  - **Proposed matrix:**
+    ```yaml
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        # Optional: go-version: ['1.24.x', '1.25.x']
+    runs-on: ${{ matrix.os }}
+    ```
+  - **Trade-offs:**
+    - ✅ Better platform coverage, catch OS-specific bugs early
+    - ❌ 3x CI time (mitigated by caching and parallel execution)
+    - ❌ 3x GitHub Actions minutes usage
+  - **Recommendation:** Add OS matrix for PRs to main, keep Linux-only for branch pushes
 
 ### 10.2 Build Configuration
 
-- [ ] Review `.goreleaser.yaml` for efficiency
+- [x] Review `.goreleaser.yaml` for efficiency
+  - **Current Configuration:**
+    - Two build IDs: `default` (darwin/linux) and `windows-build` (windows)
+    - Both configurations are IDENTICAL except for `goos` field
+    - Building 8 binaries total: darwin (amd64, arm64), linux (386, amd64, arm64), windows (386, amd64, arm64)
+    - Build time: ~45 seconds (tested via snapshot build)
+    - No explicit `goarch` specification (relying on GoReleaser defaults)
+  - **Historical Context:**
+    - `windows-build` was previously `windows-garbled` using garble obfuscation (commit ad175f7a)
+    - Garble was removed in commit 13178456 to simplify build process
+    - Both builds now have identical ldflags and settings
+  - **Efficiency Issues Found:**
+    1. ❌ **Redundant build configuration** - `windows-build` duplicates `default` build settings
+    2. ⚠️ **Implicit architecture defaults** - No explicit `goarch` list (works but less clear)
+    3. ✅ **Good practices:**
+       - CGO_ENABLED=0 for static binaries (cross-platform compatibility)
+       - Proper ldflags with -s -w (strip debug info)
+       - Version injection via ldflags
+  - **Recommendations:**
+    - 🎯 **High Priority - Consolidate builds:** Merge `windows-build` into `default` by adding `windows` to `goos` list
+      - Eliminates 14 lines of duplicate configuration
+      - Maintains exact same build output
+      - Simplifies maintenance
+      - Zero risk (functionally identical)
+    - 📋 **Low Priority - Explicit architectures:** Add explicit `goarch: [386, amd64, arm64]` for clarity
+      - Documents intent explicitly
+      - Makes configuration self-documenting
+      - No functional change (matches current defaults)
+  - **Proposed Simplified Configuration:**
+    ```yaml
+    builds:
+      - id: fabric
+        env:
+          - CGO_ENABLED=0
+        goos:
+          - darwin
+          - linux
+          - windows
+        goarch:  # Optional but explicit
+          - 386
+          - amd64
+          - arm64
+        ignore:  # Darwin doesn't support 386
+          - goos: darwin
+            goarch: 386
+        main: ./cmd/fabric
+        binary: fabric
+        ldflags:
+          - -s -w
+          - -X main.version={{.Version}}
+          - -X main.commit={{.ShortCommit}}
+          - -X main.date={{.Date}}
+          - -X main.builtBy=goreleaser
+          - -X main.tag={{.Tag}}
+    ```
+  - **Expected Impact:**
+    - Configuration: -14 lines (~25% reduction)
+    - Build time: No change (same builds)
+    - Maintainability: Improved (single source of truth)
+    - Risk: None (identical functionality)
 - [ ] Check Nix flake for unused dependencies
 - [ ] Look for build flags that could improve performance
 
