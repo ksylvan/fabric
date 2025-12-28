@@ -2,8 +2,8 @@
   import Patterns from "./Patterns.svelte";
   import Models from "./Models.svelte";
   import ModelConfig from "./ModelConfig.svelte";
+  import SessionSelector from "./SessionSelector.svelte";
   import { Select } from "$lib/components/ui/select";
-  import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { languageStore } from '$lib/store/language-store';
   import { strategies, selectedStrategy, fetchStrategies } from '$lib/store/strategy-store';
@@ -75,6 +75,7 @@
         {/each}
       </Select>
     </div>
+    <SessionSelector />
     <div>
       <Label for="pattern-variables" class="text-xs text-white/70 mb-1 block">Pattern Variables (JSON)</Label>
       <textarea

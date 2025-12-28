@@ -29,6 +29,7 @@ type PromptRequest struct {
 	ContextName  string            `json:"contextName"`
 	PatternName  string            `json:"patternName"`
 	StrategyName string            `json:"strategyName"`        // Optional strategy name
+	SessionName  string            `json:"sessionName"`         // Session name for multi-turn conversations
 	Variables    map[string]string `json:"variables,omitempty"` // Pattern variables
 }
 
@@ -131,6 +132,7 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 					},
 					PatternName:      p.PatternName,
 					ContextName:      p.ContextName,
+					SessionName:      p.SessionName,    // Pass session name for multi-turn conversations
 					PatternVariables: p.Variables,      // Pass pattern variables
 					Language:         request.Language, // Pass the language field
 				}

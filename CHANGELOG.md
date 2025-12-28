@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.4.364 (2025-12-28)
+
+### PR [#1907](https://github.com/danielmiessler/Fabric/pull/1907) by [majiayu000](https://github.com/majiayu000): feat(gui): add Session Name support for multi-turn conversations
+
+- Added Session Name support for multi-turn conversations in GUI chat interface, enabling persistent conversations similar to CLI's --session flag
+- Added SessionName field to PromptRequest and sessionName to ChatPrompt interface for proper session handling
+- Extracted SessionSelector component with Select component instead of native dropdown for better user experience
+- Implemented session message loading when selecting existing sessions with proper error handling
+- Fixed Select component binding and empty input handling to prevent redundant API calls and properly clear sessions
+
 ## v1.4.363 (2025-12-25)
 
 ### PR [#1906](https://github.com/danielmiessler/Fabric/pull/1906) by [ksylvan](https://github.com/ksylvan): Code Quality: Optimize HTTP client reuse + simplify error formatting

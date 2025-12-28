@@ -8,6 +8,7 @@ export interface ChatPrompt {
   model: string;
   patternName?: string;
   strategyName?: string; // Optional strategy name to prepend strategy prompt
+  sessionName?: string; // Session name for multi-turn conversations
   variables?: { [key: string]: string }; // Pattern variables
 }
 

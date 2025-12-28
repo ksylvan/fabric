@@ -14,6 +14,7 @@ import {
 	systemPrompt,
 } from "$lib/store/pattern-store";
 import { selectedStrategy } from "$lib/store/strategy-store";
+import { currentSession } from "$lib/store/chat-store";
 
 class LanguageValidator {
 	constructor(private targetLanguage: string) {}
@@ -210,6 +211,7 @@ export class ChatService {
 			model: config.model,
 			patternName: get(selectedPatternName),
 			strategyName: get(selectedStrategy), // Add selected strategy to prompt
+			sessionName: get(currentSession) ?? undefined, // Session name for multi-turn conversations
 			variables: get(patternVariables), // Add pattern variables
 		};
 	}
