@@ -1,11 +1,11 @@
 <script lang="ts">
   import { formatDistance } from 'date-fns';
-  import type { Post } from './post-interface';
+  import type { PostSummary } from './post-interface';
   import PostMeta from './PostMeta.svelte';
   import Card from '$lib/components/ui/cards/card.svelte';
   import { cn } from '$lib/utils/utils';
 
-  export let post: Post;
+  export let post: PostSummary;
   export let className: string = '';
 
   function parseDate(dateStr: string): Date {
@@ -34,10 +34,10 @@
           {formatDistance(parseDate(post.metadata.date), new Date(), { addSuffix: false })}
         {/if}
       </time>
-      {#if post.metadata?.tags?.length > 0}
+      {#if post.metadata?.tags && post.metadata.tags.length > 0}
         <span class="text-xs">•</span>
         <div class="flex flex-wrap gap-2">
-          {#each post.metadata?.tags as tag}
+          {#each post.metadata.tags as tag}
             <a
               href="/tags/{tag}"
               class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold transition-colors hover:bg-secondary"

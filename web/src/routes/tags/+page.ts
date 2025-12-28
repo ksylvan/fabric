@@ -1,31 +1,26 @@
 import type { PageLoad } from './$types';
-import type { Frontmatter } from '$lib/utils/markdown';
+import type { PostSummary } from '$lib/components/posts/post-interface';
 
 export const load: PageLoad = async () => {
 	const postFiles = import.meta.glob('/src/lib/content/posts/*.{md,svx}', { eager: true });
-	
-	const posts = Object.entries(postFiles).map(([path, post]: [string, any]) => {
-		const slug = path.split('/').pop()?.replace(/\.(md|svx)$/, '');
+
+	const posts: PostSummary[] = Object.entries(postFiles).map(([path, post]: [string, any]) => {
+		const slug = path.split('/').pop()?.replace(/\.(md|svx)$/, '') ?? '';
 		return {
 			slug,
-			meta: {
-				title: post.metadata.title,
-				date: post.metadata.date,
-				description: post.metadata.description,
-				tags: post.metadata.tags || []
-			}
+			metadata: post.metadata
 		};
 	});
 
 	const tags = posts.reduce((acc, post) => {
-		post.meta.tags.forEach((tag: string) => {
+		post.metadata.tags?.forEach((tag: string) => {
 			if (!acc[tag]) {
 				acc[tag] = [];
 			}
 			acc[tag].push(post);
 		});
 		return acc;
-	}, {} as Record<string, Frontmatter[]>);
+	}, {} as Record<string, PostSummary[]>);
 
 	return {
 		tags,

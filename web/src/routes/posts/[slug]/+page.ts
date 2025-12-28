@@ -1,8 +1,9 @@
 import { error } from '@sveltejs/kit';
 import type { PageLoad } from './$types';
 import type { Frontmatter } from '$lib/utils/markdown';
+import type { SvelteComponent } from 'svelte';
 
-const posts = import.meta.glob<{ metadata: Frontmatter, default: unknown }>('/src/lib/content/posts/*.{md,svx}', { eager: true });
+const posts = import.meta.glob<{ metadata: Frontmatter, default: typeof SvelteComponent }>('/src/lib/content/posts/*.{md,svx}', { eager: true });
 
 export const load: PageLoad = async ({ params }) => {
     const post = Object.entries(posts).find(([path]) => 

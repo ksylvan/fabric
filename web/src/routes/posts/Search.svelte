@@ -18,7 +18,7 @@
   $: {
     const tagSet = new Set<string>();
     posts.forEach(post => {
-      post.meta.tags.forEach(tag => tagSet.add(tag));
+      post.metadata.tags?.forEach(tag => tagSet.add(tag));
     });
     allTags = Array.from(tagSet);
   }
@@ -27,7 +27,7 @@
   $: filteredPosts = posts.filter(post => {
     if (selectedTags.length === 0) return true;
     return selectedTags.every(tag =>
-      post.meta.tags.some(postTag => postTag.toLowerCase() === tag.toLowerCase())
+      post.metadata.tags?.some((postTag: string) => postTag.toLowerCase() === tag.toLowerCase())
     );
   });
 
@@ -62,7 +62,7 @@ Could this be the new component for the search bar?
 	$: {
 		const tagSet = new Set<string>();
 		posts.forEach(post => {
-			post.meta.tags.forEach(tag => tagSet.add(tag));
+			post.metadata.tags?.forEach(tag => tagSet.add(tag));
 		});
 		allTags = Array.from(tagSet);
 	}
@@ -70,8 +70,8 @@ Could this be the new component for the search bar?
 	// Filter posts based on selected tags
 	$: filteredPosts = posts.filter(post => {
 		if (selectedTags.length === 0) return true;
-		return selectedTags.every(tag => 
-			post.meta.tags.some(postTag => postTag.toLowerCase() === tag.toLowerCase())
+		return selectedTags.every(tag =>
+			post.metadata.tags?.some((postTag: string) => postTag.toLowerCase() === tag.toLowerCase())
 		);
 	});
 
@@ -204,21 +204,23 @@ Could this be the new component for the search bar?
     {#each filteredPosts as post}
       <article class="card card-hover group relative rounded-lg border p-6 hover:bg-muted/50">
         <a href="/posts/{post.slug}" class="absolute inset-0">
-          <span class="sr-only">View {post.meta.title}</span>
+          <span class="sr-only">View {post.metadata?.title}</span>
         </a>
         <div class="flex flex-col justify-between space-y-4">
           <div class="space-y-2">
-            <h2 class="text-xl font-semibold tracking-tight">{post.meta.title}</h2>
-            <p class="text-muted-foreground">{post.meta.description}</p>
+            <h2 class="text-xl font-semibold tracking-tight">{post.metadata?.title}</h2>
+            <p class="text-muted-foreground">{post.metadata?.description}</p>
           </div>
           <div class="flex items-center space-x-4 text-sm text-muted-foreground">
-            <time datetime={post.meta.date}>
-              {formatDistance(new Date(post.meta.date), new Date(), { addSuffix: true })}
+            <time datetime={post.metadata?.date}>
+              {#if post.metadata?.date}
+                {formatDistance(new Date(post.metadata.date), new Date(), { addSuffix: true })}
+              {/if}
             </time>
-            {#if post.meta.tags.length > 0}
+            {#if post.metadata?.tags && post.metadata.tags.length > 0}
               <span class="text-xs">•</span>
               <div class="flex flex-wrap gap-2">
-                {#each post.meta.tags as tag}
+                {#each post.metadata.tags as tag}
                   <a
                     href="/tags/{tag}"
                     class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold transition-colors hover:bg-secondary"
