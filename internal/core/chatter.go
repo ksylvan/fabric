@@ -49,7 +49,7 @@ func (o *Chatter) Send(request *domain.ChatRequest, opts *domain.ChatOptions) (s
 				return
 			}
 		}
-		err = fmt.Errorf("no messages provided")
+		err = fmt.Errorf("cannot send chat request: no messages provided")
 		return
 	}
 
@@ -113,7 +113,7 @@ func (o *Chatter) Send(request *domain.ChatRequest, opts *domain.ChatOptions) (s
 
 	if message == "" {
 		session = nil
-		err = fmt.Errorf("empty response")
+		err = fmt.Errorf("empty response from AI model")
 		return
 	}
 

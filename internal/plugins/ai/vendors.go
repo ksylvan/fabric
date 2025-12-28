@@ -75,7 +75,7 @@ func (o *VendorsManager) FindByName(name string) Vendor {
 func (o *VendorsManager) readModels() (err error) {
 	if len(o.Vendors) == 0 {
 
-		err = fmt.Errorf("no AI vendors configured to read models from. Please configure at least one AI vendor")
+		err = fmt.Errorf("no ai vendors configured to read models from: please configure at least one ai vendor")
 		return
 	}
 
@@ -138,7 +138,7 @@ func (o *VendorsManager) Setup() (ret map[string]Vendor, err error) {
 func (o *VendorsManager) SetupVendor(vendorName string, configuredVendors map[string]Vendor) (err error) {
 	vendor := o.FindByName(vendorName)
 	if vendor == nil {
-		err = fmt.Errorf("vendor %s not found", vendorName)
+		err = fmt.Errorf("ai vendor %s not found", vendorName)
 		return
 	}
 	o.setupVendorTo(vendor, configuredVendors)

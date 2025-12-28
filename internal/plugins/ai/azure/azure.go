@@ -36,12 +36,12 @@ func (oi *Client) configure() error {
 
 	apiKey := strings.TrimSpace(oi.ApiKey.Value)
 	if apiKey == "" {
-		return fmt.Errorf("Azure API key is required")
+		return fmt.Errorf("azure API key is required")
 	}
 
 	baseURL := strings.TrimSpace(oi.ApiBaseURL.Value)
 	if baseURL == "" {
-		return fmt.Errorf("Azure API base URL is required")
+		return fmt.Errorf("azure API base URL is required")
 	}
 
 	apiVersion := strings.TrimSpace(oi.ApiVersion.Value)

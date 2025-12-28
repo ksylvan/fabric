@@ -98,7 +98,7 @@ func (o *GroupsItemsSelector[I]) GetGroupAndItemByItemNumber(number int) (group 
 	}
 
 	if !found {
-		err = fmt.Errorf("number %d is out of range", number)
+		err = fmt.Errorf("selection number %d is out of range", number)
 	}
 	return
 }

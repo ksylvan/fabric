@@ -77,7 +77,7 @@ func calculateVersionDate(fetchedPRs []*github.PR) time.Time {
 // ProcessIncomingPR processes a single PR for changelog entry creation
 func (g *Generator) ProcessIncomingPR(prNumber int) error {
 	if err := g.validatePRState(prNumber); err != nil {
-		return fmt.Errorf("PR validation failed: %w", err)
+		return fmt.Errorf("pr validation failed: %w", err)
 	}
 
 	if err := g.validateGitStatus(); err != nil {
@@ -364,15 +364,15 @@ func (g *Generator) validatePRState(prNumber int) error {
 	// Use lightweight validation call that doesn't fetch commits
 	details, err := g.ghClient.GetPRValidationDetails(prNumber)
 	if err != nil {
-		return fmt.Errorf("failed to fetch PR %d: %w", prNumber, err)
+		return fmt.Errorf("failed to fetch pr %d: %w", prNumber, err)
 	}
 
 	if details.State != "open" {
-		return fmt.Errorf("PR %d is not open (current state: %s)", prNumber, details.State)
+		return fmt.Errorf("pr %d is not open (current state: %s)", prNumber, details.State)
 	}
 
 	if !details.Mergeable {
-		return fmt.Errorf("PR %d is not mergeable - please resolve conflicts first", prNumber)
+		return fmt.Errorf("pr %d is not mergeable: please resolve conflicts first", prNumber)
 	}
 
 	return nil

@@ -129,7 +129,7 @@ func downloadLocale(path, locale string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status: %s", resp.Status)
+		return fmt.Errorf("failed to download locale file: unexpected status %s", resp.Status)
 	}
 	f, err := os.Create(path)
 	if err != nil {

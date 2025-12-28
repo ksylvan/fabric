@@ -343,7 +343,7 @@ func (c *Client) FetchAllMergedPRsGraphQL(since time.Time) ([]*PR, error) {
 		var query PullRequestsQuery
 		err := c.graphqlClient.Query(ctx, &query, variables)
 		if err != nil {
-			return allPRs, fmt.Errorf("GraphQL query failed: %w", err)
+			return allPRs, fmt.Errorf("graphQL query failed: %w", err)
 		}
 
 		prs := query.Repository.PullRequests.Nodes

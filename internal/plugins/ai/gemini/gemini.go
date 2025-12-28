@@ -93,7 +93,7 @@ func (o *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, o
 	// Check if this is a TTS model request
 	if o.isTTSModel(opts.Model) {
 		if !opts.AudioOutput {
-			err = fmt.Errorf("TTS model '%s' requires audio output. Please specify an audio output file with -o flag ending in .wav", opts.Model)
+			err = fmt.Errorf("tTS model '%s' requires audio output: please specify an audio output file with -o flag ending in .wav", opts.Model)
 			return
 		}
 
@@ -343,7 +343,7 @@ func (o *Client) performTTSGeneration(ctx context.Context, client *genai.Client,
 	// Generate TTS content
 	response, err := client.Models.GenerateContent(ctx, o.buildModelNameFull(opts.Model), contents, config)
 	if err != nil {
-		return "", fmt.Errorf("TTS generation failed: %w", err)
+		return "", fmt.Errorf("tTS generation failed: %w", err)
 	}
 
 	// Extract and process audio data
@@ -384,10 +384,10 @@ func (o *Client) performTTSGeneration(ctx context.Context, client *genai.Client,
 func (o *Client) generateWAVFile(pcmData []byte) ([]byte, error) {
 	// Validate input size to prevent potential security issues
 	if len(pcmData) == 0 {
-		return nil, fmt.Errorf("empty PCM data provided")
+		return nil, fmt.Errorf("empty pcm data provided")
 	}
 	if len(pcmData) > MaxAudioDataSize {
-		return nil, fmt.Errorf("PCM data too large: %d bytes, maximum allowed: %d", len(pcmData), MaxAudioDataSize)
+		return nil, fmt.Errorf("pcm data too large: %d bytes, maximum allowed: %d", len(pcmData), MaxAudioDataSize)
 	}
 
 	// WAV file parameters (Gemini TTS default specs)
