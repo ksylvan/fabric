@@ -1,7 +1,6 @@
 <script lang="ts">
   import ChatInput from "./ChatInput.svelte";
   import ChatMessages from "./ChatMessages.svelte";
-  import ModelConfig from "./ModelConfig.svelte";
   import DropdownGroup from "./DropdownGroup.svelte";
   import NoteDrawer from "$lib/components/ui/noteDrawer/NoteDrawer.svelte";
   import { Button } from "$lib/components/ui/button";

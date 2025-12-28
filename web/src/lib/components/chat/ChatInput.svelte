@@ -5,7 +5,7 @@
   import { systemPrompt, selectedPatternName } from '$lib/store/pattern-store';
   import { getToastStore } from '@skeletonlabs/skeleton';
   import { FileButton } from '@skeletonlabs/skeleton';
-  import { Paperclip, Send, FileCheck } from 'lucide-svelte';
+  import { Paperclip, Send } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { getTranscript } from '$lib/services/transcriptService';

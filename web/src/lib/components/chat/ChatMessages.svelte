@@ -1,7 +1,6 @@
 <script lang="ts">
   import { chatState, errorStore, streamingStore } from '$lib/store/chat-store';
   import { afterUpdate, onMount } from 'svelte';
-  import { toastStore } from '$lib/store/toast-store';
   import { marked } from 'marked';
   import SessionManager from './SessionManager.svelte';
   import { fade, slide } from 'svelte/transition';
