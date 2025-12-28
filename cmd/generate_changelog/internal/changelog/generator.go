@@ -15,6 +15,10 @@ import (
 	"github.com/danielmiessler/fabric/cmd/generate_changelog/internal/github"
 )
 
+const (
+	prCacheSyncInterval = 24 * time.Hour // Interval for syncing PR data from GitHub
+)
+
 type Generator struct {
 	cfg       *config.Config
 	gitWalker *git.Walker
@@ -229,7 +233,7 @@ func (g *Generator) fetchPRs(forcePRSync bool) error {
 	}
 	// If we have never synced or it's been more than 24 hours, do a full sync
 	// Also sync if we have versions with PR numbers that aren't cached
-	needsSync := lastSync.IsZero() || time.Since(lastSync) > 24*time.Hour || forcePRSync || missingPRs
+	needsSync := lastSync.IsZero() || time.Since(lastSync) > prCacheSyncInterval || forcePRSync || missingPRs
 
 	if !needsSync {
 		fmt.Fprintf(os.Stderr, "Using cached PR data (last sync: %s)\n", lastSync.Format("2006-01-02 15:04:05"))

@@ -20,6 +20,10 @@ import (
 	"github.com/openai/openai-go/shared/constant"
 )
 
+const (
+	defaultHTTPTimeout = 10 * time.Second // Default timeout for HTTP requests
+)
+
 func NewClient() (ret *Client) {
 	return NewClientCompatibleWithResponses("OpenAI", "https://api.openai.com/v1", true, nil)
 }
@@ -85,7 +89,7 @@ func (o *Client) configure() (ret error) {
 
 	// Initialize HTTP client for direct API calls (reused across requests)
 	o.httpClient = &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: defaultHTTPTimeout,
 	}
 	return
 }

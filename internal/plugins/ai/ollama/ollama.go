@@ -18,7 +18,10 @@ import (
 	ollamaapi "github.com/ollama/ollama/api"
 )
 
-const defaultBaseUrl = "http://localhost:11434"
+const (
+	defaultBaseUrl     = "http://localhost:11434"
+	defaultHTTPTimeout = 20 * time.Minute // Default HTTP timeout for Ollama requests
+)
 
 func NewClient() (ret *Client) {
 	vendorName := "Ollama"
@@ -75,7 +78,7 @@ func (o *Client) configure() (err error) {
 		return
 	}
 
-	timeout := 20 * time.Minute // Default timeout
+	timeout := defaultHTTPTimeout
 
 	if o.ApiHttpTimeout != nil {
 		parsed, err := time.ParseDuration(o.ApiHttpTimeout.Value)

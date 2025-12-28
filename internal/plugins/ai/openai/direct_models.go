@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/danielmiessler/fabric/internal/i18n"
 	debuglog "github.com/danielmiessler/fabric/internal/log"
@@ -57,7 +56,7 @@ func FetchModelsDirectly(ctx context.Context, baseURL, apiKey, providerName stri
 	client := httpClient
 	if client == nil {
 		client = &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: defaultHTTPTimeout,
 		}
 	}
 	resp, err := client.Do(req)
