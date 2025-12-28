@@ -7,12 +7,9 @@ import (
 )
 
 func TestContexts_GetContext(t *testing.T) {
-	dir := t.TempDir()
-	contexts := &ContextsEntity{
-		StorageEntity: &StorageEntity{Dir: dir},
-	}
+	contexts := setupTestContexts(t)
 	contextName := "testContext"
-	contextPath := filepath.Join(dir, contextName)
+	contextPath := filepath.Join(contexts.Dir, contextName)
 	contextContent := "test content"
 	err := os.WriteFile(contextPath, []byte(contextContent), 0644)
 	if err != nil {

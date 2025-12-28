@@ -6,14 +6,13 @@ import (
 )
 
 func TestDb_Configure(t *testing.T) {
-	dir := t.TempDir()
-	db := NewDb(dir)
+	db := setupTestDB(t)
 	err := db.Configure()
 	if err == nil {
-		t.Fatalf("db is configured, but must not be at empty dir: %v", dir)
+		t.Fatalf("db is configured, but must not be at empty dir: %v", db.Dir)
 	}
 	if db.IsEnvFileExists() {
-		t.Fatalf("db file exists, but must not be at empty dir: %v", dir)
+		t.Fatalf("db file exists, but must not be at empty dir: %v", db.Dir)
 	}
 
 	err = db.SaveEnv("")
@@ -28,8 +27,7 @@ func TestDb_Configure(t *testing.T) {
 }
 
 func TestDb_LoadEnvFile(t *testing.T) {
-	dir := t.TempDir()
-	db := NewDb(dir)
+	db := setupTestDB(t)
 	content := "KEY=VALUE\n"
 	err := os.WriteFile(db.EnvFilePath, []byte(content), 0644)
 	if err != nil {
@@ -42,8 +40,7 @@ func TestDb_LoadEnvFile(t *testing.T) {
 }
 
 func TestDb_SaveEnv(t *testing.T) {
-	dir := t.TempDir()
-	db := NewDb(dir)
+	db := setupTestDB(t)
 	content := "KEY=VALUE\n"
 	err := db.SaveEnv(content)
 	if err != nil {
