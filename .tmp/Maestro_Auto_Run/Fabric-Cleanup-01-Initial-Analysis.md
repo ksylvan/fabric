@@ -2195,9 +2195,160 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
     - Confirmed all tests pass (46 packages, cached)
   - **Other Dependencies Verified:** All other 93 indirect dependencies are correctly marked as indirect - they are transitive dependencies pulled in by our direct dependencies (e.g., AWS SDK internals, Gin dependencies, git libraries)
   - **Result:** ✅ go.mod now accurately reflects dependency usage - 1 package corrected from indirect to direct
-- [ ] Look for dependencies with known vulnerabilities
-- [ ] Review for duplicate functionality across dependencies
-- [ ] Check for deprecated packages
+- [x] Look for dependencies with known vulnerabilities
+  - ✅ **ANALYSIS COMPLETE** - Used official `govulncheck` tool to scan all dependencies
+  - **Overall Grade:** C (Needs Immediate Attention)
+  - **Findings:** 8 vulnerabilities found in 1 dependency (`github.com/ollama/ollama@v0.13.5`)
+  - **Clean Dependencies:** 123 other dependencies have ZERO vulnerabilities
+  - **Vulnerability Breakdown:**
+    - **HIGH Severity:** 3 vulnerabilities
+      - GO-2025-3824: Cross-Domain Token Exposure
+      - GO-2025-3695: Denial of Service (DoS) Attack
+      - GO-2025-3548: DoS via Crafted GZIP
+    - **MEDIUM-HIGH Severity:** 1 vulnerability
+      - GO-2025-3557: Allocation of Resources Without Limits or Throttling
+    - **MEDIUM Severity:** 4 vulnerabilities
+      - GO-2025-3689: Divide by Zero
+      - GO-2025-3688: Improper Input Validation DoS
+      - GO-2025-3687: Memory Exhaustion
+      - GO-2025-3686: Uncontrolled Resource Consumption
+  - **Status:** NO FIXES AVAILABLE (all in latest version v0.13.5)
+  - **Affected Files:**
+    - `internal/plugins/ai/ollama/ollama.go` (lines 18, 90, 99, 144)
+    - `cmd/generate_changelog/internal/git/walker.go` (line 151)
+  - **Risk Assessment:** MEDIUM-HIGH
+    - Ollama is optional plugin (one of 10+ AI provider choices)
+    - Only affects users who explicitly enable Ollama
+    - Alternative providers (Anthropic, OpenAI, Gemini, etc.) are unaffected
+  - **Mitigation Strategy:** MONITOR & DEFEND
+    - Keep dependency (users need local AI option)
+    - Implement defensive measures (request size limits, timeouts, panic recovery)
+    - Document vulnerabilities in README
+    - Monitor for upstream fixes weekly
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Go-Dependency-Vulnerabilities-Analysis.md`
+  - **Recommendations:**
+    1. IMMEDIATE: Document vulnerabilities and warn users
+    2. HIGH: Implement defensive coding measures (request limits, timeouts, circuit breaker)
+    3. HIGH: Add `govulncheck` to CI/CD pipeline
+    4. ONGOING: Monitor https://github.com/ollama/ollama for security releases
+  - **Comparison:**
+    - ✅ Anthropic SDK: 0 vulnerabilities
+    - ✅ OpenAI SDK: 0 vulnerabilities
+    - ✅ Google Gemini SDK: 0 vulnerabilities
+    - ✅ AWS Bedrock SDK: 0 vulnerabilities
+    - ✅ Azure SDK: 0 vulnerabilities
+    - ❌ Ollama SDK: 8 vulnerabilities (all recent 2025 discoveries)
+  - **Decision:** ACCEPT RISK with enhanced security measures and user documentation
+- [x] Review for duplicate functionality across dependencies
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all 33 direct dependencies
+  - **Overall Assessment:** **EXCELLENT** (Grade: A) - No problematic duplications found
+  - **Findings by Category:**
+
+    **1. CLI Frameworks (2 packages) - JUSTIFIED COEXISTENCE:**
+    - `jessevdk/go-flags` - Used in main CLI (`internal/cli/flags.go`, `internal/cli/help.go`)
+    - `spf13/cobra` - Used in utility commands (`cmd/code_analysis`, `cmd/generate_changelog`)
+    - **Verdict:** ✅ **NO DUPLICATION** - Different use cases (main CLI vs utility tools)
+    - **Reason:** go-flags provides simpler struct-based flag parsing for main CLI, cobra provides full command framework for utility tools
+
+    **2. Error Handling (1 package) - MINIMAL USAGE:**
+    - `github.com/pkg/errors` - Used only in `internal/tools/defaults.go:69` (1 call: `errors.Errorf`)
+    - **Modern Alternative:** Go 1.13+ has `fmt.Errorf` with `%w` for error wrapping
+    - **Assessment:** 🟡 **POTENTIAL OPTIMIZATION** - Could replace single `errors.Errorf` call with `fmt.Errorf`
+    - **Impact:** VERY LOW - Single usage, would save 1 dependency
+    - **Priority:** LOW - Not critical, but could simplify
+
+    **3. YAML Parsers (2 libraries) - NO DUPLICATION:**
+    - `gopkg.in/yaml.v3` - Direct dependency (used in our code: 3 files)
+    - `github.com/goccy/go-yaml` - Indirect via Gin (used by Gin's YAML binding)
+    - **Verdict:** ✅ **NO DUPLICATION** - Different contexts (our code vs Gin framework)
+
+    **4. JSON Parsers (3 libraries) - NO DUPLICATION:**
+    - Standard library `encoding/json` - Used throughout codebase
+    - `github.com/json-iterator/go` - Indirect via Gin (high-performance JSON for HTTP)
+    - `github.com/goccy/go-json` - Indirect via Gin (faster JSON codec)
+    - **Verdict:** ✅ **NO DUPLICATION** - Gin optimizes JSON performance; we use stdlib
+
+    **5. WebSocket Libraries (2 packages) - NO DUPLICATION:**
+    - `github.com/gorilla/websocket` - Indirect via `google.golang.org/genai` (Gemini AI streaming)
+    - `github.com/coder/websocket` - Indirect via `hasura/go-graphql-client` (GraphQL subscriptions)
+    - **Verdict:** ✅ **NO DUPLICATION** - Different SDKs have different dependencies
+
+    **6. Google APIs (2 packages) - DIFFERENT PURPOSES:**
+    - `google.golang.org/api` - YouTube Data API (`internal/tools/youtube/youtube.go`)
+    - `google.golang.org/genai` - Gemini AI API (`internal/plugins/ai/gemini/gemini.go`)
+    - **Verdict:** ✅ **NO DUPLICATION** - Completely different Google services
+
+    **7. AI Provider SDKs (7 packages) - INTENTIONAL DIVERSITY:**
+    - All serve different AI providers (Anthropic, OpenAI, Gemini, Ollama, Perplexity, AWS Bedrock, Azure)
+    - **Verdict:** ✅ **NO DUPLICATION** - Core feature of providing multiple AI provider options
+
+  - **Summary Statistics:**
+    - **33 direct dependencies** analyzed
+    - **0 true duplications** found (no redundant functionality)
+    - **1 minor optimization opportunity** (pkg/errors → fmt.Errorf)
+    - **All indirect duplications justified** (framework-specific optimizations)
+
+  - **Recommendations:**
+    1. **OPTIONAL:** Replace `github.com/pkg/errors` with standard library `fmt.Errorf`
+       - Single usage at `internal/tools/defaults.go:69`
+       - Change `errors.Errorf("You need to chose an available default model.")`
+       - To: `fmt.Errorf("you need to choose an available default model")`
+       - Benefit: Remove 1 dependency, use standard library
+       - Risk: NONE - Direct replacement with same functionality
+    2. **NO ACTION:** All other dependencies are justified and non-overlapping
+
+  - **Conclusion:** Dependency management is excellent - no bloat, no unnecessary duplication, each package serves a distinct purpose
+- [x] Check for deprecated packages
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive scan of all dependencies for deprecation notices
+  - **Findings:** 3 deprecated packages identified (2 in dependency tree, 1 already flagged)
+
+  **DEPRECATED PACKAGES:**
+
+  1. **github.com/go-shiori/go-readability** - DIRECT DEPENDENCY ⚠️ HIGH PRIORITY
+     - **Status:** DEPRECATED with official migration path
+     - **Deprecation Notice:** "use codeberg.org/readeck/go-readability/v2 instead."
+     - **Current Version:** v0.0.0-20251205110129-5db1dc9836f0 (pseudo-version, no tags)
+     - **Usage:** `internal/tools/converter/html_readability.go:7` (1 import, 1 function)
+     - **Migration Target:** `codeberg.org/readeck/go-readability/v2` v2.1.0
+     - **API Compatibility:** MOSTLY COMPATIBLE - Same `FromReader()` function signature
+     - **Breaking Changes:**
+       - Returns `Article` interface instead of struct (method names changed slightly)
+       - Old: `article.TextContent` (field)
+       - New: `article.RenderText(w io.Writer)` or text extraction method
+     - **Impact:** LOW - Single file, well-tested (9 test cases + stress test)
+     - **Test Coverage:** ✅ Excellent - `html_readability_test.go` with comprehensive test suite
+     - **Recommendation:** MIGRATE - Update to v2 for continued support and Mozilla Readability.js 0.6 compatibility
+
+  2. **github.com/golang/protobuf** - INDIRECT DEPENDENCY ℹ️ LOW PRIORITY
+     - **Status:** DEPRECATED - officially replaced by google.golang.org/protobuf
+     - **Deprecation Notice:** "Use the \"google.golang.org/protobuf\" module instead."
+     - **Current Version:** v1.5.4 (indirect)
+     - **Usage:** Not directly imported by fabric code
+     - **Dependency Chain:**
+       - `github.com/anthropics/anthropic-sdk-go@v1.19.0` → `github.com/golang/protobuf@v1.5.4`
+       - `github.com/golang/groupcache@v0.0.0-20241129210726` → `github.com/golang/protobuf@v1.5.4`
+       - `github.com/google/s2a-go@v0.1.9` → `github.com/golang/protobuf@v1.5.4`
+       - `github.com/ollama/ollama@v0.13.5` → `github.com/golang/protobuf@v1.5.4`
+     - **Impact:** NONE - Transitive dependency from third-party SDKs
+     - **Recommendation:** NO ACTION - Wait for upstream SDK updates (Anthropic, Ollama, etc.)
+
+  3. **github.com/pkg/errors** - QUASI-DEPRECATED ℹ️ ALREADY FLAGGED
+     - **Status:** Not officially deprecated, but superseded by Go 1.13+ standard library
+     - **Current Version:** v0.9.1
+     - **Usage:** `internal/tools/defaults.go:7` (1 import, 1 call: `errors.Errorf`)
+     - **Modern Alternative:** `fmt.Errorf` with `%w` verb for error wrapping
+     - **Impact:** VERY LOW - Single usage
+     - **Recommendation:** REPLACE - Already identified in earlier analysis (line 2292-2297)
+
+  **SUMMARY:**
+  - **Total Deprecated:** 3 packages (1 direct, 2 indirect)
+  - **Action Required:** 1 package (go-readability)
+  - **No Action:** 2 packages (golang/protobuf is indirect, pkg/errors already flagged)
+
+  **PRIORITY RECOMMENDATIONS:**
+  1. **HIGH:** Migrate `github.com/go-shiori/go-readability` → `codeberg.org/readeck/go-readability/v2`
+  2. **LOW:** Replace `github.com/pkg/errors` → `fmt.Errorf` (already planned)
+  3. **INFO:** Monitor upstream for `golang/protobuf` removal (no action needed)
 
 ### 9.2 Version Constraints
 
