@@ -49,7 +49,7 @@ func (h *PatternsHandler) Get(c *gin.Context) {
 	// Get the raw pattern content without any variable processing
 	content, err := h.patterns.Load(name + "/" + h.patterns.SystemPatternFile)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		respondWithInternalError(c, err)
 		return
 	}
 
@@ -86,7 +86,7 @@ func (h *PatternsHandler) ApplyPattern(c *gin.Context) {
 
 	var request PatternApplyRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondWithBadRequest(c, err)
 		return
 	}
 
@@ -101,7 +101,7 @@ func (h *PatternsHandler) ApplyPattern(c *gin.Context) {
 
 	pattern, err := h.patterns.GetApplyVariables(name, variables, request.Input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		respondWithInternalError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, pattern)

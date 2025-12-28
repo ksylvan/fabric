@@ -67,12 +67,9 @@ type Client struct {
 
 func (o *Client) ListModels() (ret []string, err error) {
 	ctx := context.Background()
-	var client *genai.Client
-	if client, err = genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:  o.ApiKey.Value,
-		Backend: genai.BackendGeminiAPI,
-	}); err != nil {
-		return
+	client, err := o.createGenaiClient(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	// List available models using the correct API
@@ -102,12 +99,9 @@ func (o *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, o
 	}
 
 	// Regular text generation
-	var client *genai.Client
-	if client, err = genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:  o.ApiKey.Value,
-		Backend: genai.BackendGeminiAPI,
-	}); err != nil {
-		return
+	client, err := o.createGenaiClient(ctx)
+	if err != nil {
+		return "", err
 	}
 
 	// Convert messages to new SDK format
@@ -133,12 +127,9 @@ func (o *Client) SendStream(msgs []*chat.ChatCompletionMessage, opts *domain.Cha
 	ctx := context.Background()
 	defer close(channel)
 
-	var client *genai.Client
-	if client, err = genai.NewClient(ctx, &genai.ClientConfig{
-		APIKey:  o.ApiKey.Value,
-		Backend: genai.BackendGeminiAPI,
-	}); err != nil {
-		return
+	client, err := o.createGenaiClient(ctx)
+	if err != nil {
+		return err
 	}
 
 	// Convert messages to new SDK format
