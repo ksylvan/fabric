@@ -27,6 +27,10 @@ const (
 	// pkceVerifierSize is the size in bytes for PKCE code verifier generation.
 	// RFC 7636 recommends a minimum of 32 bytes of entropy for security.
 	pkceVerifierSize = 32
+
+	// HTTP header names
+	headerAnthropicBeta = "anthropic-beta"
+	headerAPIKey        = "x-api-key"
 )
 
 // OAuthTransport is a custom HTTP transport that adds OAuth Bearer token and beta header
@@ -50,18 +54,18 @@ func (t *OAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	newReq.Header.Set("Authorization", "Bearer "+token)
 
 	// Add the anthropic-beta header for OAuth, preserving existing betas
-	existing := newReq.Header.Get("anthropic-beta")
+	existing := newReq.Header.Get(headerAnthropicBeta)
 	beta := "oauth-2025-04-20"
 	if existing != "" {
 		beta = existing + "," + beta
 	}
-	newReq.Header.Set("anthropic-beta", beta)
+	newReq.Header.Set(headerAnthropicBeta, beta)
 
 	// Set User-Agent to match AI SDK exactly
 	newReq.Header.Set("User-Agent", "ai-sdk/anthropic")
 
 	// Remove x-api-key header if present (OAuth doesn't use it)
-	newReq.Header.Del("x-api-key")
+	newReq.Header.Del(headerAPIKey)
 
 	return t.base.RoundTrip(newReq)
 }

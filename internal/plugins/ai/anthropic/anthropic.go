@@ -199,7 +199,7 @@ func (an *Client) SendStream(
 	betas := an.modelBetas[opts.Model]
 	var reqOpts []option.RequestOption
 	if len(betas) > 0 {
-		reqOpts = append(reqOpts, option.WithHeader("anthropic-beta", strings.Join(betas, ",")))
+		reqOpts = append(reqOpts, option.WithHeader(headerAnthropicBeta, strings.Join(betas, ",")))
 	}
 	stream := an.client.Messages.NewStreaming(ctx, params, reqOpts...)
 	if stream.Err() != nil && len(betas) > 0 {
@@ -293,7 +293,7 @@ func (an *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, 
 	betas := an.modelBetas[opts.Model]
 	var reqOpts []option.RequestOption
 	if len(betas) > 0 {
-		reqOpts = append(reqOpts, option.WithHeader("anthropic-beta", strings.Join(betas, ",")))
+		reqOpts = append(reqOpts, option.WithHeader(headerAnthropicBeta, strings.Join(betas, ",")))
 	}
 	if message, err = an.client.Messages.New(ctx, params, reqOpts...); err != nil {
 		if len(betas) > 0 {
