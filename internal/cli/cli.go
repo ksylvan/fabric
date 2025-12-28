@@ -86,7 +86,7 @@ func Cli(version string) (err error) {
 		if transcriptionMessage, err = handleTranscription(currentFlags, registry); err != nil {
 			return
 		}
-		currentFlags.Message = AppendMessage(currentFlags.Message, transcriptionMessage)
+		currentFlags.Message = JoinMessagesWithNewline(currentFlags.Message, transcriptionMessage)
 	}
 
 	// Process HTML readability if needed
@@ -136,7 +136,7 @@ func processYoutubeVideo(
 				return
 			}
 		}
-		message = AppendMessage(message, transcript)
+		message = JoinMessagesWithNewline(message, transcript)
 	}
 
 	if flags.YouTubeComments {
@@ -147,7 +147,7 @@ func processYoutubeVideo(
 
 		commentsString := strings.Join(comments, "\n")
 
-		message = AppendMessage(message, commentsString)
+		message = JoinMessagesWithNewline(message, commentsString)
 	}
 
 	if flags.YouTubeMetadata {
@@ -156,7 +156,7 @@ func processYoutubeVideo(
 			return
 		}
 		metadataJson, _ := json.MarshalIndent(metadata, "", "  ")
-		message = AppendMessage(message, string(metadataJson))
+		message = JoinMessagesWithNewline(message, string(metadataJson))
 	}
 
 	return

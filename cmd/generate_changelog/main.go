@@ -56,7 +56,7 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("--release cannot be used with other processing flags")
 	}
 
-	cfg.GitHubToken = util.GetTokenFromEnv(cfg.GitHubToken)
+	cfg.GitHubToken = util.ResolveGitHubToken(cfg.GitHubToken)
 
 	generator, err := changelog.New(cfg)
 	if err != nil {

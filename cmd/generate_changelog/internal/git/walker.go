@@ -521,7 +521,7 @@ func (w *Walker) PushToRemote() error {
 	pushOptions := &git.PushOptions{}
 
 	// Check if we have a GitHub token for authentication
-	if githubToken := util.GetTokenFromEnv(""); githubToken != "" {
+	if githubToken := util.ResolveGitHubToken(""); githubToken != "" {
 		// Get remote URL to check if it's a GitHub repository
 		remotes, err := w.repo.Remotes()
 		if err == nil && len(remotes) > 0 {

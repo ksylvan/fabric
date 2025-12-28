@@ -89,7 +89,7 @@ func NewPluginRegistry(db *fsdb.Db) (ret *PluginRegistry, err error) {
 	}
 	ret.TemplateExtensions = template.NewExtensionManager(filepath.Join(homedir, ".config/fabric"))
 
-	ret.Defaults = tools.NeeDefaults(ret.GetModels)
+	ret.Defaults = tools.NewDefaults(ret.GetModels)
 
 	// Create a vendors slice to hold all vendors (order doesn't matter initially)
 	vendors := []ai.Vendor{}

@@ -217,7 +217,7 @@ func Init() (ret *Flags, err error) {
 
 	// Append positional arguments to the message (custom message)
 	if len(args) > 0 {
-		ret.Message = AppendMessage(ret.Message, args[len(args)-1])
+		ret.Message = JoinMessagesWithNewline(ret.Message, args[len(args)-1])
 	}
 
 	if pipedToStdin {
@@ -225,7 +225,7 @@ func Init() (ret *Flags, err error) {
 		if pipedMessage, err = readStdin(); err != nil {
 			return
 		}
-		ret.Message = AppendMessage(ret.Message, pipedMessage)
+		ret.Message = JoinMessagesWithNewline(ret.Message, pipedMessage)
 	}
 	return
 }
@@ -537,7 +537,7 @@ func (o *Flags) BuildChatRequest(Meta string) (ret *domain.ChatRequest, err erro
 }
 
 func (o *Flags) AppendMessage(message string) {
-	o.Message = AppendMessage(o.Message, message)
+	o.Message = JoinMessagesWithNewline(o.Message, message)
 }
 
 func (o *Flags) IsChatRequest() (ret bool) {
@@ -553,7 +553,7 @@ func (o *Flags) WriteOutput(message string) (err error) {
 	return
 }
 
-func AppendMessage(message string, newMessage string) (ret string) {
+func JoinMessagesWithNewline(message string, newMessage string) (ret string) {
 	if message != "" {
 		ret = message + "\n" + newMessage
 	} else {
