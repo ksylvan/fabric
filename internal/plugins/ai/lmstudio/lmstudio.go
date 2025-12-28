@@ -16,9 +16,14 @@ import (
 	"github.com/danielmiessler/fabric/internal/plugins"
 )
 
+const (
+	// defaultBaseURL is the default base URL for LM Studio API
+	defaultBaseURL = "http://localhost:1234/v1"
+)
+
 // NewClient creates a new LM Studio client with default configuration.
 func NewClient() (ret *Client) {
-	return NewClientCompatible("LM Studio", "http://localhost:1234/v1", nil)
+	return NewClientCompatible("LM Studio", defaultBaseURL, nil)
 }
 
 // NewClientCompatible creates a new LM Studio client with custom configuration.

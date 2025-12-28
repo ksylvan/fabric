@@ -14,6 +14,11 @@ import (
 	_ "github.com/danielmiessler/fabric/docs" // swagger docs
 )
 
+const (
+	// swaggerHost is the default host for Swagger documentation
+	swaggerHost = "localhost:8080"
+)
+
 // @title Fabric REST API
 // @version 1.0
 // @description REST API for Fabric AI augmentation framework. Provides endpoints for chat completions, pattern management, contexts, sessions, and more.

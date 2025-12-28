@@ -22,6 +22,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	// defaultRESTAPIPort is the default port for the Fabric REST API server
+	defaultRESTAPIPort = ":8080"
+)
+
 // Flags create flags struct. the users flags go into this, this will be passed to the chat struct in cli
 // Chat parameter defaults set in the struct tags must match domain.Default* constants
 
