@@ -2,14 +2,15 @@
 title: Welcome to Your Blog
 description: First post of your new SvelteKit blog
 date: 2024-01-17
-tags: 
+tags:
   - welcome
   - blog
 updated: 2024-01-17
 author: Your Name Here
-aliases: 
+aliases:
   - Welcome!
 ---
+
 <script>
   import { Button } from '$lib/components/ui/button';
   import NoteDrawer from '$lib/components/ui/noteDrawer/NoteDrawer.svelte';
@@ -32,6 +33,7 @@ aliases:
 This is the first post of your new blog, powered by [SvelteKit](/posts/getting-started), [Obsidian](/obsidian), and [Fabric](/about). We are excited to share this project with you and we hope you find it useful for your own writing and experiences.
 
 **Get started:**
+
 <div class="flex text-inherit justify-start mt-2">
     <Button
         variant="primary"
@@ -51,7 +53,4 @@ This part of the application is edited in <a href="http://localhost:5173/posts/o
 - How to use Fabric and Obsidian to write and publish
 - More ways to use Obsidian and Fabric together!
 
-Stay tuned for more content! 
-
-
- 
+Stay tuned for more content!

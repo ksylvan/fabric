@@ -7,14 +7,17 @@ If fabric is not installed, ensure Go is installed https://go.dev/doc/install an
 There are many ways to install fabric. Here's one approach that usually works well:
 
 ## Step 1: clone the repo
+
 In terminal, from the parent directory where you want to install fabric:
 git clone https://github.com/danielmiessler/fabric.git
 
 ## Step 2 : Install Fabric
+
 cd fabric
 go install github.com/danielmiessler/fabric@latest
 
 ## Step 3: Install GUI
+
 Navigate to the web directory and install dependencies:
 
 cd web
@@ -24,8 +27,10 @@ npm install
 npx svelte-kit sync
 
 ## Step 4: Install PDF-to-Markdown
+
 Install the PDF conversion components in the correct order:
 cd web
+
 # Install dependencies in this specific order
 
 npm install -D patch-package
@@ -34,20 +39,22 @@ npm install -D pdfjs-dist@2.5.207
 
 npm install -D github:jzillmann/pdf-to-markdown#modularize
 
-
 No build step is required after installation.
 
 ## Step 5: Update Shell Configuration if not already done from your fabric installation
+
 For Mac/Linux users:
 
 Add environment variables to your ~/.bashrc (Linux) or ~/.zshrc (Mac) file:
 
 # For Intel-based Macs or Linux
+
 export GOROOT=/usr/local/go
 export GOPATH=$HOME/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
 
 # For Apple Silicon Macs
+
 export GOROOT=$(brew --prefix go)/libexec
 export GOPATH=$HOME/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$HOME/.local/bin:$PATH
@@ -128,11 +135,11 @@ npm run dev
 If you get an ** ERROR **.
 It would be much appreciated that you copy /paste your error in your favorite LLM before opening a ticket, 90% of the time your llm will point you to the solution.
 
-Also if you modify patterns, descriptions or tags in  Pattern_Descriptions/pattern_descriptions.json, make sure to copy the file over in  web/static/data/pattern_descriptions.json  
+Also if you modify patterns, descriptions or tags in  Pattern_Descriptions/pattern_descriptions.json, make sure to copy the file over in  web/static/data/pattern_descriptions.json
 
 _____   ______   ______
 
-OPTIONAL: Create Start/Stop Scripts 
+OPTIONAL: Create Start/Stop Scripts
 You can create scripts to start/stop both servers at once.
 
 ### For Mac Users
@@ -153,7 +160,7 @@ When creating scripts on Windows:
 
 ACTUAL SCRIPTS (Mac example)
 
-Start Script 
+Start Script
 1. Create a new file named start-fabric.command on your Desktop:
 
 #!/bin/bash
@@ -213,3 +220,4 @@ Note: You might need to allow the scripts to execute in your security settings b
 
 ## 🎥 Demo Video
 https://youtu.be/XMzjgqvdltM
+```

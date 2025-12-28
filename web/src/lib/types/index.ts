@@ -1,4 +1,4 @@
 export interface Pattern {
-  patternName: string;
-  description: string;
+	patternName: string;
+	description: string;
 }

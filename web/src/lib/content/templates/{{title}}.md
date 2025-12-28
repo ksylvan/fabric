@@ -1,7 +1,8 @@
 ---
 title: Your Title Here
-date: 
+date:
 description: Post description
 updated:
 ---
+
 {{Content}}

@@ -5,9 +5,9 @@ const storedLanguage = browser ? localStorage.getItem('selectedLanguage') || 'en
 const languageStore = writable<string>(storedLanguage);
 
 if (browser) {
-    languageStore.subscribe(value => {
-        localStorage.setItem('selectedLanguage', value);
-    });
+	languageStore.subscribe((value) => {
+		localStorage.setItem('selectedLanguage', value);
+	});
 }
 
 export { languageStore };

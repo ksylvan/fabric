@@ -3,7 +3,7 @@
 A user-friendly web interface for [Fabric](https://github.com/danielmiessler/Fabric) built with [Svelte](https://svelte.dev/), [Skeleton UI](https://www.skeleton.dev/), and [Mdsvex](https://mdsvex.pngwn.io/).
 
 ![Fabric Web App Preview](../docs/images/svelte-preview.png)
-*Alt: Screenshot of the Fabric web app dashboard showing pattern inputs and outputs.*
+_Alt: Screenshot of the Fabric web app dashboard showing pattern inputs and outputs._
 
 ## Table of Contents
 

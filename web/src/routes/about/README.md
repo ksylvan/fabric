@@ -377,21 +377,21 @@ Now let's look at some things you can do with Fabric.
 
 1. Run the `summarize` Pattern based on input from `stdin`. In this case, the body of an article.
 
-    ```bash
-    pbpaste | fabric --pattern summarize
-    ```
+   ```bash
+   pbpaste | fabric --pattern summarize
+   ```
 
 2. Run the `analyze_claims` Pattern with the `--stream` option to get immediate and streaming results.
 
-    ```bash
-    pbpaste | fabric --stream --pattern analyze_claims
-    ```
+   ```bash
+   pbpaste | fabric --stream --pattern analyze_claims
+   ```
 
 3. Run the `extract_wisdom` Pattern with the `--stream` option to get immediate and streaming results from any Youtube video (much like in the original introduction video).
 
-    ```bash
-    fabric -y "https://youtube.com/watch?v=uXs-zPc63kM" --stream --pattern extract_wisdom
-    ```
+   ```bash
+   fabric -y "https://youtube.com/watch?v=uXs-zPc63kM" --stream --pattern extract_wisdom
+   ```
 
 4. Create patterns- you must create a .md file with the pattern and save it to ~/.config/fabric/patterns/[yourpatternname].
 
@@ -482,7 +482,7 @@ alias pbpaste='xclip -selection clipboard -o'
 Fabric now includes a built-in web interface that provides a GUI alternative to the command-line interface and an out-of-the-box website for those who want to get started with web development or blogging.
 You can use this app as a GUI interface for Fabric, a ready to go blog-site, or a website template for your own projects.
 
-The `web/src/lib/content` directory includes starter `.obsidian/` and `templates/` directories,  allowing you to open up the `web/src/lib/content/` directory as an [Obsidian.md](https://obsidian.md) vault. You can place your posts in the posts directory when you're ready to publish.
+The `web/src/lib/content` directory includes starter `.obsidian/` and `templates/` directories, allowing you to open up the `web/src/lib/content/` directory as an [Obsidian.md](https://obsidian.md) vault. You can place your posts in the posts directory when you're ready to publish.
 
 ### Installing
 

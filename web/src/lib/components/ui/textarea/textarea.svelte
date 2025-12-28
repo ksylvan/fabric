@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { cn } from "$lib/utils/utils";
-  let className: string | undefined = undefined;
-  export let value: string | undefined = undefined;
-  export { className as class };
-  export let readonly: boolean | undefined = undefined;
+	import { cn } from '$lib/utils/utils';
+	let className: string | undefined = undefined;
+	export let value: string | undefined = undefined;
+	export { className as class };
+	export let readonly: boolean | undefined = undefined;
 </script>
 
 <textarea
 	class={cn(
-		"border-input placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[60px] w-full rounded-lg border bg-transparent px-3 py-2 text-sm shadow-lg focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50",
+		'border-input placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[60px] w-full rounded-lg border bg-transparent px-3 py-2 text-sm shadow-lg focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50',
 		className
 	)}
 	bind:value

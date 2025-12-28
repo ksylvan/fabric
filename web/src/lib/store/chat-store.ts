@@ -1,23 +1,19 @@
-import { derived, get, writable } from "svelte/store";
-import { browser } from "$app/environment";
-import type {
-	ChatState,
-	Message,
-	StreamResponse,
-} from "$lib/interfaces/chat-interface";
-import { ChatError, ChatService } from "$lib/services/ChatService";
-import { languageStore } from "$lib/store/language-store";
-import { selectedPatternName } from "$lib/store/pattern-store";
+import { derived, get, writable } from 'svelte/store';
+import { browser } from '$app/environment';
+import type { ChatState, Message, StreamResponse } from '$lib/interfaces/chat-interface';
+import { ChatError, ChatService } from '$lib/services/ChatService';
+import { languageStore } from '$lib/store/language-store';
+import { selectedPatternName } from '$lib/store/pattern-store';
 
 // Initialize chat service
 const chatService = new ChatService();
 
 // Local storage key for persisting messages
-const MESSAGES_STORAGE_KEY = "chat_messages";
+const MESSAGES_STORAGE_KEY = 'chat_messages';
 
 // Load initial messages from local storage (only in browser)
 const initialMessages = browser
-	? JSON.parse(localStorage.getItem(MESSAGES_STORAGE_KEY) || "[]")
+	? JSON.parse(localStorage.getItem(MESSAGES_STORAGE_KEY) || '[]')
 	: [];
 
 // Separate stores for different concerns
@@ -34,13 +30,10 @@ if (browser) {
 }
 
 // Derived store for chat state
-export const chatState = derived(
-	[messageStore, streamingStore],
-	([$messages, $streaming]) => ({
-		messages: $messages,
-		isStreaming: $streaming,
-	}),
-);
+export const chatState = derived([messageStore, streamingStore], ([$messages, $streaming]) => ({
+	messages: $messages,
+	isStreaming: $streaming
+}));
 
 // Error handling utility
 function handleError(error: Error | string) {
@@ -66,7 +59,7 @@ export const setSession = (sessionName: string | null) => {
 export const clearMessages = () => {
 	messageStore.set([]);
 	errorStore.set(null);
-	if (typeof localStorage !== "undefined") {
+	if (typeof localStorage !== 'undefined') {
 		localStorage.removeItem(MESSAGES_STORAGE_KEY);
 	}
 };
@@ -78,15 +71,12 @@ export const revertLastMessage = () => {
 export async function sendMessage(
 	content: string,
 	systemPromptText?: string,
-	isSystem: boolean = false,
+	isSystem: boolean = false
 ) {
 	try {
 		const $streaming = get(streamingStore);
 		if ($streaming) {
-			throw new ChatError(
-				"Message submission blocked - already streaming",
-				"STREAMING_BLOCKED",
-			);
+			throw new ChatError('Message submission blocked - already streaming', 'STREAMING_BLOCKED');
 		}
 
 		streamingStore.set(true);
@@ -96,9 +86,9 @@ export async function sendMessage(
 		messageStore.update((messages) => [
 			...messages,
 			{
-				role: isSystem ? "system" : "user",
-				content,
-			},
+				role: isSystem ? 'system' : 'user',
+				content
+			}
 		]);
 
 		if (!isSystem) {
@@ -111,14 +101,14 @@ export async function sendMessage(
 						const newMessages = [...messages];
 						const lastMessage = newMessages[newMessages.length - 1];
 
-						if (lastMessage?.role === "assistant") {
+						if (lastMessage?.role === 'assistant') {
 							lastMessage.content = content;
 							lastMessage.format = response?.format;
 						} else {
 							newMessages.push({
-								role: "assistant",
+								role: 'assistant',
 								content,
-								format: response?.format,
+								format: response?.format
 							});
 						}
 
@@ -127,7 +117,7 @@ export async function sendMessage(
 				},
 				(error) => {
 					handleError(error);
-				},
+				}
 			);
 		}
 
