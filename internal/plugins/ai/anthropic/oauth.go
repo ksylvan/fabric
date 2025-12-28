@@ -24,6 +24,9 @@ const (
 	oauthAuthURL     = "https://claude.ai/oauth/authorize"
 	oauthTokenURL    = "https://console.anthropic.com/v1/oauth/token"
 	oauthRedirectURL = "https://console.anthropic.com/oauth/code/callback"
+	// pkceVerifierSize is the size in bytes for PKCE code verifier generation.
+	// RFC 7636 recommends a minimum of 32 bytes of entropy for security.
+	pkceVerifierSize = 32
 )
 
 // OAuthTransport is a custom HTTP transport that adds OAuth Bearer token and beta header
@@ -114,7 +117,7 @@ func NewOAuthTransport(client *Client, base http.RoundTripper) *OAuthTransport {
 
 // generatePKCE generates PKCE code verifier and challenge
 func generatePKCE() (verifier, challenge string, err error) {
-	b := make([]byte, 32)
+	b := make([]byte, pkceVerifierSize)
 	if _, err = rand.Read(b); err != nil {
 		return
 	}
