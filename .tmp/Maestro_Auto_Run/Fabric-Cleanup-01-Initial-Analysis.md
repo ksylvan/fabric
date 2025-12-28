@@ -2544,7 +2544,31 @@ This Auto-Run document guides a comprehensive code maintenance and cleanup analy
     - Build time: No change (same builds)
     - Maintainability: Improved (single source of truth)
     - Risk: None (identical functionality)
-- [ ] Check Nix flake for unused dependencies
+- [x] Check Nix flake for unused dependencies
+  - ✅ **ANALYSIS COMPLETE** - Comprehensive review of all Nix dependencies
+  - **Overall Grade:** A- (Excellent with minor cleanup opportunity)
+  - **Findings:**
+    - **Flake Inputs (4 total):** 100% required, ZERO unused inputs ✅
+      - nixpkgs: Core package set (REQUIRED)
+      - systems: Multi-platform support (REQUIRED)
+      - treefmt-nix: Formatting framework (REQUIRED)
+      - gomod2nix: Go build tooling (REQUIRED)
+    - **Dev Shell Packages (7 total):** 2 unused packages identified ⚠️
+      - `pkgs.go-tools` - NOT used anywhere (staticcheck, structlayout, etc.) ❌ REMOVE
+      - `pkgs.goimports-reviser` - NOT used, standard goimports preferred ❌ REMOVE
+      - `goVersion`, `gopls`, `gotools`, `gomod2nix`, `goEnv`, `update-mod` - All required ✅
+    - **Treefmt Formatters (5 total):** 100% required ✅
+      - deadnix, statix, nixfmt (Nix formatters) - All used
+      - goimports, gofmt (Go formatters) - Both required with custom wrappers
+    - **Package Build Dependencies (5 total):** 100% required ✅
+      - buildGoApplication, go, installShellFiles, yt-dlp, makeWrapper - All necessary
+  - **Recommendations:**
+    - HIGH PRIORITY: Remove `pkgs.go-tools` and `pkgs.goimports-reviser` from dev shell
+    - Benefits: ~70-130MB dev shell size reduction, faster `nix develop`, cleaner deps
+    - Risk: ZERO - Neither package referenced anywhere in project
+  - **Verification:** Tested grep searches, CI/CD workflows, documentation - no usage found
+  - **Detailed Report:** `/Users/kayvan/src/fabric/.tmp/Maestro_Auto_Run/Working/Nix-Flake-Dependency-Analysis.md`
+  - **Grade After Cleanup:** A (Perfect - all dependencies necessary and used)
 - [ ] Look for build flags that could improve performance
 
 ## Validation and Safety Checks
