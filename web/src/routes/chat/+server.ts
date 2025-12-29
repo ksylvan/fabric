@@ -32,14 +32,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		// Handle pattern execution request
-		// Removed redundant language instruction logic; Go backend handles this
-		// if (body.prompts?.[0] && body.language && body.language !== 'en') {
-		//   const languageInstruction = `. Please use the language '${body.language}' for the output.`;
-		//   if (!body.prompts[0].userInput?.includes(languageInstruction)) {
-		//     body.prompts[0].userInput = (body.prompts[0].userInput || '') + languageInstruction;
-		//   }
-		// }
-
 		const fabricResponse = await fetch('http://localhost:8080/api/chat', {
 			method: 'POST',
 			headers: {

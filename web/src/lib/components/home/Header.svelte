@@ -32,7 +32,6 @@
 		{ href: '/posts', label: 'Posts' },
 		// { href: '/tags', label: 'Tags' },
 		{ href: '/chat', label: 'Chat' },
-		//{ href: '/obsidian', label: 'Obsidian' },
 		{ href: '/contact', label: 'Contact' },
 		{ href: '/about', label: 'About' }
 	];

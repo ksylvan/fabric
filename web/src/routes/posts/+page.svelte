@@ -1,5 +1,4 @@
 <script lang="ts">
-	//import Search from './Search.svelte';
 	import type { PageData } from './$types';
 	import Card from '$lib/components/ui/cards/card.svelte';
 	import { Youtube } from 'svelte-youtube-lite';

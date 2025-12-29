@@ -202,7 +202,7 @@ func (o *PatternsLoader) movePatterns() (err error) {
 		return
 	}
 
-	//create an empty file to indicate that the patterns have been updated if not exists
+	// Create an empty file to indicate that the patterns have been updated if not exists
 	if _, err = os.Create(o.loadedFilePath); err != nil {
 		return fmt.Errorf(i18n.T("patterns_failed_loaded_marker"), o.loadedFilePath, err)
 	}

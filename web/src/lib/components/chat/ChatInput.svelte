@@ -10,7 +10,6 @@
 	import { get } from 'svelte/store';
 	import { getTranscript } from '$lib/services/transcriptService';
 	import { ChatService } from '$lib/services/ChatService';
-	// import { obsidianSettings } from '$lib/store/obsidian-store';
 	import { languageStore } from '$lib/store/language-store';
 	import { obsidianSettings, updateObsidianSettings } from '$lib/store/obsidian-store';
 	import { PdfConversionService } from '$lib/services/PdfConversionService';
