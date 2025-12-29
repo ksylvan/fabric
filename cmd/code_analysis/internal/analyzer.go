@@ -8,10 +8,12 @@ import (
 	"strings"
 )
 
+// Analyzer provides code analysis functionality for a target directory.
 type Analyzer struct {
 	targetDir string
 }
 
+// FileStats contains statistics and metadata for a single source file.
 type FileStats struct {
 	FilePath  string
 	Extension string
@@ -19,6 +21,7 @@ type FileStats struct {
 	IsLarge   bool
 }
 
+// AnalysisResult contains the aggregated results of code analysis.
 type AnalysisResult struct {
 	TotalFiles int
 	TotalLOC   int
@@ -28,15 +31,18 @@ type AnalysisResult struct {
 }
 
 const (
+	// LargeFileThreshold defines the line count above which a file is considered large.
 	LargeFileThreshold = 500
 )
 
+// NewAnalyzer creates a new Analyzer for the specified target directory.
 func NewAnalyzer(targetDir string) *Analyzer {
 	return &Analyzer{
 		targetDir: targetDir,
 	}
 }
 
+// Analyze performs code analysis on the target directory and returns a markdown report.
 func (a *Analyzer) Analyze() (string, error) {
 	result, err := a.collectMetrics()
 	if err != nil {
