@@ -48,7 +48,7 @@ func NewYouTubeHandler(r *gin.Engine, registry *core.PluginRegistry) *YouTubeHan
 func (h *YouTubeHandler) Transcript(c *gin.Context) {
 	var req YouTubeRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		respondWithBadRequest(c, err)
 		return
 	}
 	if req.URL == "" {
@@ -63,7 +63,7 @@ func (h *YouTubeHandler) Transcript(c *gin.Context) {
 	var videoID, playlistID string
 	var err error
 	if videoID, playlistID, err = h.yt.GetVideoOrPlaylistId(req.URL); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		respondWithBadRequest(c, err)
 		return
 	}
 	if videoID == "" && playlistID != "" {
@@ -92,7 +92,7 @@ func (h *YouTubeHandler) Transcript(c *gin.Context) {
 		transcript, err = h.yt.GrabTranscript(videoID, language)
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondWithInternalError(c, err)
 		return
 	}
 

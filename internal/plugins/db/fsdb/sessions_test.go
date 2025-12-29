@@ -7,10 +7,7 @@ import (
 )
 
 func TestSessions_GetOrCreateSession(t *testing.T) {
-	dir := t.TempDir()
-	sessions := &SessionsEntity{
-		StorageEntity: &StorageEntity{Dir: dir, FileExtension: ".json"},
-	}
+	sessions := setupTestSessions(t)
 	sessionName := "testSession"
 	session, err := sessions.Get(sessionName)
 	if err != nil {
@@ -22,10 +19,7 @@ func TestSessions_GetOrCreateSession(t *testing.T) {
 }
 
 func TestSessions_SaveSession(t *testing.T) {
-	dir := t.TempDir()
-	sessions := &SessionsEntity{
-		StorageEntity: &StorageEntity{Dir: dir, FileExtension: ".json"},
-	}
+	sessions := setupTestSessions(t)
 	sessionName := "testSession"
 	session := &Session{Name: sessionName, Messages: []*chat.ChatCompletionMessage{{Content: "message1"}}}
 	err := sessions.SaveSession(session)

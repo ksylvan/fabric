@@ -54,10 +54,10 @@ func LevelFromInt(i int) Level {
 func Debug(l Level, format string, a ...any) {
 	mu.RLock()
 	current := level
-	w := output
+	writer := output
 	mu.RUnlock()
 	if current >= l {
-		fmt.Fprintf(w, "DEBUG: "+format, a...)
+		fmt.Fprintf(writer, "DEBUG: "+format, a...)
 	}
 }
 
@@ -65,9 +65,9 @@ func Debug(l Level, format string, a ...any) {
 // This is for important messages that should always be shown regardless of debug level.
 func Log(format string, a ...any) {
 	mu.RLock()
-	w := output
+	writer := output
 	mu.RUnlock()
-	fmt.Fprintf(w, format, a...)
+	fmt.Fprintf(writer, format, a...)
 }
 
 // SetOutput allows overriding the output destination for debug logs.

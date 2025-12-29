@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-// GetTokenFromEnv returns a GitHub token based on the following precedence order:
+// ResolveGitHubToken returns a GitHub token based on the following precedence order:
 //  1. If tokenValue is non-empty, it is returned.
 //  2. Otherwise, if the GITHUB_TOKEN environment variable is set, its value is returned.
 //  3. Otherwise, if the GH_TOKEN environment variable is set, its value is returned.
@@ -14,13 +14,13 @@ import (
 //
 //	os.Setenv("GITHUB_TOKEN", "abc")
 //	os.Setenv("GH_TOKEN", "def")
-//	GetTokenFromEnv("xyz") // returns "xyz"
-//	GetTokenFromEnv("")    // returns "abc"
+//	ResolveGitHubToken("xyz") // returns "xyz"
+//	ResolveGitHubToken("")    // returns "abc"
 //	os.Unsetenv("GITHUB_TOKEN")
-//	GetTokenFromEnv("")    // returns "def"
+//	ResolveGitHubToken("")    // returns "def"
 //	os.Unsetenv("GH_TOKEN")
-//	GetTokenFromEnv("")    // returns ""
-func GetTokenFromEnv(tokenValue string) string {
+//	ResolveGitHubToken("")    // returns ""
+func ResolveGitHubToken(tokenValue string) string {
 	if tokenValue == "" {
 		tokenValue = os.Getenv("GITHUB_TOKEN")
 		if tokenValue == "" {

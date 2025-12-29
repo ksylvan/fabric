@@ -243,7 +243,7 @@ func TestOAuthTransport_RoundTrip(t *testing.T) {
 
 	// Create a test request
 	req := httptest.NewRequest("GET", "https://api.anthropic.com/v1/messages", nil)
-	req.Header.Set("x-api-key", "should-be-removed")
+	req.Header.Set(headerAPIKey, "should-be-removed")
 
 	// Create temporary directory and set up fake home with valid token
 	tempDir := t.TempDir()
@@ -269,7 +269,7 @@ func TestOAuthTransport_RoundTrip(t *testing.T) {
 			t.Errorf("Expected 'Bearer valid_access_token', got '%s'", auth)
 		}
 
-		beta := r.Header.Get("anthropic-beta")
+		beta := r.Header.Get(headerAnthropicBeta)
 		if beta != "oauth-2025-04-20" {
 			t.Errorf("Expected 'oauth-2025-04-20', got '%s'", beta)
 		}
@@ -280,7 +280,7 @@ func TestOAuthTransport_RoundTrip(t *testing.T) {
 		}
 
 		// Check that x-api-key header is removed
-		if r.Header.Get("x-api-key") != "" {
+		if r.Header.Get(headerAPIKey) != "" {
 			t.Error("Expected x-api-key header to be removed")
 		}
 

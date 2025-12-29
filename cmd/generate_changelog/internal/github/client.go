@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -85,16 +86,16 @@ func (c *Client) FetchPRs(prNumbers []int) ([]*PR, error) {
 		close(errChan)
 	}()
 
-	var errors []error
+	var errs []error
 	for pr := range prsChan {
 		prs = append(prs, pr)
 	}
 	for err := range errChan {
-		errors = append(errors, err)
+		errs = append(errs, err)
 	}
 
-	if len(errors) > 0 {
-		return prs, fmt.Errorf("some PRs failed to fetch: %v", errors)
+	if len(errs) > 0 {
+		return prs, errors.Join(errs...)
 	}
 
 	return prs, nil
@@ -343,7 +344,7 @@ func (c *Client) FetchAllMergedPRsGraphQL(since time.Time) ([]*PR, error) {
 		var query PullRequestsQuery
 		err := c.graphqlClient.Query(ctx, &query, variables)
 		if err != nil {
-			return allPRs, fmt.Errorf("GraphQL query failed: %w", err)
+			return allPRs, fmt.Errorf("graphQL query failed: %w", err)
 		}
 
 		prs := query.Repository.PullRequests.Nodes

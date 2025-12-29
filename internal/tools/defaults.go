@@ -11,7 +11,7 @@ import (
 	"github.com/danielmiessler/fabric/internal/plugins/ai"
 )
 
-func NeeDefaults(getVendorsModels func() (*ai.VendorsModels, error)) (ret *Defaults) {
+func NewDefaults(getVendorsModels func() (*ai.VendorsModels, error)) (ret *Defaults) {
 	vendorName := "Default"
 	ret = &Defaults{
 		PluginBase: &plugins.PluginBase{

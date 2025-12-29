@@ -31,7 +31,7 @@ func (h *StorageHandler[T]) Get(c *gin.Context) {
 	name := c.Param("name")
 	item, err := h.storage.Get(name)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		respondWithInternalError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, item)
@@ -41,7 +41,7 @@ func (h *StorageHandler[T]) Get(c *gin.Context) {
 func (h *StorageHandler[T]) GetNames(c *gin.Context) {
 	names, err := h.storage.GetNames()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		respondWithInternalError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, names)
@@ -52,7 +52,7 @@ func (h *StorageHandler[T]) Delete(c *gin.Context) {
 	name := c.Param("name")
 	err := h.storage.Delete(name)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		respondWithInternalError(c, err)
 		return
 	}
 	c.Status(http.StatusOK)
@@ -71,7 +71,7 @@ func (h *StorageHandler[T]) Rename(c *gin.Context) {
 	newName := c.Param("newName")
 	err := h.storage.Rename(oldName, newName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		respondWithInternalError(c, err)
 		return
 	}
 	c.Status(http.StatusOK)
@@ -87,14 +87,14 @@ func (h *StorageHandler[T]) Save(c *gin.Context) {
 
 	content, err := io.ReadAll(body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		respondWithInternalError(c, err)
 		return
 	}
 
 	// Save the content to storage
 	err = h.storage.Save(name, content)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		respondWithInternalError(c, err)
 		return
 	}
 	c.Status(http.StatusOK)

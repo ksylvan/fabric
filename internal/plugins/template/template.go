@@ -42,11 +42,11 @@ func debugf(format string, a ...any) {
 func matchTriple(r *regexp.Regexp, full string) (string, string, string, bool) {
 	parts := r.FindStringSubmatch(full)
 	if len(parts) >= 3 {
-		v := ""
+		optionalPart := ""
 		if len(parts) == 4 {
-			v = parts[3]
+			optionalPart = parts[3]
 		}
-		return parts[1], parts[2], v, true
+		return parts[1], parts[2], optionalPart, true
 	}
 	return "", "", "", false
 }
@@ -80,7 +80,7 @@ func ApplyTemplate(content string, variables map[string]string, input string) (s
 					debugf("Extension call: name=%s operation=%s value=%s\n", name, operation, value)
 					result, err := extensionManager.ProcessExtension(name, operation, value)
 					if err != nil {
-						return "", fmt.Errorf("extension %s error: %v", name, err)
+						return "", fmt.Errorf("extension %s error: %w", name, err)
 					}
 					content = strings.ReplaceAll(content, full, result)
 					progress = true
@@ -118,7 +118,7 @@ func ApplyTemplate(content string, variables map[string]string, input string) (s
 					}
 					if err != nil {
 						debugf("Plugin error: %v\n", err)
-						return "", fmt.Errorf("plugin %s error: %v", namespace, err)
+						return "", fmt.Errorf("plugin %s error: %w", namespace, err)
 					}
 					content = strings.ReplaceAll(content, full, result)
 					progress = true

@@ -41,7 +41,7 @@ func handleToolProcessing(currentFlags *Flags, registry *core.PluginRegistry) (m
 							return
 						}
 					} else {
-						messageTools = AppendMessage(messageTools, message)
+						messageTools = JoinMessagesWithNewline(messageTools, message)
 					}
 				}
 			}
@@ -68,7 +68,7 @@ func handleToolProcessing(currentFlags *Flags, registry *core.PluginRegistry) (m
 			if website, err = registry.Jina.ScrapeURL(currentFlags.ScrapeURL); err != nil {
 				return
 			}
-			messageTools = AppendMessage(messageTools, website)
+			messageTools = JoinMessagesWithNewline(messageTools, website)
 		}
 
 		// Check if the scrape_question flag is set and call ScrapeQuestion
@@ -78,7 +78,7 @@ func handleToolProcessing(currentFlags *Flags, registry *core.PluginRegistry) (m
 				return
 			}
 
-			messageTools = AppendMessage(messageTools, website)
+			messageTools = JoinMessagesWithNewline(messageTools, website)
 		}
 
 		if !currentFlags.IsChatRequest() {

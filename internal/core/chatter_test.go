@@ -68,26 +68,35 @@ func (m *mockVendor) NeedsRawMode(modelName string) bool {
 	return false
 }
 
-func TestChatter_Send_SuppressThink(t *testing.T) {
+// setupChatterTest creates a test chatter with a mock vendor
+func setupChatterTest(t *testing.T, streaming bool, vendor *mockVendor) *Chatter {
+	t.Helper()
 	tempDir := t.TempDir()
 	db := fsdb.NewDb(tempDir)
 
-	mockVendor := &mockVendor{}
-
-	chatter := &Chatter{
+	return &Chatter{
 		db:     db,
-		Stream: false,
-		vendor: mockVendor,
+		Stream: streaming,
+		vendor: vendor,
 		model:  "test-model",
 	}
+}
 
-	request := &domain.ChatRequest{
+// createTestRequest creates a standard test chat request
+func createTestRequest(content string) *domain.ChatRequest {
+	return &domain.ChatRequest{
 		Message: &chat.ChatCompletionMessage{
 			Role:    chat.ChatMessageRoleUser,
-			Content: "test",
+			Content: content,
 		},
 	}
+}
 
+func TestChatter_Send_SuppressThink(t *testing.T) {
+	mockVendor := &mockVendor{}
+	chatter := setupChatterTest(t, false, mockVendor)
+
+	request := createTestRequest("test")
 	opts := &domain.ChatOptions{
 		Model:         "test-model",
 		SuppressThink: true,
@@ -114,10 +123,6 @@ func TestChatter_Send_SuppressThink(t *testing.T) {
 }
 
 func TestChatter_Send_StreamingErrorPropagation(t *testing.T) {
-	// Create a temporary database for testing
-	tempDir := t.TempDir()
-	db := fsdb.NewDb(tempDir)
-
 	// Create a mock vendor that will return an error from SendStream
 	expectedError := errors.New("streaming error")
 	mockVendor := &mockVendor{
@@ -125,20 +130,10 @@ func TestChatter_Send_StreamingErrorPropagation(t *testing.T) {
 	}
 
 	// Create chatter with streaming enabled
-	chatter := &Chatter{
-		db:     db,
-		Stream: true, // Enable streaming to trigger SendStream path
-		vendor: mockVendor,
-		model:  "test-model",
-	}
+	chatter := setupChatterTest(t, true, mockVendor)
 
 	// Create a test request
-	request := &domain.ChatRequest{
-		Message: &chat.ChatCompletionMessage{
-			Role:    chat.ChatMessageRoleUser,
-			Content: "test message",
-		},
-	}
+	request := createTestRequest("test message")
 
 	// Create test options
 	opts := &domain.ChatOptions{
@@ -164,10 +159,6 @@ func TestChatter_Send_StreamingErrorPropagation(t *testing.T) {
 }
 
 func TestChatter_Send_StreamingSuccessfulAggregation(t *testing.T) {
-	// Create a temporary database for testing
-	tempDir := t.TempDir()
-	db := fsdb.NewDb(tempDir)
-
 	// Create test chunks that should be aggregated
 	testChunks := []string{"Hello", " ", "world", "!", " This", " is", " a", " test."}
 	expectedMessage := "Hello world! This is a test."
@@ -179,20 +170,10 @@ func TestChatter_Send_StreamingSuccessfulAggregation(t *testing.T) {
 	}
 
 	// Create chatter with streaming enabled
-	chatter := &Chatter{
-		db:     db,
-		Stream: true, // Enable streaming to trigger SendStream path
-		vendor: mockVendor,
-		model:  "test-model",
-	}
+	chatter := setupChatterTest(t, true, mockVendor)
 
 	// Create a test request
-	request := &domain.ChatRequest{
-		Message: &chat.ChatCompletionMessage{
-			Role:    chat.ChatMessageRoleUser,
-			Content: "test message",
-		},
-	}
+	request := createTestRequest("test message")
 
 	// Create test options
 	opts := &domain.ChatOptions{

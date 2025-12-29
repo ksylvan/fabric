@@ -1,6 +1,7 @@
 package changelog
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -77,7 +78,7 @@ func calculateVersionDate(fetchedPRs []*github.PR) time.Time {
 // ProcessIncomingPR processes a single PR for changelog entry creation
 func (g *Generator) ProcessIncomingPR(prNumber int) error {
 	if err := g.validatePRState(prNumber); err != nil {
-		return fmt.Errorf("PR validation failed: %w", err)
+		return fmt.Errorf("pr validation failed: %w", err)
 	}
 
 	if err := g.validateGitStatus(); err != nil {
@@ -129,78 +130,30 @@ func (g *Generator) CreateNewChangelogEntry(version string) error {
 		return fmt.Errorf("failed to scan incoming directory: %w", err)
 	}
 
-	var content strings.Builder
-	var processingErrors []string
-
-	// First, aggregate all incoming PR files
-	for i, file := range files {
-		data, err := os.ReadFile(file)
-		if err != nil {
-			processingErrors = append(processingErrors, fmt.Sprintf("failed to read %s: %v", file, err))
-			continue // Continue to attempt processing other files
-		}
-		content.WriteString(string(data))
-		// Add an extra newline between PR sections for proper spacing
-		if i < len(files)-1 {
-			content.WriteString("\n")
-		}
+	content, err := g.aggregateIncomingPRFiles(files)
+	if err != nil {
+		return err
 	}
 
-	if len(processingErrors) > 0 {
-		return fmt.Errorf("encountered errors while processing incoming files: %s", strings.Join(processingErrors, "; "))
-	}
+	processedPRs, processedCommitSHAs, fetchedPRs, prNumbers := g.extractPRDataFromFiles(files)
 
-	// Extract PR numbers and their commit SHAs from processed files to avoid including their commits as "direct"
-	processedPRs := make(map[int]bool)
-	processedCommitSHAs := make(map[string]bool)
-	var fetchedPRs []*github.PR
-	var prNumbers []int
-
-	for _, file := range files {
-		// Extract PR number from filename (e.g., "1640.txt" -> 1640)
-		filename := filepath.Base(file)
-		if prNumStr, ok := strings.CutSuffix(filename, ".txt"); ok {
-			if prNum, err := strconv.Atoi(prNumStr); err == nil {
-				processedPRs[prNum] = true
-				prNumbers = append(prNumbers, prNum)
-
-				// Fetch the PR to get its commit SHAs
-				if pr, err := g.ghClient.GetPRWithCommits(prNum); err == nil {
-					fetchedPRs = append(fetchedPRs, pr)
-					for _, commit := range pr.Commits {
-						processedCommitSHAs[commit.SHA] = true
-					}
-				}
-			}
-		}
-	}
-
-	// Now add direct commits since the last release, excluding commits from processed PRs
 	directCommitsContent, err := g.getDirectCommitsSinceLastRelease(processedPRs, processedCommitSHAs)
 	if err != nil {
 		return fmt.Errorf("failed to get direct commits since last release: %w", err)
 	}
 	if directCommitsContent != "" {
-		// Add spacing before direct commits section if we have PR content
 		if content.Len() > 0 {
 			content.WriteString("\n")
 		}
 		content.WriteString(directCommitsContent)
 	}
 
-	// Check if we have any content at all
 	if content.Len() == 0 {
-		if len(files) == 0 {
-			fmt.Fprintf(os.Stderr, "No incoming PR files found in %s and no direct commits since last release\n", g.cfg.IncomingDir)
-		} else {
-			fmt.Fprintf(os.Stderr, "No content found in incoming files and no direct commits since last release\n")
-		}
+		g.reportNoContent(files)
 		return nil
 	}
 
-	// Calculate the version date for the changelog entry as the most recent commit date from processed PRs
 	versionDate := calculateVersionDate(fetchedPRs)
-
 	entry := fmt.Sprintf("## %s (%s)\n\n%s",
 		version, versionDate.Format("2006-01-02"), strings.TrimLeft(content.String(), "\n"))
 
@@ -208,80 +161,12 @@ func (g *Generator) CreateNewChangelogEntry(version string) error {
 		return fmt.Errorf("failed to update CHANGELOG.md: %w", err)
 	}
 
-	if g.cache != nil {
-		// Cache the fetched PRs using the same logic as normal changelog generation
-		if len(fetchedPRs) > 0 {
-			// Save PRs to cache
-			if err := g.cache.SavePRBatch(fetchedPRs); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Failed to save PR batch to cache: %v\n", err)
-			}
-
-			// Save SHA→PR mappings for lightning-fast git operations
-			if err := g.cache.SaveCommitPRMappings(fetchedPRs); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: Failed to cache commit mappings: %v\n", err)
-			}
-
-			// Save individual commits to cache for each PR
-			for _, pr := range fetchedPRs {
-				for _, commit := range pr.Commits {
-					// Use actual commit timestamp, with fallback to current time if invalid
-					commitDate := commit.Date
-					if commitDate.IsZero() {
-						commitDate = time.Now()
-						fmt.Fprintf(os.Stderr, "Warning: Commit %s has invalid timestamp, using current time as fallback\n", commit.SHA)
-					}
-
-					// Convert github.PRCommit to git.Commit
-					gitCommit := &git.Commit{
-						SHA:      commit.SHA,
-						Message:  commit.Message,
-						Author:   commit.Author,
-						Email:    commit.Email,          // Use email from GitHub API
-						Date:     commitDate,            // Use actual commit timestamp from GitHub API
-						IsMerge:  isMergeCommit(commit), // Detect merge commits using parents and message patterns
-						PRNumber: pr.Number,
-					}
-					if err := g.cache.SaveCommit(gitCommit, version); err != nil {
-						fmt.Fprintf(os.Stderr, "Warning: Failed to save commit %s to cache: %v\n", commit.SHA, err)
-					}
-				}
-			}
-		}
-
-		// Create a proper new version entry for the database
-		newVersionEntry := &git.Version{
-			Name:      version,
-			Date:      versionDate, // Use most recent commit date instead of current time
-			CommitSHA: "",          // Will be set when the release commit is made
-			PRNumbers: prNumbers,   // Now we have the actual PR numbers
-			AISummary: content.String(),
-		}
-
-		if err := g.cache.SaveVersion(newVersionEntry); err != nil {
-			return fmt.Errorf("failed to save new version entry to database: %w", err)
-		}
+	if err := g.cacheVersionData(version, versionDate, fetchedPRs, prNumbers, content.String()); err != nil {
+		return err
 	}
 
-	for _, file := range files {
-		// Convert to relative path for git operations
-		relativeFile, err := filepath.Rel(g.cfg.RepoPath, file)
-		if err != nil {
-			relativeFile = file
-		}
-
-		// Use git remove to handle both filesystem and git index
-		if err := g.gitWalker.RemoveFile(relativeFile); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: Failed to remove %s from git index: %v\n", relativeFile, err)
-			// Fallback to filesystem-only removal
-			if err := os.Remove(file); err != nil {
-				fmt.Fprintf(os.Stderr, "Error: Failed to remove %s from the filesystem after failing to remove it from the git index.\n", relativeFile)
-				fmt.Fprintf(os.Stderr, "Filesystem error: %v\n", err)
-				fmt.Fprintf(os.Stderr, "Manual intervention required:\n")
-				fmt.Fprintf(os.Stderr, "  1. Remove the file %s manually (using the OS-specific command)\n", file)
-				fmt.Fprintf(os.Stderr, "  2. Remove from git index: git rm --cached %s\n", relativeFile)
-				fmt.Fprintf(os.Stderr, "  3. Or reset git index: git reset HEAD %s\n", relativeFile)
-			}
-		}
+	if err := g.cleanupProcessedFiles(files); err != nil {
+		return err
 	}
 
 	if err := g.stageChangesForRelease(); err != nil {
@@ -290,6 +175,182 @@ func (g *Generator) CreateNewChangelogEntry(version string) error {
 
 	fmt.Printf("Successfully processed %d incoming PR files for version %s\n", len(files), version)
 	return nil
+}
+
+// aggregateIncomingPRFiles reads and combines content from all incoming PR files
+func (g *Generator) aggregateIncomingPRFiles(files []string) (*strings.Builder, error) {
+	var content strings.Builder
+	var errs []error
+
+	for i, file := range files {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to read %s: %w", file, err))
+			continue
+		}
+		content.WriteString(string(data))
+		if i < len(files)-1 {
+			content.WriteString("\n")
+		}
+	}
+
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
+	}
+
+	return &content, nil
+}
+
+// reportNoContent prints an appropriate message when no content is available
+func (g *Generator) reportNoContent(files []string) {
+	if len(files) == 0 {
+		fmt.Fprintf(os.Stderr, "No incoming PR files found in %s and no direct commits since last release\n", g.cfg.IncomingDir)
+	} else {
+		fmt.Fprintf(os.Stderr, "No content found in incoming files and no direct commits since last release\n")
+	}
+}
+
+// cacheVersionData saves PR and version data to the cache database
+func (g *Generator) cacheVersionData(version string, versionDate time.Time, fetchedPRs []*github.PR, prNumbers []int, contentStr string) error {
+	if g.cache == nil {
+		return nil
+	}
+
+	if len(fetchedPRs) > 0 {
+		if err := g.cache.SavePRBatch(fetchedPRs); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to save PR batch to cache: %v\n", err)
+		}
+
+		if err := g.cache.SaveCommitPRMappings(fetchedPRs); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to cache commit mappings: %v\n", err)
+		}
+
+		for _, pr := range fetchedPRs {
+			if err := g.cacheCommitsForPR(pr, version); err != nil {
+				return err
+			}
+		}
+	}
+
+	newVersionEntry := &git.Version{
+		Name:      version,
+		Date:      versionDate,
+		CommitSHA: "",
+		PRNumbers: prNumbers,
+		AISummary: contentStr,
+	}
+
+	if err := g.cache.SaveVersion(newVersionEntry); err != nil {
+		return fmt.Errorf("failed to save new version entry to database: %w", err)
+	}
+
+	return nil
+}
+
+// cacheCommitsForPR saves all commits from a PR to the cache
+func (g *Generator) cacheCommitsForPR(pr *github.PR, version string) error {
+	for _, commit := range pr.Commits {
+		commitDate := commit.Date
+		if commitDate.IsZero() {
+			commitDate = time.Now()
+			fmt.Fprintf(os.Stderr, "Warning: Commit %s has invalid timestamp, using current time as fallback\n", commit.SHA)
+		}
+
+		gitCommit := &git.Commit{
+			SHA:      commit.SHA,
+			Message:  commit.Message,
+			Author:   commit.Author,
+			Email:    commit.Email,
+			Date:     commitDate,
+			IsMerge:  isMergeCommit(commit),
+			PRNumber: pr.Number,
+		}
+		if err := g.cache.SaveCommit(gitCommit, version); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to save commit %s to cache: %v\n", commit.SHA, err)
+		}
+	}
+	return nil
+}
+
+// cleanupProcessedFiles removes processed incoming files from git and filesystem
+func (g *Generator) cleanupProcessedFiles(files []string) error {
+	for _, file := range files {
+		relativeFile, err := filepath.Rel(g.cfg.RepoPath, file)
+		if err != nil {
+			relativeFile = file
+		}
+
+		if err := g.gitWalker.RemoveFile(relativeFile); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to remove %s from git index: %v\n", relativeFile, err)
+			if err := os.Remove(file); err != nil {
+				g.reportFileRemovalFailure(file, relativeFile, err)
+			}
+		}
+	}
+	return nil
+}
+
+// reportFileRemovalFailure prints detailed error messages for file removal failures
+func (g *Generator) reportFileRemovalFailure(file, relativeFile string, err error) {
+	fmt.Fprintf(os.Stderr, "Error: Failed to remove %s from the filesystem after failing to remove it from the git index.\n", relativeFile)
+	fmt.Fprintf(os.Stderr, "Filesystem error: %v\n", err)
+	fmt.Fprintf(os.Stderr, "Manual intervention required:\n")
+	fmt.Fprintf(os.Stderr, "  1. Remove the file %s manually (using the OS-specific command)\n", file)
+	fmt.Fprintf(os.Stderr, "  2. Remove from git index: git rm --cached %s\n", relativeFile)
+	fmt.Fprintf(os.Stderr, "  3. Or reset git index: git reset HEAD %s\n", relativeFile)
+}
+
+// extractPRDataFromFiles extracts PR numbers and commit data from incoming files
+func (g *Generator) extractPRDataFromFiles(files []string) (map[int]bool, map[string]bool, []*github.PR, []int) {
+	processedPRs := make(map[int]bool)
+	processedCommitSHAs := make(map[string]bool)
+	var fetchedPRs []*github.PR
+	var prNumbers []int
+
+	for _, file := range files {
+		prNum, pr := g.processSinglePRFile(file)
+		if prNum == 0 {
+			continue // Invalid file, skip
+		}
+
+		processedPRs[prNum] = true
+		prNumbers = append(prNumbers, prNum)
+
+		if pr != nil {
+			fetchedPRs = append(fetchedPRs, pr)
+			g.recordCommitSHAs(pr, processedCommitSHAs)
+		}
+	}
+
+	return processedPRs, processedCommitSHAs, fetchedPRs, prNumbers
+}
+
+// processSinglePRFile extracts PR number from filename and fetches PR data
+func (g *Generator) processSinglePRFile(file string) (int, *github.PR) {
+	filename := filepath.Base(file)
+	prNumStr, ok := strings.CutSuffix(filename, ".txt")
+	if !ok {
+		return 0, nil
+	}
+
+	prNum, err := strconv.Atoi(prNumStr)
+	if err != nil {
+		return 0, nil
+	}
+
+	pr, err := g.ghClient.GetPRWithCommits(prNum)
+	if err != nil {
+		return prNum, nil // Return PR number even if fetch fails
+	}
+
+	return prNum, pr
+}
+
+// recordCommitSHAs records all commit SHAs from a PR
+func (g *Generator) recordCommitSHAs(pr *github.PR, processedCommitSHAs map[string]bool) {
+	for _, commit := range pr.Commits {
+		processedCommitSHAs[commit.SHA] = true
+	}
 }
 
 // getDirectCommitsSinceLastRelease gets all direct commits (not part of PRs) since the last release
@@ -312,29 +373,7 @@ func (g *Generator) getDirectCommitsSinceLastRelease(processedPRs map[int]bool, 
 
 	// Filter out commits that are part of PRs (we already have those from incoming files)
 	// and format the direct commits
-	var directCommits []*git.Commit
-	for _, commit := range unreleasedVersion.Commits {
-		// Skip version bump commits
-		if commit.IsVersion {
-			continue
-		}
-
-		// Skip commits that belong to PRs we've already processed from incoming files (by PR number)
-		if commit.PRNumber > 0 && processedPRs[commit.PRNumber] {
-			continue
-		}
-
-		// Skip commits whose SHA is already included in processed PRs (this catches commits
-		// that might not have been detected as part of a PR but are actually in the PR)
-		if processedCommitSHAs[commit.SHA] {
-			continue
-		}
-
-		// Only include commits that are NOT part of any PR (direct commits)
-		if commit.PRNumber == 0 {
-			directCommits = append(directCommits, commit)
-		}
-	}
+	directCommits := g.filterDirectCommits(unreleasedVersion.Commits, processedPRs, processedCommitSHAs)
 
 	if len(directCommits) == 0 {
 		return "", nil // No direct commits
@@ -359,20 +398,55 @@ func (g *Generator) getDirectCommitsSinceLastRelease(processedPRs map[int]bool, 
 	return sb.String(), nil
 }
 
+// filterDirectCommits filters commits to only include direct commits (not part of PRs)
+func (g *Generator) filterDirectCommits(commits []*git.Commit, processedPRs map[int]bool, processedCommitSHAs map[string]bool) []*git.Commit {
+	var directCommits []*git.Commit
+
+	for _, commit := range commits {
+		if !g.isDirectCommit(commit, processedPRs, processedCommitSHAs) {
+			continue
+		}
+		directCommits = append(directCommits, commit)
+	}
+
+	return directCommits
+}
+
+// isDirectCommit checks if a commit is a direct commit (not part of a PR)
+func (g *Generator) isDirectCommit(commit *git.Commit, processedPRs map[int]bool, processedCommitSHAs map[string]bool) bool {
+	// Skip version bump commits
+	if commit.IsVersion {
+		return false
+	}
+
+	// Skip commits that belong to already-processed PRs
+	if commit.PRNumber > 0 && processedPRs[commit.PRNumber] {
+		return false
+	}
+
+	// Skip commits whose SHA is in processed PRs
+	if processedCommitSHAs[commit.SHA] {
+		return false
+	}
+
+	// Only include commits that are NOT part of any PR
+	return commit.PRNumber == 0
+}
+
 // validatePRState validates that a PR is in the correct state for processing
 func (g *Generator) validatePRState(prNumber int) error {
 	// Use lightweight validation call that doesn't fetch commits
 	details, err := g.ghClient.GetPRValidationDetails(prNumber)
 	if err != nil {
-		return fmt.Errorf("failed to fetch PR %d: %w", prNumber, err)
+		return fmt.Errorf("failed to fetch pr %d: %w", prNumber, err)
 	}
 
 	if details.State != "open" {
-		return fmt.Errorf("PR %d is not open (current state: %s)", prNumber, details.State)
+		return fmt.Errorf("pr %d is not open (current state: %s)", prNumber, details.State)
 	}
 
 	if !details.Mergeable {
-		return fmt.Errorf("PR %d is not mergeable - please resolve conflicts first", prNumber)
+		return fmt.Errorf("pr %d is not mergeable: please resolve conflicts first", prNumber)
 	}
 
 	return nil

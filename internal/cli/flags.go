@@ -22,6 +22,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+const (
+	// defaultRESTAPIPort is the default port for the Fabric REST API server
+	defaultRESTAPIPort = ":8080"
+)
+
 // Flags create flags struct. the users flags go into this, this will be passed to the chat struct in cli
 // Chat parameter defaults set in the struct tags must match domain.Default* constants
 
@@ -116,9 +121,9 @@ func Init() (ret *Flags, err error) {
 
 	// Create mapping from flag names (both short and long) to yaml tag names
 	flagToYamlTag := make(map[string]string)
-	t := reflect.TypeFor[Flags]()
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
+	flagsType := reflect.TypeFor[Flags]()
+	for i := 0; i < flagsType.NumField(); i++ {
+		field := flagsType.Field(i)
 		yamlTag := field.Tag.Get("yaml")
 		if yamlTag != "" {
 			longTag := field.Tag.Get("long")
@@ -153,7 +158,8 @@ func Init() (ret *Flags, err error) {
 	var args []string
 	if args, err = parser.Parse(); err != nil {
 		// Check if this is a help request and handle it with our custom help
-		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+		var flagsErr *flags.Error
+		if errors.As(err, &flagsErr) && flagsErr.Type == flags.ErrHelp {
 			CustomHelpHandler(parser, os.Stdout)
 			os.Exit(0)
 		}
@@ -211,7 +217,7 @@ func Init() (ret *Flags, err error) {
 
 	// Append positional arguments to the message (custom message)
 	if len(args) > 0 {
-		ret.Message = AppendMessage(ret.Message, args[len(args)-1])
+		ret.Message = JoinMessagesWithNewline(ret.Message, args[len(args)-1])
 	}
 
 	if pipedToStdin {
@@ -219,7 +225,7 @@ func Init() (ret *Flags, err error) {
 		if pipedMessage, err = readStdin(); err != nil {
 			return
 		}
-		ret.Message = AppendMessage(ret.Message, pipedMessage)
+		ret.Message = JoinMessagesWithNewline(ret.Message, pipedMessage)
 	}
 	return
 }
@@ -416,6 +422,9 @@ func validateImageParameters(imagePath, size, quality, background string, compre
 	return nil
 }
 
+// BuildChatOptions constructs a ChatOptions instance from the current flag values, validating
+// image parameters and setting appropriate defaults for thinking tags if not specified.
+// Returns an error if image file or parameter validation fails.
 func (o *Flags) BuildChatOptions() (ret *domain.ChatOptions, err error) {
 	// Validate image file if specified
 	if err = validateImageFile(o.ImageFile); err != nil {
@@ -463,6 +472,10 @@ func (o *Flags) BuildChatOptions() (ret *domain.ChatOptions, err error) {
 	return
 }
 
+// BuildChatRequest constructs a ChatRequest from the current flag values and provided metadata.
+// It processes attachments, combines the message with any language-specific content, and builds
+// the request with all configured options. Returns an error if attachment processing or option
+// building fails.
 func (o *Flags) BuildChatRequest(Meta string) (ret *domain.ChatRequest, err error) {
 	ret = &domain.ChatRequest{
 		ContextName:           o.Context,
@@ -531,7 +544,7 @@ func (o *Flags) BuildChatRequest(Meta string) (ret *domain.ChatRequest, err erro
 }
 
 func (o *Flags) AppendMessage(message string) {
-	o.Message = AppendMessage(o.Message, message)
+	o.Message = JoinMessagesWithNewline(o.Message, message)
 }
 
 func (o *Flags) IsChatRequest() (ret bool) {
@@ -539,6 +552,8 @@ func (o *Flags) IsChatRequest() (ret bool) {
 	return
 }
 
+// WriteOutput prints the message to stdout and optionally writes it to a file if the Output
+// flag is set. Returns an error if file creation fails.
 func (o *Flags) WriteOutput(message string) (err error) {
 	fmt.Println(message)
 	if o.Output != "" {
@@ -547,7 +562,7 @@ func (o *Flags) WriteOutput(message string) (err error) {
 	return
 }
 
-func AppendMessage(message string, newMessage string) (ret string) {
+func JoinMessagesWithNewline(message string, newMessage string) (ret string) {
 	if message != "" {
 		ret = message + "\n" + newMessage
 	} else {

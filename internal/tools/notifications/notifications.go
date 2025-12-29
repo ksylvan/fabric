@@ -43,7 +43,7 @@ func NewNotificationManager() *NotificationManager {
 // Send sends a notification using the configured provider
 func (nm *NotificationManager) Send(title, message string) error {
 	if nm.provider == nil {
-		return fmt.Errorf("no notification provider available")
+		return fmt.Errorf("cannot send notification: no notification provider available")
 	}
 	return nm.provider.Send(title, message)
 }

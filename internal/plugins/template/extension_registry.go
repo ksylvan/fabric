@@ -1,10 +1,7 @@
 package template
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -80,18 +77,18 @@ func (e *ExtensionDefinition) IsCleanupEnabled() bool {
 }
 
 func NewExtensionRegistry(configDir string) *ExtensionRegistry {
-	r := &ExtensionRegistry{
+	registry := &ExtensionRegistry{
 		configDir: configDir,
 	}
-	r.registry.Extensions = make(map[string]*RegistryEntry)
+	registry.registry.Extensions = make(map[string]*RegistryEntry)
 
-	r.ensureConfigDir()
+	registry.ensureConfigDir()
 
-	if err := r.loadRegistry(); err != nil {
+	if err := registry.loadRegistry(); err != nil {
 		debuglog.Log("Warning: could not load extension registry: %v\n", err)
 	}
 
-	return r
+	return registry
 }
 
 func (r *ExtensionRegistry) ensureConfigDir() error {
@@ -273,7 +270,7 @@ func (r *ExtensionRegistry) GetExtension(name string) (*ExtensionDefinition, err
 }
 
 func (r *ExtensionRegistry) ListExtensions() ([]*ExtensionDefinition, error) {
-	var exts []*ExtensionDefinition
+	exts := make([]*ExtensionDefinition, 0, len(r.registry.Extensions))
 
 	for name := range r.registry.Extensions {
 		ext, err := r.GetExtension(name)
@@ -287,21 +284,6 @@ func (r *ExtensionRegistry) ListExtensions() ([]*ExtensionDefinition, error) {
 	}
 
 	return exts, nil
-}
-
-func (r *ExtensionRegistry) calculateFileHash(path string) (string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
 func (r *ExtensionRegistry) saveRegistry() error {

@@ -52,7 +52,7 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 
 	err := h.db.LoadEnvFile()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondWithInternalError(c, err)
 		return
 	}
 
@@ -125,12 +125,12 @@ func (h *ConfigHandler) UpdateConfig(c *gin.Context) {
 
 	// Save configuration to file
 	if err := h.db.SaveEnv(envContent.String()); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondWithInternalError(c, err)
 		return
 	}
 
 	if err := h.db.LoadEnvFile(); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondWithInternalError(c, err)
 		return
 	}
 

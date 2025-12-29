@@ -9,6 +9,11 @@ import (
 	"github.com/danielmiessler/fabric/internal/plugins/ai/openai"
 )
 
+const (
+	// defaultLiteLLMPort is the default port for LiteLLM proxy server
+	defaultLiteLLMPort = "http://localhost:4000"
+)
+
 // ProviderConfig defines the configuration for an OpenAI-compatible API provider
 type ProviderConfig struct {
 	Name                string
@@ -162,7 +167,7 @@ var ProviderMap = map[string]ProviderConfig{
 	},
 	"LiteLLM": {
 		Name:                "LiteLLM",
-		BaseURL:             "http://localhost:4000",
+		BaseURL:             defaultLiteLLMPort,
 		ImplementsResponses: false,
 	},
 	"MiniMax": {

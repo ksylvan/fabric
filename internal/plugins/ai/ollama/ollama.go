@@ -15,10 +15,14 @@ import (
 	"github.com/danielmiessler/fabric/internal/domain"
 	debuglog "github.com/danielmiessler/fabric/internal/log"
 	"github.com/danielmiessler/fabric/internal/plugins"
+	"github.com/danielmiessler/fabric/internal/plugins/ai/helpers"
 	ollamaapi "github.com/ollama/ollama/api"
 )
 
-const defaultBaseUrl = "http://localhost:11434"
+const (
+	defaultBaseUrl     = "http://localhost:11434"
+	defaultHTTPTimeout = 20 * time.Minute // Default HTTP timeout for Ollama requests
+)
 
 func NewClient() (ret *Client) {
 	vendorName := "Ollama"
@@ -52,18 +56,6 @@ type Client struct {
 	httpClient     *http.Client
 }
 
-type transport_sec struct {
-	underlyingTransport http.RoundTripper
-	ApiKey              *plugins.SetupQuestion
-}
-
-func (t *transport_sec) RoundTrip(req *http.Request) (*http.Response, error) {
-	if t.ApiKey.Value != "" {
-		req.Header.Add("Authorization", "Bearer "+t.ApiKey.Value)
-	}
-	return t.underlyingTransport.RoundTrip(req)
-}
-
 // IsConfigured returns true only if OLLAMA_API_URL environment variable is explicitly set
 func (o *Client) IsConfigured() bool {
 	return os.Getenv("OLLAMA_API_URL") != ""
@@ -75,7 +67,7 @@ func (o *Client) configure() (err error) {
 		return
 	}
 
-	timeout := 20 * time.Minute // Default timeout
+	timeout := defaultHTTPTimeout
 
 	if o.ApiHttpTimeout != nil {
 		parsed, err := time.ParseDuration(o.ApiHttpTimeout.Value)
@@ -86,7 +78,17 @@ func (o *Client) configure() (err error) {
 		}
 	}
 
-	o.httpClient = &http.Client{Timeout: timeout, Transport: &transport_sec{underlyingTransport: http.DefaultTransport, ApiKey: o.ApiKey}}
+	// Create HTTP client with Bearer authentication transport
+	var transport http.RoundTripper
+	if o.ApiKey.Value != "" {
+		transport = &helpers.BearerAuthTransport{
+			Token: o.ApiKey.Value,
+			Base:  http.DefaultTransport,
+		}
+	} else {
+		transport = http.DefaultTransport
+	}
+	o.httpClient = helpers.NewHTTPClient(timeout, transport)
 	o.client = ollamaapi.NewClient(o.apiUrl, o.httpClient)
 
 	return
@@ -100,6 +102,7 @@ func (o *Client) ListModels() (ret []string, err error) {
 		return
 	}
 
+	ret = make([]string, 0, len(listResp.Models))
 	for _, mod := range listResp.Models {
 		ret = append(ret, mod.Model)
 	}
@@ -128,13 +131,13 @@ func (o *Client) SendStream(msgs []*chat.ChatCompletionMessage, opts *domain.Cha
 }
 
 func (o *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, opts *domain.ChatOptions) (ret string, err error) {
-	bf := false
+	streamingDisabled := false
 
 	var req ollamaapi.ChatRequest
 	if req, err = o.createChatRequest(ctx, msgs, opts); err != nil {
 		return
 	}
-	req.Stream = &bf
+	req.Stream = &streamingDisabled
 
 	respFunc := func(resp ollamaapi.ChatResponse) (streamErr error) {
 		ret = resp.Message.Content

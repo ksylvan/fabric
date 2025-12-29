@@ -42,7 +42,10 @@ var playlistPatternRegex *regexp.Regexp
 var vttTagRegex *regexp.Regexp
 var durationRegex *regexp.Regexp
 
-const TimeGapForRepeats = 10 // seconds
+const (
+	TimeGapForRepeats = 10              // seconds
+	apiRateLimitPause = 1 * time.Second // Pause between API requests to respect rate limits
+)
 
 func init() {
 	// Match timestamps like "00:00:01.234" or just numbers or sequence numbers
@@ -176,8 +179,8 @@ func (o *YouTube) GrabTranscriptWithTimestampsWithArgs(videoId string, language 
 func detectError(ytOutput io.Reader) error {
 	scanner := bufio.NewScanner(ytOutput)
 	for scanner.Scan() {
-		curLine := scanner.Text()
-		debuglog.Debug(debuglog.Trace, "%s\n", curLine)
+		currentLine := scanner.Text()
+		debuglog.Debug(debuglog.Trace, "%s\n", currentLine)
 		errorMessages := map[string]string{
 			"429":                                 i18n.T("youtube_rate_limit_exceeded"),
 			"Too Many Requests":                   i18n.T("youtube_rate_limit_exceeded"),
@@ -186,7 +189,7 @@ func detectError(ytOutput io.Reader) error {
 		}
 
 		for key, message := range errorMessages {
-			if strings.Contains(curLine, key) {
+			if strings.Contains(currentLine, key) {
 				return fmt.Errorf("%s", message)
 			}
 		}
@@ -633,7 +636,7 @@ func (o *YouTube) FetchPlaylistVideos(playlistID string) (ret []*VideoMeta, err 
 			break
 		}
 
-		time.Sleep(1 * time.Second) // Pause to respect API rate limit
+		time.Sleep(apiRateLimitPause)
 	}
 	return
 }

@@ -29,7 +29,7 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 		hostname, err := os.Hostname()
 		if err != nil {
 			debugf("Sys: hostname error: %v", err)
-			return "", fmt.Errorf("sys: hostname error: %v", err)
+			return "", fmt.Errorf("sys: hostname error: %w", err)
 		}
 		debugf("Sys: hostname=%q", hostname)
 		return hostname, nil
@@ -38,7 +38,7 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 		currentUser, err := user.Current()
 		if err != nil {
 			debugf("Sys: user error: %v", err)
-			return "", fmt.Errorf("sys: user error: %v", err)
+			return "", fmt.Errorf("sys: user error: %w", err)
 		}
 		debugf("Sys: user=%q", currentUser.Username)
 		return currentUser.Username, nil
@@ -66,7 +66,7 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 		dir, err := os.Getwd()
 		if err != nil {
 			debugf("Sys: pwd error: %v", err)
-			return "", fmt.Errorf("sys: pwd error: %v", err)
+			return "", fmt.Errorf("sys: pwd error: %w", err)
 		}
 		debugf("Sys: pwd=%q", dir)
 		return dir, nil
@@ -75,7 +75,7 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			debugf("Sys: home error: %v", err)
-			return "", fmt.Errorf("sys: home error: %v", err)
+			return "", fmt.Errorf("sys: home error: %w", err)
 		}
 		debugf("Sys: home=%q", homeDir)
 		return homeDir, nil

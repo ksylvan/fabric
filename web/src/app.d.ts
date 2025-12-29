@@ -7,3 +7,10 @@ declare namespace App {
 	// interface Error {}
 	// interface Platform {}
 }
+
+// Declare module for markdown files
+declare module '*.md' {
+	import type { SvelteComponent } from 'svelte';
+	const component: typeof SvelteComponent;
+	export default component;
+}

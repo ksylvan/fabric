@@ -61,7 +61,7 @@ func (o *PatternsEntity) loadPattern(source string) (pattern *Pattern, err error
 		// Resolve the file path using GetAbsolutePath
 		var absPath string
 		if absPath, err = util.GetAbsolutePath(source); err != nil {
-			return nil, fmt.Errorf("could not resolve file path: %v", err)
+			return nil, fmt.Errorf("could not resolve file path: %w", err)
 		}
 
 		// Use the resolved absolute path to get the pattern
@@ -174,7 +174,7 @@ func (o *PatternsEntity) getFromFile(pathStr string) (pattern *Pattern, err erro
 	if strings.HasPrefix(pathStr, "~/") {
 		var homedir string
 		if homedir, err = os.UserHomeDir(); err != nil {
-			err = fmt.Errorf("could not get home directory: %v", err)
+			err = fmt.Errorf("could not get home directory: %w", err)
 			return
 		}
 		pathStr = filepath.Join(homedir, pathStr[2:])
@@ -182,7 +182,7 @@ func (o *PatternsEntity) getFromFile(pathStr string) (pattern *Pattern, err erro
 
 	var content []byte
 	if content, err = os.ReadFile(pathStr); err != nil {
-		err = fmt.Errorf("could not read pattern file %s: %v", pathStr, err)
+		err = fmt.Errorf("could not read pattern file %s: %w", pathStr, err)
 		return
 	}
 	pattern = &Pattern{
@@ -265,11 +265,11 @@ func (o *PatternsEntity) Get(name string) (*Pattern, error) {
 func (o *PatternsEntity) Save(name string, content []byte) (err error) {
 	patternDir := filepath.Join(o.Dir, name)
 	if err = os.MkdirAll(patternDir, os.ModePerm); err != nil {
-		return fmt.Errorf("could not create pattern directory: %v", err)
+		return fmt.Errorf("could not create pattern directory: %w", err)
 	}
 	patternPath := filepath.Join(patternDir, o.SystemPatternFile)
 	if err = os.WriteFile(patternPath, content, 0644); err != nil {
-		return fmt.Errorf("could not save pattern: %v", err)
+		return fmt.Errorf("could not save pattern: %w", err)
 	}
 	return nil
 }

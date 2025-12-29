@@ -5,8 +5,7 @@ import (
 )
 
 func TestStorage_SaveAndLoad(t *testing.T) {
-	dir := t.TempDir()
-	storage := &StorageEntity{Dir: dir}
+	storage := setupTestStorage(t)
 	name := "test"
 	content := []byte("test content")
 	if err := storage.Save(name, content); err != nil {
@@ -22,8 +21,7 @@ func TestStorage_SaveAndLoad(t *testing.T) {
 }
 
 func TestStorage_Exists(t *testing.T) {
-	dir := t.TempDir()
-	storage := &StorageEntity{Dir: dir}
+	storage := setupTestStorage(t)
 	name := "test"
 	if storage.Exists(name) {
 		t.Errorf("expected file to not exist")
@@ -37,8 +35,7 @@ func TestStorage_Exists(t *testing.T) {
 }
 
 func TestStorage_Delete(t *testing.T) {
-	dir := t.TempDir()
-	storage := &StorageEntity{Dir: dir}
+	storage := setupTestStorage(t)
 	name := "test"
 	if err := storage.Save(name, []byte("test content")); err != nil {
 		t.Fatalf("failed to save content: %v", err)

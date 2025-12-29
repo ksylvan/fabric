@@ -2,6 +2,7 @@ package fsdb
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/danielmiessler/fabric/internal/chat"
 	"github.com/danielmiessler/fabric/internal/domain"
@@ -82,18 +83,19 @@ func (o *Session) GetLastMessage() (ret *chat.ChatCompletionMessage) {
 }
 
 func (o *Session) String() (ret string) {
+	var builder strings.Builder
 	for _, message := range o.Messages {
-		ret += fmt.Sprintf("\n--- \n[%v]\n%v", message.Role, message.Content)
+		builder.WriteString(fmt.Sprintf("\n--- \n[%v]\n%v", message.Role, message.Content))
 		if message.MultiContent != nil {
 			for _, part := range message.MultiContent {
 				switch part.Type {
 				case chat.ChatMessagePartTypeImageURL:
-					ret += fmt.Sprintf("\n%v: %v", part.Type, *part.ImageURL)
+					builder.WriteString(fmt.Sprintf("\n%v: %v", part.Type, *part.ImageURL))
 				case chat.ChatMessagePartTypeText:
-					ret += fmt.Sprintf("\n%v: %v", part.Type, part.Text)
+					builder.WriteString(fmt.Sprintf("\n%v: %v", part.Type, part.Text))
 				}
 			}
 		}
 	}
-	return
+	return builder.String()
 }

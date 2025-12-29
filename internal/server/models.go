@@ -22,7 +22,7 @@ func NewModelsHandler(r *gin.Engine, vendorManager *ai.VendorsManager) {
 // @Description Get a list of all available AI models grouped by vendor
 // @Tags models
 // @Produce json
-// @Success 200 {object} map[string]interface{} "Returns models (array) and vendors (map)"
+// @Success 200 {object} map[string]any "Returns models (array) and vendors (map)"
 // @Failure 500 {object} map[string]string
 // @Security ApiKeyAuth
 // @Router /models/names [get]

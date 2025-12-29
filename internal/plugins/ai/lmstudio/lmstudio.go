@@ -5,19 +5,25 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/danielmiessler/fabric/internal/chat"
-
 	"github.com/danielmiessler/fabric/internal/domain"
 	"github.com/danielmiessler/fabric/internal/plugins"
+	"github.com/danielmiessler/fabric/internal/plugins/ai/helpers"
+)
+
+const (
+	// defaultBaseURL is the default base URL for LM Studio API
+	defaultBaseURL = "http://localhost:1234/v1"
 )
 
 // NewClient creates a new LM Studio client with default configuration.
 func NewClient() (ret *Client) {
-	return NewClientCompatible("LM Studio", "http://localhost:1234/v1", nil)
+	return NewClientCompatible("LM Studio", defaultBaseURL, nil)
 }
 
 // NewClientCompatible creates a new LM Studio client with custom configuration.
@@ -44,9 +50,9 @@ type Client struct {
 	HttpClient *http.Client
 }
 
-// configure sets up the HTTP client.
+// configure sets up the HTTP client with default timeout.
 func (c *Client) configure() error {
-	c.HttpClient = &http.Client{}
+	c.HttpClient = helpers.NewHTTPClient(helpers.DefaultHTTPTimeout, nil)
 	return nil
 }
 
@@ -65,8 +71,9 @@ func (c *Client) ListModels() ([]string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	// Check HTTP status using shared helper
+	if err := helpers.CheckHTTPStatus(resp, helpers.DefaultErrorBodyLimit); err != nil {
+		return nil, err
 	}
 
 	var result struct {
@@ -128,7 +135,7 @@ func (c *Client) SendStream(msgs []*chat.ChatCompletionMessage, opts *domain.Cha
 	for {
 		var line []byte
 		if line, err = reader.ReadBytes('\n'); err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				err = nil
 				break
 			}

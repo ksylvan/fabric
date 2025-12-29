@@ -73,7 +73,7 @@ func (a *Attachment) ResolveType() (ret string, err error) {
 		ret = mimetype.Detect(a.Content).String()
 		return
 	}
-	err = fmt.Errorf("attachment has no type and no content to derive it from")
+	err = fmt.Errorf("cannot determine content type: attachment has no type and no content to derive it from")
 	return
 }
 
@@ -99,7 +99,7 @@ func (a *Attachment) ContentBytes() (ret []byte, err error) {
 		}
 		return
 	}
-	err = fmt.Errorf("no content available")
+	err = fmt.Errorf("no content available: attachment has no content, path, or url")
 	return
 }
 
@@ -153,7 +153,7 @@ func detectMimeTypeFromURL(url string) (string, error) {
 	defer resp.Body.Close()
 	mimeType := resp.Header.Get("Content-Type")
 	if mimeType == "" {
-		return "", fmt.Errorf("could not determine mimetype of URL")
+		return "", fmt.Errorf("could not determine mimetype: url response has no content-type header")
 	}
 	return mimeType, nil
 }

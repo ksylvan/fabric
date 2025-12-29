@@ -9,13 +9,18 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
+const (
+	// defaultBaseURL is the default base URL for Exolab API
+	defaultBaseURL = "http://localhost:52415"
+)
+
 func NewClient() (ret *Client) {
 	ret = &Client{}
 	ret.Client = openai.NewClientCompatibleNoSetupQuestions("Exolab", ret.configure)
 
 	ret.ApiKey = ret.AddSetupQuestion("API Key", false)
 	ret.ApiBaseURL = ret.AddSetupQuestion("API Base URL", true)
-	ret.ApiBaseURL.Value = "http://localhost:52415"
+	ret.ApiBaseURL.Value = defaultBaseURL
 
 	ret.ApiModels = ret.AddSetupQuestionCustom("models", true,
 		"Enter your deployed Exolab models (comma separated)")
