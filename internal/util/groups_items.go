@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/danielmiessler/fabric/internal/i18n"
 	"github.com/samber/lo"
 )
 
@@ -98,7 +99,7 @@ func (o *GroupsItemsSelector[I]) GetGroupAndItemByItemNumber(number int) (group 
 	}
 
 	if !found {
-		err = fmt.Errorf("number %d is out of range", number)
+		err = fmt.Errorf("%s", fmt.Sprintf(i18n.T("groups_items_number_out_of_range"), number))
 	}
 	return
 }
