@@ -50,8 +50,8 @@ func NewSpotify() *Spotify {
 		EnvNamePrefix:    plugins.BuildEnvVariablePrefix(label),
 	}
 
-	ret.ClientId = ret.AddSetupQuestion("Client ID", false)
-	ret.ClientSecret = ret.AddSetupQuestion("Client Secret", false)
+	ret.ClientId = ret.AddSetupQuestionWithEnvName("Client ID", false, i18n.T("spotify_client_id_question"))
+	ret.ClientSecret = ret.AddSetupQuestionWithEnvName("Client Secret", false, i18n.T("spotify_client_secret_question"))
 
 	return ret
 }
@@ -475,48 +475,48 @@ func (s *Spotify) FormatMetadataAsText(metadata any) string {
 
 	switch m := metadata.(type) {
 	case *ShowMetadata:
-		sb.WriteString("# Spotify Podcast/Show\n\n")
-		sb.WriteString(fmt.Sprintf("**Title**: %s\n", m.Name))
-		sb.WriteString(fmt.Sprintf("**Publisher**: %s\n", m.Publisher))
-		sb.WriteString(fmt.Sprintf("**Total Episodes**: %d\n", m.TotalEpisodes))
+		sb.WriteString(i18n.T("spotify_show_header") + "\n\n")
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_title_label")+"\n", m.Name))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_publisher_label")+"\n", m.Publisher))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_total_episodes_label")+"\n", m.TotalEpisodes))
 		if len(m.Languages) > 0 {
-			sb.WriteString(fmt.Sprintf("**Languages**: %s\n", strings.Join(m.Languages, ", ")))
+			sb.WriteString(fmt.Sprintf(i18n.T("spotify_languages_label")+"\n", strings.Join(m.Languages, ", ")))
 		}
-		sb.WriteString(fmt.Sprintf("**Media Type**: %s\n", m.MediaType))
-		sb.WriteString(fmt.Sprintf("**URL**: %s\n\n", m.ExternalURL))
-		sb.WriteString("## Description\n\n")
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_media_type_label")+"\n", m.MediaType))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_url_label")+"\n\n", m.ExternalURL))
+		sb.WriteString(i18n.T("spotify_description_header") + "\n\n")
 		sb.WriteString(m.Description)
 		sb.WriteString("\n")
 
 	case *EpisodeMetadata:
-		sb.WriteString("# Spotify Episode\n\n")
-		sb.WriteString(fmt.Sprintf("**Title**: %s\n", m.Name))
-		sb.WriteString(fmt.Sprintf("**Show**: %s\n", m.ShowName))
-		sb.WriteString(fmt.Sprintf("**Release Date**: %s\n", m.ReleaseDate))
-		sb.WriteString(fmt.Sprintf("**Duration**: %d minutes\n", m.DurationMinutes))
-		sb.WriteString(fmt.Sprintf("**Language**: %s\n", m.Language))
-		sb.WriteString(fmt.Sprintf("**Explicit**: %v\n", m.Explicit))
-		sb.WriteString(fmt.Sprintf("**URL**: %s\n", m.ExternalURL))
+		sb.WriteString(i18n.T("spotify_episode_header") + "\n\n")
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_title_label")+"\n", m.Name))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_show_name_label")+"\n", m.ShowName))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_release_date_label")+"\n", m.ReleaseDate))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_duration_label")+"\n", m.DurationMinutes))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_language_field_label")+"\n", m.Language))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_explicit_label")+"\n", m.Explicit))
+		sb.WriteString(fmt.Sprintf(i18n.T("spotify_url_label")+"\n", m.ExternalURL))
 		if m.AudioPreviewURL != "" {
-			sb.WriteString(fmt.Sprintf("**Audio Preview**: %s\n", m.AudioPreviewURL))
+			sb.WriteString(fmt.Sprintf(i18n.T("spotify_audio_preview_label")+"\n", m.AudioPreviewURL))
 		}
-		sb.WriteString("\n## Description\n\n")
+		sb.WriteString("\n" + i18n.T("spotify_description_header") + "\n\n")
 		sb.WriteString(m.Description)
 		sb.WriteString("\n")
 
 	case *SearchResult:
-		sb.WriteString("# Spotify Search Results\n\n")
+		sb.WriteString(i18n.T("spotify_search_results_header") + "\n\n")
 		for i, show := range m.Shows {
 			sb.WriteString(fmt.Sprintf("## %d. %s\n", i+1, show.Name))
-			sb.WriteString(fmt.Sprintf("- **Publisher**: %s\n", show.Publisher))
-			sb.WriteString(fmt.Sprintf("- **Episodes**: %d\n", show.TotalEpisodes))
-			sb.WriteString(fmt.Sprintf("- **URL**: %s\n", show.ExternalURL))
+			sb.WriteString(fmt.Sprintf(i18n.T("spotify_search_publisher_label")+"\n", show.Publisher))
+			sb.WriteString(fmt.Sprintf(i18n.T("spotify_search_episodes_label")+"\n", show.TotalEpisodes))
+			sb.WriteString(fmt.Sprintf(i18n.T("spotify_search_url_label")+"\n", show.ExternalURL))
 			// Truncate description for search results
 			desc := show.Description
 			if len(desc) > 200 {
 				desc = desc[:200] + "..."
 			}
-			sb.WriteString(fmt.Sprintf("- **Description**: %s\n\n", desc))
+			sb.WriteString(fmt.Sprintf(i18n.T("spotify_search_description_label")+"\n\n", desc))
 		}
 	}
 
