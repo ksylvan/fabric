@@ -517,5 +517,12 @@
   "copilot_error_stream_request": "درخواست جریان ناموفق بود: %s - %s",
   "copilot_debug_created_conversation": "مکالمه Copilot ایجاد شد: %s",
   "copilot_debug_failed_parse_sse_event": "تجزیه رویداد SSE ناموفق بود: %v",
-  "copilot_error_reading_stream": "خطا در خواندن جریان: %w"
+  "copilot_error_reading_stream": "خطا در خواندن جریان: %w",
+  "ollama_http_timeout_question": "مدت زمان تایم‌اوت HTTP برای درخواست‌های Ollama را مشخص کنید (مثلاً 30s، 5m، 1h)",
+  "ollama_cannot_parse_url": "قادر به تجزیه URL نیست: %s: %v",
+  "ollama_invalid_http_timeout_using_default": "فرمت تایم‌اوت HTTP نامعتبر است (%q)، مقدار پیش‌فرض (20m) استفاده می‌شود: %v",
+  "ollama_chat_request_failed": "درخواست چت Ollama شکست خورد: %v",
+  "ollama_invalid_data_url_format": "فرمت URL داده نامعتبر است",
+  "ollama_failed_decode_data_url": "شکست در رمزگشایی URL داده: %v",
+  "ollama_failed_fetch_image": "شکست در دریافت تصویر %s: %s"
 }

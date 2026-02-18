@@ -525,5 +525,12 @@
   "copilot_error_stream_request": "流请求失败: %s - %s",
   "copilot_debug_created_conversation": "已创建 Copilot 对话: %s",
   "copilot_debug_failed_parse_sse_event": "解析 SSE 事件失败: %v",
-  "copilot_error_reading_stream": "读取流时出错: %w"
+  "copilot_error_reading_stream": "读取流时出错: %w",
+  "ollama_http_timeout_question": "请为 Ollama 请求指定 HTTP 超时时长（例如 30s、5m、1h）",
+  "ollama_cannot_parse_url": "无法解析 URL：%s：%v",
+  "ollama_invalid_http_timeout_using_default": "无效的 HTTP 超时格式（%q），将使用默认值（20m）：%v",
+  "ollama_chat_request_failed": "Ollama 聊天请求失败：%v",
+  "ollama_invalid_data_url_format": "无效的数据 URL 格式",
+  "ollama_failed_decode_data_url": "解码数据 URL 失败：%v",
+  "ollama_failed_fetch_image": "获取图片失败 %s：%s"
 }

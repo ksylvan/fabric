@@ -525,5 +525,12 @@
   "copilot_error_stream_request": "ストリームリクエストが失敗しました: %s - %s",
   "copilot_debug_created_conversation": "Copilot会話を作成しました: %s",
   "copilot_debug_failed_parse_sse_event": "SSEイベントの解析に失敗しました: %v",
-  "copilot_error_reading_stream": "ストリームの読み取りエラー: %w"
+  "copilot_error_reading_stream": "ストリームの読み取りエラー: %w",
+  "ollama_http_timeout_question": "Ollama リクエストの HTTP タイムアウト時間を指定してください（例: 30s、5m、1h）",
+  "ollama_cannot_parse_url": "URL を解析できません: %s: %v",
+  "ollama_invalid_http_timeout_using_default": "無効な HTTP タイムアウト形式です (%q)。デフォルト値 (20m) を使用します: %v",
+  "ollama_chat_request_failed": "Ollama のチャットリクエストに失敗しました: %v",
+  "ollama_invalid_data_url_format": "無効なデータ URL 形式です",
+  "ollama_failed_decode_data_url": "データ URL のデコードに失敗しました: %v",
+  "ollama_failed_fetch_image": "画像の取得に失敗しました %s: %s"
 }

@@ -525,5 +525,12 @@
   "copilot_error_stream_request": "échec de la demande de flux: %s - %s",
   "copilot_debug_created_conversation": "Conversation Copilot créée: %s",
   "copilot_debug_failed_parse_sse_event": "Échec de l'analyse de l'événement SSE: %v",
-  "copilot_error_reading_stream": "erreur lors de la lecture du flux: %w"
+  "copilot_error_reading_stream": "erreur lors de la lecture du flux: %w",
+  "ollama_http_timeout_question": "Spécifiez la durée du délai HTTP pour les requêtes Ollama (par ex. 30s, 5m, 1h)",
+  "ollama_cannot_parse_url": "impossible d'analyser l'URL : %s : %v",
+  "ollama_invalid_http_timeout_using_default": "Format de délai HTTP invalide (%q), utilisation de la valeur par défaut (20m) : %v",
+  "ollama_chat_request_failed": "échec de la requête de chat Ollama : %v",
+  "ollama_invalid_data_url_format": "format d'URL de données invalide",
+  "ollama_failed_decode_data_url": "échec du décodage de l'URL de données : %v",
+  "ollama_failed_fetch_image": "échec de récupération de l'image %s : %s"
 }

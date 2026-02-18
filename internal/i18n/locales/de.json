@@ -525,5 +525,12 @@
   "copilot_error_stream_request": "Stream-Anforderung fehlgeschlagen: %s - %s",
   "copilot_debug_created_conversation": "Copilot-Konversation erstellt: %s",
   "copilot_debug_failed_parse_sse_event": "SSE-Ereignis konnte nicht geparst werden: %v",
-  "copilot_error_reading_stream": "Fehler beim Lesen des Streams: %w"
+  "copilot_error_reading_stream": "Fehler beim Lesen des Streams: %w",
+  "ollama_http_timeout_question": "HTTP-Timeout-Dauer für Ollama-Anfragen angeben (z. B. 30s, 5m, 1h)",
+  "ollama_cannot_parse_url": "URL kann nicht geparst werden: %s: %v",
+  "ollama_invalid_http_timeout_using_default": "Ungültiges HTTP-Timeout-Format (%q), Standardwert (20m) wird verwendet: %v",
+  "ollama_chat_request_failed": "Ollama-Chat-Anfrage fehlgeschlagen: %v",
+  "ollama_invalid_data_url_format": "ungültiges Data-URL-Format",
+  "ollama_failed_decode_data_url": "Data-URL konnte nicht dekodiert werden: %v",
+  "ollama_failed_fetch_image": "Bild konnte nicht abgerufen werden %s: %s"
 }
