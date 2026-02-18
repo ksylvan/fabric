@@ -530,5 +530,11 @@
   "copilot_error_stream_request": "درخواست جریان ناموفق بود: %s - %s",
   "copilot_debug_created_conversation": "مکالمه Copilot ایجاد شد: %s",
   "copilot_debug_failed_parse_sse_event": "تجزیه رویداد SSE ناموفق بود: %v",
-  "copilot_error_reading_stream": "خطا در خواندن جریان: %w"
+  "copilot_error_reading_stream": "خطا در خواندن جریان: %w",
+  "perplexity_api_key_not_configured": "کلید API %s پیکربندی نشده است. لطفاً متغیر محیطی %s را تنظیم کنید یا 'fabric --setup %s' را اجرا کنید",
+  "perplexity_failed_configure": "پیکربندی کلاینت Perplexity ناموفق بود: %w",
+  "perplexity_api_request_failed": "درخواست API Perplexity ناموفق بود: %w",
+  "perplexity_citations_header": "\n\n# منابع\n\n",
+  "perplexity_streaming_error": "خطای جریان Perplexity: %v\n",
+  "anthropic_stream_error": "خطای جریان پیام‌ها: %v\n"
 }

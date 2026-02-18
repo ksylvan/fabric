@@ -538,5 +538,11 @@
   "copilot_error_stream_request": "流请求失败: %s - %s",
   "copilot_debug_created_conversation": "已创建 Copilot 对话: %s",
   "copilot_debug_failed_parse_sse_event": "解析 SSE 事件失败: %v",
-  "copilot_error_reading_stream": "读取流时出错: %w"
+  "copilot_error_reading_stream": "读取流时出错: %w",
+  "perplexity_api_key_not_configured": "%s API密钥未配置。请设置环境变量 %s 或运行 'fabric --setup %s'",
+  "perplexity_failed_configure": "配置Perplexity客户端失败: %w",
+  "perplexity_api_request_failed": "Perplexity API请求失败: %w",
+  "perplexity_citations_header": "\n\n# 引用\n\n",
+  "perplexity_streaming_error": "Perplexity流式传输错误: %v\n",
+  "anthropic_stream_error": "消息流错误: %v\n"
 }

@@ -7,12 +7,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/danielmiessler/fabric/internal/chat"
 	"github.com/danielmiessler/fabric/internal/domain"
+	"github.com/danielmiessler/fabric/internal/i18n"
 	debuglog "github.com/danielmiessler/fabric/internal/log"
 	"github.com/danielmiessler/fabric/internal/plugins"
 	perplexity "github.com/sgaunet/perplexity-go/v2"
-
-	"github.com/danielmiessler/fabric/internal/chat"
 )
 
 const (
@@ -46,7 +46,7 @@ func (c *Client) Configure() error {
 		if apiKeyFromEnv != "" {
 			c.APIKey.Value = apiKeyFromEnv
 		} else {
-			return fmt.Errorf("%s API key not configured. Please set the %s environment variable or run 'fabric --setup %s'", providerName, envKey, providerName)
+			return fmt.Errorf(i18n.T("perplexity_api_key_not_configured"), providerName, envKey, providerName)
 		}
 	}
 	c.client = perplexity.NewClient(c.APIKey.Value)
@@ -62,7 +62,7 @@ func (c *Client) ListModels() ([]string, error) {
 func (c *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, opts *domain.ChatOptions) (string, error) {
 	if c.client == nil {
 		if err := c.Configure(); err != nil {
-			return "", fmt.Errorf("failed to configure Perplexity client: %w", err)
+			return "", fmt.Errorf(i18n.T("perplexity_failed_configure"), err)
 		}
 	}
 
@@ -101,7 +101,7 @@ func (c *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, o
 	// Corrected: Use SendCompletionRequest method from perplexity-go library
 	resp, err := c.client.SendCompletionRequest(request) // Pass request directly
 	if err != nil {
-		return "", fmt.Errorf("perplexity API request failed: %w", err) // Corrected capitalization
+		return "", fmt.Errorf(i18n.T("perplexity_api_request_failed"), err)
 	}
 
 	var content strings.Builder
@@ -110,7 +110,7 @@ func (c *Client) Send(ctx context.Context, msgs []*chat.ChatCompletionMessage, o
 	// Append citations if available
 	citations := resp.GetCitations()
 	if len(citations) > 0 {
-		content.WriteString("\n\n# CITATIONS\n\n")
+		content.WriteString(i18n.T("perplexity_citations_header"))
 		for i, citation := range citations {
 			content.WriteString(fmt.Sprintf("- [%d] %s\n", i+1, citation))
 		}
@@ -123,7 +123,7 @@ func (c *Client) SendStream(msgs []*chat.ChatCompletionMessage, opts *domain.Cha
 	if c.client == nil {
 		if err := c.Configure(); err != nil {
 			close(channel) // Ensure channel is closed on error
-			return fmt.Errorf("failed to configure Perplexity client: %w", err)
+			return fmt.Errorf(i18n.T("perplexity_failed_configure"), err)
 		}
 	}
 
@@ -170,7 +170,7 @@ func (c *Client) SendStream(msgs []*chat.ChatCompletionMessage, opts *domain.Cha
 		if err != nil {
 			// Log error, can't send to string channel directly.
 			// Consider a mechanism to propagate this error if needed.
-			debuglog.Log("perplexity streaming error: %v\n", err)
+			debuglog.Log(i18n.T("perplexity_streaming_error"), err)
 			// If the error occurs during stream setup, the channel might not have been closed by the receiver loop.
 			// However, closing it here might cause a panic if the receiver loop also tries to close it.
 			// close(channel) // Caution: Uncommenting this may cause panic, as channel is closed in the receiver goroutine.
@@ -216,7 +216,7 @@ func (c *Client) SendStream(msgs []*chat.ChatCompletionMessage, opts *domain.Cha
 			citations := lastResponse.GetCitations()
 			if len(citations) > 0 {
 				var citationsText strings.Builder
-				citationsText.WriteString("\n\n# CITATIONS\n\n")
+				citationsText.WriteString(i18n.T("perplexity_citations_header"))
 				for i, citation := range citations {
 					citationsText.WriteString(fmt.Sprintf("- [%d] %s\n", i+1, citation))
 				}

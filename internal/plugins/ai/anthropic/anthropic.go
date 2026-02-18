@@ -13,6 +13,7 @@ import (
 	"github.com/anthropics/anthropic-sdk-go/option"
 	"github.com/danielmiessler/fabric/internal/chat"
 	"github.com/danielmiessler/fabric/internal/domain"
+	"github.com/danielmiessler/fabric/internal/i18n"
 	debuglog "github.com/danielmiessler/fabric/internal/log"
 	"github.com/danielmiessler/fabric/internal/plugins"
 )
@@ -194,7 +195,7 @@ func (an *Client) SendStream(
 	}
 
 	if stream.Err() != nil {
-		fmt.Fprintf(os.Stderr, "Messages stream error: %v\n", stream.Err())
+		fmt.Fprintf(os.Stderr, i18n.T("anthropic_stream_error"), stream.Err())
 	}
 	close(channel)
 	return

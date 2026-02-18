@@ -538,5 +538,11 @@
   "copilot_error_stream_request": "Stream-Anforderung fehlgeschlagen: %s - %s",
   "copilot_debug_created_conversation": "Copilot-Konversation erstellt: %s",
   "copilot_debug_failed_parse_sse_event": "SSE-Ereignis konnte nicht geparst werden: %v",
-  "copilot_error_reading_stream": "Fehler beim Lesen des Streams: %w"
+  "copilot_error_reading_stream": "Fehler beim Lesen des Streams: %w",
+  "perplexity_api_key_not_configured": "%s API-Schlüssel nicht konfiguriert. Bitte setzen Sie die Umgebungsvariable %s oder führen Sie 'fabric --setup %s' aus",
+  "perplexity_failed_configure": "Perplexity-Client konnte nicht konfiguriert werden: %w",
+  "perplexity_api_request_failed": "Perplexity-API-Anfrage fehlgeschlagen: %w",
+  "perplexity_citations_header": "\n\n# QUELLENANGABEN\n\n",
+  "perplexity_streaming_error": "Perplexity-Streaming-Fehler: %v\n",
+  "anthropic_stream_error": "Nachrichten-Stream-Fehler: %v\n"
 }
