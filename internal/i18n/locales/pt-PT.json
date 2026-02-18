@@ -516,5 +516,11 @@
   "copilot_error_stream_request": "pedido de transmissão falhou: %s - %s",
   "copilot_debug_created_conversation": "Conversa do Copilot criada: %s",
   "copilot_debug_failed_parse_sse_event": "Falha ao analisar evento SSE: %v",
-  "copilot_error_reading_stream": "erro ao ler transmissão: %w"
+  "copilot_error_reading_stream": "erro ao ler transmissão: %w",
+  "util_path_is_empty": "o caminho está vazio",
+  "util_could_not_resolve_home_dir": "não foi possível resolver o diretório pessoal",
+  "util_could_not_get_absolute_path": "não foi possível obter o caminho absoluto",
+  "util_could_not_resolve_symlinks": "não foi possível resolver as ligações simbólicas: %w",
+  "util_could_not_determine_home_dir": "não foi possível determinar o diretório pessoal do utilizador: %w",
+  "util_error_accessing_default_config_path": "erro ao aceder ao caminho de configuração predefinido: %w"
 }

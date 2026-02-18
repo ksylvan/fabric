@@ -516,5 +516,11 @@
   "copilot_error_stream_request": "流请求失败: %s - %s",
   "copilot_debug_created_conversation": "已创建 Copilot 对话: %s",
   "copilot_debug_failed_parse_sse_event": "解析 SSE 事件失败: %v",
-  "copilot_error_reading_stream": "读取流时出错: %w"
+  "copilot_error_reading_stream": "读取流时出错: %w",
+  "util_path_is_empty": "路径为空",
+  "util_could_not_resolve_home_dir": "无法解析主目录",
+  "util_could_not_get_absolute_path": "无法获取绝对路径",
+  "util_could_not_resolve_symlinks": "无法解析符号链接: %w",
+  "util_could_not_determine_home_dir": "无法确定用户主目录: %w",
+  "util_error_accessing_default_config_path": "访问默认配置路径时出错: %w"
 }

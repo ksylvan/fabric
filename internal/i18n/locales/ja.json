@@ -516,5 +516,11 @@
   "copilot_error_stream_request": "ストリームリクエストが失敗しました: %s - %s",
   "copilot_debug_created_conversation": "Copilot会話を作成しました: %s",
   "copilot_debug_failed_parse_sse_event": "SSEイベントの解析に失敗しました: %v",
-  "copilot_error_reading_stream": "ストリームの読み取りエラー: %w"
+  "copilot_error_reading_stream": "ストリームの読み取りエラー: %w",
+  "util_path_is_empty": "パスが空です",
+  "util_could_not_resolve_home_dir": "ホームディレクトリを解決できませんでした",
+  "util_could_not_get_absolute_path": "絶対パスを取得できませんでした",
+  "util_could_not_resolve_symlinks": "シンボリックリンクを解決できませんでした: %w",
+  "util_could_not_determine_home_dir": "ユーザーのホームディレクトリを特定できませんでした: %w",
+  "util_error_accessing_default_config_path": "デフォルト設定パスへのアクセスエラー: %w"
 }

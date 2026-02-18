@@ -516,5 +516,11 @@
   "copilot_error_stream_request": "échec de la demande de flux: %s - %s",
   "copilot_debug_created_conversation": "Conversation Copilot créée: %s",
   "copilot_debug_failed_parse_sse_event": "Échec de l'analyse de l'événement SSE: %v",
-  "copilot_error_reading_stream": "erreur lors de la lecture du flux: %w"
+  "copilot_error_reading_stream": "erreur lors de la lecture du flux: %w",
+  "util_path_is_empty": "le chemin est vide",
+  "util_could_not_resolve_home_dir": "impossible de résoudre le répertoire personnel",
+  "util_could_not_get_absolute_path": "impossible d'obtenir le chemin absolu",
+  "util_could_not_resolve_symlinks": "impossible de résoudre les liens symboliques: %w",
+  "util_could_not_determine_home_dir": "impossible de déterminer le répertoire personnel de l'utilisateur: %w",
+  "util_error_accessing_default_config_path": "erreur lors de l'accès au chemin de configuration par défaut: %w"
 }

@@ -508,5 +508,11 @@
   "copilot_error_stream_request": "درخواست جریان ناموفق بود: %s - %s",
   "copilot_debug_created_conversation": "مکالمه Copilot ایجاد شد: %s",
   "copilot_debug_failed_parse_sse_event": "تجزیه رویداد SSE ناموفق بود: %v",
-  "copilot_error_reading_stream": "خطا در خواندن جریان: %w"
+  "copilot_error_reading_stream": "خطا در خواندن جریان: %w",
+  "util_path_is_empty": "مسیر خالی است",
+  "util_could_not_resolve_home_dir": "دایرکتوری خانگی قابل حل نبود",
+  "util_could_not_get_absolute_path": "مسیر مطلق قابل دریافت نبود",
+  "util_could_not_resolve_symlinks": "لینک‌های نمادین قابل حل نبودند: %w",
+  "util_could_not_determine_home_dir": "دایرکتوری خانگی کاربر قابل تعیین نبود: %w",
+  "util_error_accessing_default_config_path": "خطا در دسترسی به مسیر پیکربندی پیش‌فرض: %w"
 }

@@ -516,5 +516,11 @@
   "copilot_error_stream_request": "stream request failed: %s - %s",
   "copilot_debug_created_conversation": "Created Copilot conversation: %s",
   "copilot_debug_failed_parse_sse_event": "Failed to parse SSE event: %v",
-  "copilot_error_reading_stream": "error reading stream: %w"
+  "copilot_error_reading_stream": "error reading stream: %w",
+  "util_path_is_empty": "path is empty",
+  "util_could_not_resolve_home_dir": "could not resolve home directory",
+  "util_could_not_get_absolute_path": "could not get absolute path",
+  "util_could_not_resolve_symlinks": "could not resolve symlinks: %w",
+  "util_could_not_determine_home_dir": "could not determine user home directory: %w",
+  "util_error_accessing_default_config_path": "error accessing default config path: %w"
 }

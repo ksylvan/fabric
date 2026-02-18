@@ -516,5 +516,11 @@
   "copilot_error_stream_request": "richiesta di stream fallita: %s - %s",
   "copilot_debug_created_conversation": "Conversazione Copilot creata: %s",
   "copilot_debug_failed_parse_sse_event": "Impossibile analizzare l'evento SSE: %v",
-  "copilot_error_reading_stream": "errore nella lettura dello stream: %w"
+  "copilot_error_reading_stream": "errore nella lettura dello stream: %w",
+  "util_path_is_empty": "il percorso è vuoto",
+  "util_could_not_resolve_home_dir": "impossibile risolvere la directory home",
+  "util_could_not_get_absolute_path": "impossibile ottenere il percorso assoluto",
+  "util_could_not_resolve_symlinks": "impossibile risolvere i link simbolici: %w",
+  "util_could_not_determine_home_dir": "impossibile determinare la directory home dell'utente: %w",
+  "util_error_accessing_default_config_path": "errore nell'accesso al percorso di configurazione predefinito: %w"
 }
