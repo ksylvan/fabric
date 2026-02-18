@@ -534,5 +534,6 @@
   "ollama_failed_fetch_image": "شکست در دریافت تصویر %s: %s",
   "jina_error_creating_request": "خطا در ایجاد درخواست: %v",
   "jina_error_sending_request": "خطا در ارسال درخواست: %v",
-  "jina_error_reading_response_body": "خطا در خواندن بدنه پاسخ: %v"
+  "jina_error_reading_response_body": "خطا در خواندن بدنه پاسخ: %v",
+  "groups_items_number_out_of_range": "عدد %d خارج از بازه است"
 }

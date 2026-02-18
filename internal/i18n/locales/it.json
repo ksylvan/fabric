@@ -542,5 +542,6 @@
   "ollama_failed_fetch_image": "impossibile recuperare l'immagine %s: %s",
   "jina_error_creating_request": "errore durante la creazione della richiesta: %v",
   "jina_error_sending_request": "errore durante l'invio della richiesta: %v",
-  "jina_error_reading_response_body": "errore durante la lettura del corpo della risposta: %v"
+  "jina_error_reading_response_body": "errore durante la lettura del corpo della risposta: %v",
+  "groups_items_number_out_of_range": "il numero %d è fuori intervallo"
 }

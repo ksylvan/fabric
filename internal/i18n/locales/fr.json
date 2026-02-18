@@ -542,5 +542,6 @@
   "ollama_failed_fetch_image": "échec de récupération de l'image %s : %s",
   "jina_error_creating_request": "erreur lors de la création de la requête : %v",
   "jina_error_sending_request": "erreur lors de l'envoi de la requête : %v",
-  "jina_error_reading_response_body": "erreur lors de la lecture du corps de la réponse : %v"
+  "jina_error_reading_response_body": "erreur lors de la lecture du corps de la réponse : %v",
+  "groups_items_number_out_of_range": "le numéro %d est hors plage"
 }

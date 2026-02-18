@@ -542,5 +542,6 @@
   "ollama_failed_fetch_image": "error al obtener la imagen %s: %s",
   "jina_error_creating_request": "error al crear la solicitud: %v",
   "jina_error_sending_request": "error al enviar la solicitud: %v",
-  "jina_error_reading_response_body": "error al leer el cuerpo de la respuesta: %v"
+  "jina_error_reading_response_body": "error al leer el cuerpo de la respuesta: %v",
+  "groups_items_number_out_of_range": "el número %d está fuera de rango"
 }

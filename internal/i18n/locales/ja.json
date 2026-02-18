@@ -542,5 +542,6 @@
   "ollama_failed_fetch_image": "画像の取得に失敗しました %s: %s",
   "jina_error_creating_request": "リクエストの作成中にエラーが発生しました: %v",
   "jina_error_sending_request": "リクエストの送信中にエラーが発生しました: %v",
-  "jina_error_reading_response_body": "レスポンスボディの読み取り中にエラーが発生しました: %v"
+  "jina_error_reading_response_body": "レスポンスボディの読み取り中にエラーが発生しました: %v",
+  "groups_items_number_out_of_range": "番号 %d は範囲外です"
 }

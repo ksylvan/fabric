@@ -542,5 +542,6 @@
   "copilot_error_reading_stream": "error reading stream: %w",
   "jina_error_creating_request": "error creating request: %v",
   "jina_error_sending_request": "error sending request: %v",
-  "jina_error_reading_response_body": "error reading response body: %v"
+  "jina_error_reading_response_body": "error reading response body: %v",
+  "groups_items_number_out_of_range": "number %d is out of range"
 }
