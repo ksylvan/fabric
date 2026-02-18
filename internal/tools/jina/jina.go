@@ -45,7 +45,7 @@ func (jc *Client) ScrapeQuestion(question string) (ret string, err error) {
 func (jc *Client) request(requestURL string) (ret string, err error) {
 	var req *http.Request
 	if req, err = http.NewRequest("GET", requestURL, nil); err != nil {
-		err = fmt.Errorf("error creating request: %w", err)
+		err = fmt.Errorf("%s", fmt.Sprintf(i18n.T("jina_error_creating_request"), err))
 		return
 	}
 
@@ -57,14 +57,14 @@ func (jc *Client) request(requestURL string) (ret string, err error) {
 	client := &http.Client{}
 	var resp *http.Response
 	if resp, err = client.Do(req); err != nil {
-		err = fmt.Errorf("error sending request: %w", err)
+		err = fmt.Errorf("%s", fmt.Sprintf(i18n.T("jina_error_sending_request"), err))
 		return
 	}
 	defer resp.Body.Close()
 
 	var body []byte
 	if body, err = io.ReadAll(resp.Body); err != nil {
-		err = fmt.Errorf("error reading response body: %w", err)
+		err = fmt.Errorf("%s", fmt.Sprintf(i18n.T("jina_error_reading_response_body"), err))
 		return
 	}
 	ret = string(body)

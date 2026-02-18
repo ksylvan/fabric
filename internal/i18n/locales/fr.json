@@ -539,5 +539,8 @@
   "ollama_chat_request_failed": "échec de la requête de chat Ollama : %v",
   "ollama_invalid_data_url_format": "format d'URL de données invalide",
   "ollama_failed_decode_data_url": "échec du décodage de l'URL de données : %v",
-  "ollama_failed_fetch_image": "échec de récupération de l'image %s : %s"
+  "ollama_failed_fetch_image": "échec de récupération de l'image %s : %s",
+  "jina_error_creating_request": "erreur lors de la création de la requête : %v",
+  "jina_error_sending_request": "erreur lors de l'envoi de la requête : %v",
+  "jina_error_reading_response_body": "erreur lors de la lecture du corps de la réponse : %v"
 }

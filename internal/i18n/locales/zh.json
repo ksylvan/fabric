@@ -539,5 +539,8 @@
   "ollama_chat_request_failed": "Ollama 聊天请求失败：%v",
   "ollama_invalid_data_url_format": "无效的数据 URL 格式",
   "ollama_failed_decode_data_url": "解码数据 URL 失败：%v",
-  "ollama_failed_fetch_image": "获取图片失败 %s：%s"
+  "ollama_failed_fetch_image": "获取图片失败 %s：%s",
+  "jina_error_creating_request": "创建请求时出错：%v",
+  "jina_error_sending_request": "发送请求时出错：%v",
+  "jina_error_reading_response_body": "读取响应体时出错：%v"
 }

@@ -539,5 +539,8 @@
   "ollama_chat_request_failed": "falha no pedido de chat do Ollama: %v",
   "ollama_invalid_data_url_format": "formato de URL de dados inválido",
   "ollama_failed_decode_data_url": "falha ao descodificar URL de dados: %v",
-  "ollama_failed_fetch_image": "falha ao obter imagem %s: %s"
+  "ollama_failed_fetch_image": "falha ao obter imagem %s: %s",
+  "jina_error_creating_request": "erro ao criar o pedido: %v",
+  "jina_error_sending_request": "erro ao enviar o pedido: %v",
+  "jina_error_reading_response_body": "erro ao ler o corpo da resposta: %v"
 }

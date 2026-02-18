@@ -531,5 +531,8 @@
   "ollama_chat_request_failed": "درخواست چت Ollama شکست خورد: %v",
   "ollama_invalid_data_url_format": "فرمت URL داده نامعتبر است",
   "ollama_failed_decode_data_url": "شکست در رمزگشایی URL داده: %v",
-  "ollama_failed_fetch_image": "شکست در دریافت تصویر %s: %s"
+  "ollama_failed_fetch_image": "شکست در دریافت تصویر %s: %s",
+  "jina_error_creating_request": "خطا در ایجاد درخواست: %v",
+  "jina_error_sending_request": "خطا در ارسال درخواست: %v",
+  "jina_error_reading_response_body": "خطا در خواندن بدنه پاسخ: %v"
 }

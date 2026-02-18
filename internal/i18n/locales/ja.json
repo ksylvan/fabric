@@ -539,5 +539,8 @@
   "ollama_chat_request_failed": "Ollama のチャットリクエストに失敗しました: %v",
   "ollama_invalid_data_url_format": "無効なデータ URL 形式です",
   "ollama_failed_decode_data_url": "データ URL のデコードに失敗しました: %v",
-  "ollama_failed_fetch_image": "画像の取得に失敗しました %s: %s"
+  "ollama_failed_fetch_image": "画像の取得に失敗しました %s: %s",
+  "jina_error_creating_request": "リクエストの作成中にエラーが発生しました: %v",
+  "jina_error_sending_request": "リクエストの送信中にエラーが発生しました: %v",
+  "jina_error_reading_response_body": "レスポンスボディの読み取り中にエラーが発生しました: %v"
 }

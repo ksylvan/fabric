@@ -539,5 +539,8 @@
   "copilot_error_stream_request": "stream request failed: %s - %s",
   "copilot_debug_created_conversation": "Created Copilot conversation: %s",
   "copilot_debug_failed_parse_sse_event": "Failed to parse SSE event: %v",
-  "copilot_error_reading_stream": "error reading stream: %w"
+  "copilot_error_reading_stream": "error reading stream: %w",
+  "jina_error_creating_request": "error creating request: %v",
+  "jina_error_sending_request": "error sending request: %v",
+  "jina_error_reading_response_body": "error reading response body: %v"
 }
