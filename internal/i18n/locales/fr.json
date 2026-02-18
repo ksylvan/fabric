@@ -516,5 +516,11 @@
   "copilot_error_stream_request": "échec de la demande de flux: %s - %s",
   "copilot_debug_created_conversation": "Conversation Copilot créée: %s",
   "copilot_debug_failed_parse_sse_event": "Échec de l'analyse de l'événement SSE: %v",
-  "copilot_error_reading_stream": "erreur lors de la lecture du flux: %w"
+  "copilot_error_reading_stream": "erreur lors de la lecture du flux: %w",
+  "template_sys_error_hostname": "sys: hostname error: %v",
+  "template_sys_error_user": "sys: user error: %v",
+  "template_sys_error_env_requires_var": "sys: env operation requires a variable name",
+  "template_sys_error_pwd": "sys: pwd error: %v",
+  "template_sys_error_home": "sys: home error: %v",
+  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)"
 }

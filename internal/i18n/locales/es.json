@@ -516,5 +516,11 @@
   "copilot_error_stream_request": "falló la solicitud de transmisión: %s - %s",
   "copilot_debug_created_conversation": "Conversación de Copilot creada: %s",
   "copilot_debug_failed_parse_sse_event": "Error al analizar el evento SSE: %v",
-  "copilot_error_reading_stream": "error al leer la transmisión: %w"
+  "copilot_error_reading_stream": "error al leer la transmisión: %w",
+  "template_sys_error_hostname": "sys: hostname error: %v",
+  "template_sys_error_user": "sys: user error: %v",
+  "template_sys_error_env_requires_var": "sys: env operation requires a variable name",
+  "template_sys_error_pwd": "sys: pwd error: %v",
+  "template_sys_error_home": "sys: home error: %v",
+  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)"
 }

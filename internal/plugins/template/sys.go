@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/user"
 	"runtime"
+
+	"github.com/danielmiessler/fabric/internal/i18n"
 )
 
 // SysPlugin provides access to system-level information.
@@ -29,7 +31,7 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 		hostname, err := os.Hostname()
 		if err != nil {
 			debugf("Sys: hostname error: %v", err)
-			return "", fmt.Errorf("sys: hostname error: %v", err)
+			return "", fmt.Errorf(i18n.T("template_sys_error_hostname"), err)
 		}
 		debugf("Sys: hostname=%q", hostname)
 		return hostname, nil
@@ -38,7 +40,7 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 		currentUser, err := user.Current()
 		if err != nil {
 			debugf("Sys: user error: %v", err)
-			return "", fmt.Errorf("sys: user error: %v", err)
+			return "", fmt.Errorf(i18n.T("template_sys_error_user"), err)
 		}
 		debugf("Sys: user=%q", currentUser.Username)
 		return currentUser.Username, nil
@@ -56,7 +58,7 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 	case "env":
 		if value == "" {
 			debugf("Sys: env error: missing variable name")
-			return "", fmt.Errorf("sys: env operation requires a variable name")
+			return "", fmt.Errorf("%s", i18n.T("template_sys_error_env_requires_var"))
 		}
 		result := os.Getenv(value)
 		debugf("Sys: env %q=%q", value, result)
@@ -66,7 +68,7 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 		dir, err := os.Getwd()
 		if err != nil {
 			debugf("Sys: pwd error: %v", err)
-			return "", fmt.Errorf("sys: pwd error: %v", err)
+			return "", fmt.Errorf(i18n.T("template_sys_error_pwd"), err)
 		}
 		debugf("Sys: pwd=%q", dir)
 		return dir, nil
@@ -75,13 +77,13 @@ func (p *SysPlugin) Apply(operation string, value string) (string, error) {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			debugf("Sys: home error: %v", err)
-			return "", fmt.Errorf("sys: home error: %v", err)
+			return "", fmt.Errorf(i18n.T("template_sys_error_home"), err)
 		}
 		debugf("Sys: home=%q", homeDir)
 		return homeDir, nil
 
 	default:
 		debugf("Sys: unknown operation %q", operation)
-		return "", fmt.Errorf("sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)", operation)
+		return "", fmt.Errorf(i18n.T("template_sys_error_unknown_operation"), operation)
 	}
 }
