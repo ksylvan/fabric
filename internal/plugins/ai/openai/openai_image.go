@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/danielmiessler/fabric/internal/domain"
+	"github.com/danielmiessler/fabric/internal/i18n"
 	"github.com/openai/openai-go/packages/param"
 	"github.com/openai/openai-go/responses"
 )
@@ -115,23 +116,23 @@ func (o *Client) extractAndSaveImages(resp *responses.Response, opts *domain.Cha
 				// Decode base64 image data
 				imageData, err := base64.StdEncoding.DecodeString(imageCall.Result)
 				if err != nil {
-					return fmt.Errorf("failed to decode image data: %w", err)
+					return fmt.Errorf("%s", fmt.Sprintf(i18n.T("openai_image_failed_to_decode_image_data"), err))
 				}
 
 				// Ensure directory exists
 				dir := filepath.Dir(opts.ImageFile)
 				if dir != "." {
 					if err := os.MkdirAll(dir, 0755); err != nil {
-						return fmt.Errorf("failed to create directory %s: %w", dir, err)
+						return fmt.Errorf("%s", fmt.Sprintf(i18n.T("openai_image_failed_to_create_directory"), dir, err))
 					}
 				}
 
 				// Save image to file
 				if err := os.WriteFile(opts.ImageFile, imageData, 0644); err != nil {
-					return fmt.Errorf("failed to save image to %s: %w", opts.ImageFile, err)
+					return fmt.Errorf("%s", fmt.Sprintf(i18n.T("openai_image_failed_to_save_image"), opts.ImageFile, err))
 				}
 
-				fmt.Printf("Image saved to: %s\n", opts.ImageFile)
+				fmt.Printf("%s\n", fmt.Sprintf(i18n.T("openai_image_saved_to"), opts.ImageFile))
 				return nil
 			}
 		}
