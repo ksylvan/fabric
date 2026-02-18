@@ -522,5 +522,10 @@
   "util_could_not_get_absolute_path": "絶対パスを取得できませんでした",
   "util_could_not_resolve_symlinks": "シンボリックリンクを解決できませんでした: %w",
   "util_could_not_determine_home_dir": "ユーザーのホームディレクトリを特定できませんでした: %w",
-  "util_error_accessing_default_config_path": "デフォルト設定パスへのアクセスエラー: %w"
+  "util_error_accessing_default_config_path": "デフォルト設定パスへのアクセスエラー: %w",
+  "githelper_failed_clone_repository": "リポジトリのクローンに失敗しました: %w",
+  "githelper_failed_get_head": "リポジトリのHEADの取得に失敗しました: %w",
+  "githelper_failed_get_commit": "コミットの取得に失敗しました: %w",
+  "githelper_failed_get_tree": "ツリーの取得に失敗しました: %w",
+  "githelper_failed_create_dest_dir": "宛先ディレクトリの作成に失敗しました: %w"
 }

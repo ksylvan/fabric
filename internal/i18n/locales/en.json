@@ -522,5 +522,10 @@
   "util_could_not_get_absolute_path": "could not get absolute path",
   "util_could_not_resolve_symlinks": "could not resolve symlinks: %w",
   "util_could_not_determine_home_dir": "could not determine user home directory: %w",
-  "util_error_accessing_default_config_path": "error accessing default config path: %w"
+  "util_error_accessing_default_config_path": "error accessing default config path: %w",
+  "githelper_failed_clone_repository": "failed to clone repository: %w",
+  "githelper_failed_get_head": "failed to get repository HEAD: %w",
+  "githelper_failed_get_commit": "failed to get commit: %w",
+  "githelper_failed_get_tree": "failed to get tree: %w",
+  "githelper_failed_create_dest_dir": "failed to create destination directory: %w"
 }

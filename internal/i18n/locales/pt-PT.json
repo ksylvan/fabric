@@ -522,5 +522,10 @@
   "util_could_not_get_absolute_path": "não foi possível obter o caminho absoluto",
   "util_could_not_resolve_symlinks": "não foi possível resolver as ligações simbólicas: %w",
   "util_could_not_determine_home_dir": "não foi possível determinar o diretório pessoal do utilizador: %w",
-  "util_error_accessing_default_config_path": "erro ao aceder ao caminho de configuração predefinido: %w"
+  "util_error_accessing_default_config_path": "erro ao aceder ao caminho de configuração predefinido: %w",
+  "githelper_failed_clone_repository": "falha ao clonar o repositório: %w",
+  "githelper_failed_get_head": "falha ao obter o HEAD do repositório: %w",
+  "githelper_failed_get_commit": "falha ao obter o commit: %w",
+  "githelper_failed_get_tree": "falha ao obter a árvore: %w",
+  "githelper_failed_create_dest_dir": "falha ao criar o diretório de destino: %w"
 }

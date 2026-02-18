@@ -522,5 +522,10 @@
   "util_could_not_get_absolute_path": "Absoluter Pfad konnte nicht ermittelt werden",
   "util_could_not_resolve_symlinks": "Symbolische Links konnten nicht aufgelöst werden: %w",
   "util_could_not_determine_home_dir": "Benutzer-Home-Verzeichnis konnte nicht ermittelt werden: %w",
-  "util_error_accessing_default_config_path": "Fehler beim Zugriff auf den Standard-Konfigurationspfad: %w"
+  "util_error_accessing_default_config_path": "Fehler beim Zugriff auf den Standard-Konfigurationspfad: %w",
+  "githelper_failed_clone_repository": "Repository konnte nicht geklont werden: %w",
+  "githelper_failed_get_head": "Repository-HEAD konnte nicht abgerufen werden: %w",
+  "githelper_failed_get_commit": "Commit konnte nicht abgerufen werden: %w",
+  "githelper_failed_get_tree": "Verzeichnisbaum konnte nicht abgerufen werden: %w",
+  "githelper_failed_create_dest_dir": "Zielverzeichnis konnte nicht erstellt werden: %w"
 }

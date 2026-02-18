@@ -514,5 +514,10 @@
   "util_could_not_get_absolute_path": "مسیر مطلق قابل دریافت نبود",
   "util_could_not_resolve_symlinks": "لینک‌های نمادین قابل حل نبودند: %w",
   "util_could_not_determine_home_dir": "دایرکتوری خانگی کاربر قابل تعیین نبود: %w",
-  "util_error_accessing_default_config_path": "خطا در دسترسی به مسیر پیکربندی پیش‌فرض: %w"
+  "util_error_accessing_default_config_path": "خطا در دسترسی به مسیر پیکربندی پیش‌فرض: %w",
+  "githelper_failed_clone_repository": "کلون کردن مخزن ناموفق بود: %w",
+  "githelper_failed_get_head": "دریافت HEAD مخزن ناموفق بود: %w",
+  "githelper_failed_get_commit": "دریافت کامیت ناموفق بود: %w",
+  "githelper_failed_get_tree": "دریافت درخت ناموفق بود: %w",
+  "githelper_failed_create_dest_dir": "ایجاد پوشه مقصد ناموفق بود: %w"
 }
