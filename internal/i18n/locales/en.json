@@ -2,6 +2,13 @@
   "html_readability_error": "use original input, because can't apply html readability",
   "vendor_not_configured": "vendor %s not configured",
   "vendor_no_transcription_support": "vendor %s does not support audio transcription",
+  "azure_api_key_required": "Azure API key is required",
+  "azure_api_version_question": "Enter the Azure API version (optional)",
+  "azure_base_url_required": "Azure API base URL is required",
+  "azure_deployments_question": "Enter your Azure deployments (comma separated)",
+  "azure_failed_extract_deployment": "failed to extract deployment name: %w",
+  "azure_model_field_empty": "model field is empty or missing in request body",
+  "azure_request_body_nil": "request body is nil",
   "transcription_model_required": "transcription model is required (use --transcribe-model)",
   "youtube_not_configured": "YouTube is not configured, please run the setup procedure",
   "spotify_not_configured": "Spotify is not configured, please run the setup procedure",
@@ -522,5 +529,10 @@
   "template_sys_error_env_requires_var": "sys: env operation requires a variable name",
   "template_sys_error_pwd": "sys: pwd error: %v",
   "template_sys_error_home": "sys: home error: %v",
-  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)"
+  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)",
+  "template_datetime_error_unknown_operation": "datetime: unknown operation %q (see plugin documentation for supported operations)",
+  "template_datetime_error_relative_requires_value": "datetime: relative time requires a value (e.g., -1h, -1d, -1w)",
+  "template_datetime_error_invalid_relative_format": "datetime: invalid relative format (use: -1h, 2d, -3w, 1m, -1y)",
+  "template_datetime_error_invalid_number": "datetime: invalid number in relative time: %q",
+  "template_datetime_error_invalid_unit": "datetime: invalid unit %q (use: h,m for time or d,w,m,y for date)"
 }

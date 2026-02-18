@@ -2,6 +2,13 @@
   "html_readability_error": "usa l'input originale, perché non è possibile applicare la leggibilità HTML",
   "vendor_not_configured": "il fornitore %s non è configurato",
   "vendor_no_transcription_support": "il fornitore %s non supporta la trascrizione audio",
+  "azure_api_key_required": "Chiave API Azure richiesta",
+  "azure_api_version_question": "Inserisci la versione API di Azure (opzionale)",
+  "azure_base_url_required": "URL base API Azure richiesto",
+  "azure_deployments_question": "Inserisci le tue distribuzioni Azure (separate da virgola)",
+  "azure_failed_extract_deployment": "impossibile estrarre il nome distribuzione: %w",
+  "azure_model_field_empty": "il campo modello è vuoto o mancante nel corpo della richiesta",
+  "azure_request_body_nil": "il corpo della richiesta è nil",
   "transcription_model_required": "è richiesto un modello di trascrizione (usa --transcribe-model)",
   "youtube_not_configured": "YouTube non è configurato, eseguire la procedura di configurazione",
   "spotify_not_configured": "Spotify non è configurato, eseguire la procedura di configurazione",
@@ -522,5 +529,10 @@
   "template_sys_error_env_requires_var": "sys: env operation requires a variable name",
   "template_sys_error_pwd": "sys: pwd error: %v",
   "template_sys_error_home": "sys: home error: %v",
-  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)"
+  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)",
+  "template_datetime_error_unknown_operation": "datetime: unknown operation %q (see plugin documentation for supported operations)",
+  "template_datetime_error_relative_requires_value": "datetime: relative time requires a value (e.g., -1h, -1d, -1w)",
+  "template_datetime_error_invalid_relative_format": "datetime: invalid relative format (use: -1h, 2d, -3w, 1m, -1y)",
+  "template_datetime_error_invalid_number": "datetime: invalid number in relative time: %q",
+  "template_datetime_error_invalid_unit": "datetime: invalid unit %q (use: h,m for time or d,w,m,y for date)"
 }

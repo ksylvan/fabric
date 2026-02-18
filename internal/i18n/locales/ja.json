@@ -2,6 +2,13 @@
   "html_readability_error": "HTML可読性を適用できないため、元の入力を使用します",
   "vendor_not_configured": "ベンダー %s が設定されていません",
   "vendor_no_transcription_support": "ベンダー %s は音声転写をサポートしていません",
+  "azure_api_key_required": "Azure APIキーが必要です",
+  "azure_api_version_question": "Azure APIバージョンを入力してください（オプション）",
+  "azure_base_url_required": "Azure APIベースURLが必要です",
+  "azure_deployments_question": "Azureデプロイメントを入力してください（カンマ区切り）",
+  "azure_failed_extract_deployment": "デプロイメント名の抽出に失敗しました: %w",
+  "azure_model_field_empty": "リクエストボディにモデルフィールドが空か存在しません",
+  "azure_request_body_nil": "リクエストボディがnilです",
   "transcription_model_required": "転写モデルが必要です（--transcribe-model を使用）",
   "youtube_not_configured": "YouTubeが設定されていません。セットアップ手順を実行してください",
   "spotify_not_configured": "Spotifyが設定されていません。セットアップ手順を実行してください",
@@ -522,5 +529,10 @@
   "template_sys_error_env_requires_var": "sys: env operation requires a variable name",
   "template_sys_error_pwd": "sys: pwd error: %v",
   "template_sys_error_home": "sys: home error: %v",
-  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)"
+  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)",
+  "template_datetime_error_unknown_operation": "datetime: unknown operation %q (see plugin documentation for supported operations)",
+  "template_datetime_error_relative_requires_value": "datetime: relative time requires a value (e.g., -1h, -1d, -1w)",
+  "template_datetime_error_invalid_relative_format": "datetime: invalid relative format (use: -1h, 2d, -3w, 1m, -1y)",
+  "template_datetime_error_invalid_number": "datetime: invalid number in relative time: %q",
+  "template_datetime_error_invalid_unit": "datetime: invalid unit %q (use: h,m for time or d,w,m,y for date)"
 }

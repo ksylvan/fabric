@@ -2,6 +2,13 @@
   "html_readability_error": "使用原始输入，因为无法应用 HTML 可读性处理",
   "vendor_not_configured": "供应商 %s 未配置",
   "vendor_no_transcription_support": "供应商 %s 不支持音频转录",
+  "azure_api_key_required": "需要 Azure API 密钥",
+  "azure_api_version_question": "输入 Azure API 版本（可选）",
+  "azure_base_url_required": "需要 Azure API 基础 URL",
+  "azure_deployments_question": "输入您的 Azure 部署（用逗号分隔）",
+  "azure_failed_extract_deployment": "提取部署名称失败：%w",
+  "azure_model_field_empty": "请求正文中的模型字段为空或缺失",
+  "azure_request_body_nil": "请求正文为 nil",
   "transcription_model_required": "需要转录模型（使用 --transcribe-model）",
   "youtube_not_configured": "YouTube 未配置，请运行设置程序",
   "spotify_not_configured": "Spotify 未配置，请运行设置程序",
@@ -522,5 +529,10 @@
   "template_sys_error_env_requires_var": "sys: env operation requires a variable name",
   "template_sys_error_pwd": "sys: pwd error: %v",
   "template_sys_error_home": "sys: home error: %v",
-  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)"
+  "template_sys_error_unknown_operation": "sys: unknown operation %q (supported: hostname, user, os, arch, env, pwd, home)",
+  "template_datetime_error_unknown_operation": "datetime: unknown operation %q (see plugin documentation for supported operations)",
+  "template_datetime_error_relative_requires_value": "datetime: relative time requires a value (e.g., -1h, -1d, -1w)",
+  "template_datetime_error_invalid_relative_format": "datetime: invalid relative format (use: -1h, 2d, -3w, 1m, -1y)",
+  "template_datetime_error_invalid_number": "datetime: invalid number in relative time: %q",
+  "template_datetime_error_invalid_unit": "datetime: invalid unit %q (use: h,m for time or d,w,m,y for date)"
 }

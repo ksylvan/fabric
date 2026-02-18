@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/danielmiessler/fabric/internal/i18n"
 	"github.com/danielmiessler/fabric/internal/plugins"
 	"github.com/danielmiessler/fabric/internal/plugins/ai/openai"
 	openaiapi "github.com/openai/openai-go"
@@ -20,9 +21,9 @@ func NewClient() (ret *Client) {
 	ret = &Client{}
 	ret.Client = openai.NewClientCompatible("Azure", "", ret.configure)
 	ret.ApiDeployments = ret.AddSetupQuestionCustom("deployments", true,
-		"Enter your Azure deployments (comma separated)")
+		i18n.T("azure_deployments_question"))
 	ret.ApiVersion = ret.AddSetupQuestionCustom("API Version", false,
-		"Enter the Azure API version (optional)")
+		i18n.T("azure_api_version_question"))
 
 	return
 }
@@ -42,12 +43,12 @@ func (oi *Client) configure() error {
 
 	apiKey := strings.TrimSpace(oi.ApiKey.Value)
 	if apiKey == "" {
-		return fmt.Errorf("Azure API key is required")
+		return fmt.Errorf(i18n.T("azure_api_key_required"))
 	}
 
 	baseURL := strings.TrimSpace(oi.ApiBaseURL.Value)
 	if baseURL == "" {
-		return fmt.Errorf("Azure API base URL is required")
+		return fmt.Errorf(i18n.T("azure_base_url_required"))
 	}
 
 	apiVersion := strings.TrimSpace(oi.ApiVersion.Value)
@@ -101,7 +102,7 @@ func azureDeploymentMiddleware(req *http.Request, next option.MiddlewareNext) (*
 		// Extract model/deployment name from request body
 		deploymentName, err := extractDeploymentFromBody(req)
 		if err != nil {
-			return nil, fmt.Errorf("failed to extract deployment name: %w", err)
+			return nil, fmt.Errorf(i18n.T("azure_failed_extract_deployment"), err)
 		}
 
 		// Transform path: /chat/completions -> /deployments/{name}/chat/completions
@@ -117,7 +118,7 @@ func azureDeploymentMiddleware(req *http.Request, next option.MiddlewareNext) (*
 // and restores the body for subsequent use
 func extractDeploymentFromBody(req *http.Request) (string, error) {
 	if req.Body == nil {
-		return "", fmt.Errorf("request body is nil")
+		return "", fmt.Errorf(i18n.T("azure_request_body_nil"))
 	}
 
 	bodyBytes, err := io.ReadAll(req.Body)
@@ -135,7 +136,7 @@ func extractDeploymentFromBody(req *http.Request) (string, error) {
 	}
 
 	if payload.Model == "" {
-		return "", fmt.Errorf("model field is empty or missing in request body")
+		return "", fmt.Errorf(i18n.T("azure_model_field_empty"))
 	}
 
 	return payload.Model, nil
