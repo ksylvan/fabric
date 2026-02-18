@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/danielmiessler/fabric/internal/i18n"
 	"github.com/danielmiessler/fabric/internal/plugins"
 )
 
@@ -74,8 +75,7 @@ func (o *VendorsManager) FindByName(name string) Vendor {
 
 func (o *VendorsManager) readModels() (err error) {
 	if len(o.Vendors) == 0 {
-
-		err = fmt.Errorf("no AI vendors configured to read models from. Please configure at least one AI vendor")
+		err = fmt.Errorf("%s", i18n.T("vendors_no_ai_vendors_configured_read_models"))
 		return
 	}
 
@@ -138,7 +138,7 @@ func (o *VendorsManager) Setup() (ret map[string]Vendor, err error) {
 func (o *VendorsManager) SetupVendor(vendorName string, configuredVendors map[string]Vendor) (err error) {
 	vendor := o.FindByName(vendorName)
 	if vendor == nil {
-		err = fmt.Errorf("vendor %s not found", vendorName)
+		err = fmt.Errorf("%s", fmt.Sprintf(i18n.T("vendor_not_found"), vendorName))
 		return
 	}
 	o.setupVendorTo(vendor, configuredVendors)
@@ -147,11 +147,11 @@ func (o *VendorsManager) SetupVendor(vendorName string, configuredVendors map[st
 
 func (o *VendorsManager) setupVendorTo(vendor Vendor, configuredVendors map[string]Vendor) {
 	if vendorErr := vendor.Setup(); vendorErr == nil {
-		fmt.Printf("[%v] configured\n", vendor.GetName())
+		fmt.Printf("%s\n", fmt.Sprintf(i18n.T("plugin_setup_configured"), vendor.GetName()))
 		configuredVendors[strings.ToLower(vendor.GetName())] = vendor
 	} else {
 		delete(configuredVendors, strings.ToLower(vendor.GetName()))
-		fmt.Printf("[%v] skipped\n", vendor.GetName())
+		fmt.Printf("%s", fmt.Sprintf(i18n.T("plugin_setup_skipped"), vendor.GetName()))
 	}
 }
 
