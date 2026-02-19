@@ -6,7 +6,7 @@
   "azure_api_version_question": "Geben Sie die Azure API-Version ein (optional)",
   "azure_base_url_required": "Azure API-Basis-URL ist erforderlich",
   "azure_deployments_question": "Geben Sie Ihre Azure-Bereitstellungen ein (kommagetrennt)",
-  "azure_failed_extract_deployment": "Bereitstellungsname konnte nicht extrahiert werden: %w",
+  "azure_failed_extract_deployment": "Bereitstellungsname konnte nicht extrahiert werden",
   "azure_model_field_empty": "Modellfeld ist leer oder fehlt im Anfragekörper",
   "azure_request_body_nil": "Anfragekörper ist nil",
   "transcription_model_required": "Transkriptionsmodell ist erforderlich (verwende --transcribe-model)",

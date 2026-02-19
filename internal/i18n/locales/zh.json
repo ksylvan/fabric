@@ -6,7 +6,7 @@
   "azure_api_version_question": "输入 Azure API 版本（可选）",
   "azure_base_url_required": "需要 Azure API 基础 URL",
   "azure_deployments_question": "输入您的 Azure 部署（用逗号分隔）",
-  "azure_failed_extract_deployment": "提取部署名称失败：%w",
+  "azure_failed_extract_deployment": "提取部署名称失败",
   "azure_model_field_empty": "请求正文中的模型字段为空或缺失",
   "azure_request_body_nil": "请求正文为 nil",
   "transcription_model_required": "需要转录模型（使用 --transcribe-model）",

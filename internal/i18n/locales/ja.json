@@ -6,7 +6,7 @@
   "azure_api_version_question": "Azure APIバージョンを入力してください（オプション）",
   "azure_base_url_required": "Azure APIベースURLが必要です",
   "azure_deployments_question": "Azureデプロイメントを入力してください（カンマ区切り）",
-  "azure_failed_extract_deployment": "デプロイメント名の抽出に失敗しました: %w",
+  "azure_failed_extract_deployment": "デプロイメント名の抽出に失敗しました",
   "azure_model_field_empty": "リクエストボディにモデルフィールドが空か存在しません",
   "azure_request_body_nil": "リクエストボディがnilです",
   "transcription_model_required": "転写モデルが必要です（--transcribe-model を使用）",

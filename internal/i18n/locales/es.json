@@ -6,7 +6,7 @@
   "azure_api_version_question": "Ingrese la versión de la API de Azure (opcional)",
   "azure_base_url_required": "Se requiere URL base de API de Azure",
   "azure_deployments_question": "Ingrese sus implementaciones de Azure (separadas por comas)",
-  "azure_failed_extract_deployment": "fallo al extraer el nombre de implementación: %w",
+  "azure_failed_extract_deployment": "fallo al extraer el nombre de implementación",
   "azure_model_field_empty": "el campo de modelo está vacío o falta en el cuerpo de la solicitud",
   "azure_request_body_nil": "el cuerpo de la solicitud es nil",
   "transcription_model_required": "se requiere un modelo de transcripción (usa --transcribe-model)",

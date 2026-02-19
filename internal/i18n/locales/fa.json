@@ -6,7 +6,7 @@
   "azure_api_version_question": "نسخه API Azure را وارد کنید (اختیاری)",
   "azure_base_url_required": "URL پایه API Azure الزامی است",
   "azure_deployments_question": "موارد استقرار Azure خود را وارد کنید (جدا شده با کاما)",
-  "azure_failed_extract_deployment": "استخراج نام استقرار ناموفق بود: %w",
+  "azure_failed_extract_deployment": "استخراج نام استقرار ناموفق بود",
   "azure_model_field_empty": "فیلد مدل در بدنه درخواست خالی یا موجود نیست",
   "azure_request_body_nil": "بدنه درخواست nil است",
   "transcription_model_required": "مدل رونویسی الزامی است (از --transcribe-model استفاده کنید)",

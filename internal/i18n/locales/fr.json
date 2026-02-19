@@ -6,7 +6,7 @@
   "azure_api_version_question": "Entrez la version de l'API Azure (facultatif)",
   "azure_base_url_required": "URL de base de l'API Azure requise",
   "azure_deployments_question": "Entrez vos déploiements Azure (séparés par des virgules)",
-  "azure_failed_extract_deployment": "échec de l'extraction du nom de déploiement: %w",
+  "azure_failed_extract_deployment": "échec de l'extraction du nom de déploiement",
   "azure_model_field_empty": "le champ modèle est vide ou manquant dans le corps de la requête",
   "azure_request_body_nil": "le corps de la requête est nil",
   "transcription_model_required": "un modèle de transcription est requis (utilisez --transcribe-model)",

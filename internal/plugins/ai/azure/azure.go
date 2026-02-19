@@ -43,12 +43,12 @@ func (oi *Client) configure() error {
 
 	apiKey := strings.TrimSpace(oi.ApiKey.Value)
 	if apiKey == "" {
-		return fmt.Errorf(i18n.T("azure_api_key_required"))
+		return fmt.Errorf("%s", i18n.T("azure_api_key_required"))
 	}
 
 	baseURL := strings.TrimSpace(oi.ApiBaseURL.Value)
 	if baseURL == "" {
-		return fmt.Errorf(i18n.T("azure_base_url_required"))
+		return fmt.Errorf("%s", i18n.T("azure_base_url_required"))
 	}
 
 	apiVersion := strings.TrimSpace(oi.ApiVersion.Value)
@@ -102,7 +102,7 @@ func azureDeploymentMiddleware(req *http.Request, next option.MiddlewareNext) (*
 		// Extract model/deployment name from request body
 		deploymentName, err := extractDeploymentFromBody(req)
 		if err != nil {
-			return nil, fmt.Errorf(i18n.T("azure_failed_extract_deployment"), err)
+			return nil, fmt.Errorf("%s: %w", i18n.T("azure_failed_extract_deployment"), err)
 		}
 
 		// Transform path: /chat/completions -> /deployments/{name}/chat/completions
@@ -118,7 +118,7 @@ func azureDeploymentMiddleware(req *http.Request, next option.MiddlewareNext) (*
 // and restores the body for subsequent use
 func extractDeploymentFromBody(req *http.Request) (string, error) {
 	if req.Body == nil {
-		return "", fmt.Errorf(i18n.T("azure_request_body_nil"))
+		return "", fmt.Errorf("%s", i18n.T("azure_request_body_nil"))
 	}
 
 	bodyBytes, err := io.ReadAll(req.Body)
@@ -136,7 +136,7 @@ func extractDeploymentFromBody(req *http.Request) (string, error) {
 	}
 
 	if payload.Model == "" {
-		return "", fmt.Errorf(i18n.T("azure_model_field_empty"))
+		return "", fmt.Errorf("%s", i18n.T("azure_model_field_empty"))
 	}
 
 	return payload.Model, nil
