@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/danielmiessler/fabric/internal/i18n"
 )
 
 // DateTimePlugin handles time and date operations
@@ -94,7 +96,7 @@ func (p *DateTimePlugin) Apply(operation string, value string) (string, error) {
 		return p.handleRelative(now, value)
 
 	default:
-		return "", fmt.Errorf("datetime: unknown operation %q (see plugin documentation for supported operations)", operation)
+		return "", fmt.Errorf(i18n.T("template_datetime_error_unknown_operation"), operation)
 	}
 }
 
@@ -102,7 +104,7 @@ func (p *DateTimePlugin) handleRelative(now time.Time, value string) (string, er
 	debugf("DateTime: handling relative time value=%q", value)
 
 	if value == "" {
-		return "", fmt.Errorf("datetime: relative time requires a value (e.g., -1h, -1d, -1w)")
+		return "", fmt.Errorf("%s", i18n.T("template_datetime_error_relative_requires_value"))
 	}
 
 	// Try standard duration first (hours, minutes)
@@ -114,7 +116,7 @@ func (p *DateTimePlugin) handleRelative(now time.Time, value string) (string, er
 
 	// Handle date units
 	if len(value) < 2 {
-		return "", fmt.Errorf("datetime: invalid relative format (use: -1h, 2d, -3w, 1m, -1y)")
+		return "", fmt.Errorf("%s", i18n.T("template_datetime_error_invalid_relative_format"))
 	}
 
 	unit := value[len(value)-1:]
@@ -122,7 +124,7 @@ func (p *DateTimePlugin) handleRelative(now time.Time, value string) (string, er
 
 	num, err := strconv.Atoi(numStr)
 	if err != nil {
-		return "", fmt.Errorf("datetime: invalid number in relative time: %q", value)
+		return "", fmt.Errorf(i18n.T("template_datetime_error_invalid_number"), value)
 	}
 
 	var result string
@@ -136,7 +138,7 @@ func (p *DateTimePlugin) handleRelative(now time.Time, value string) (string, er
 	case "y":
 		result = now.AddDate(num, 0, 0).Format("2006-01-02")
 	default:
-		return "", fmt.Errorf("datetime: invalid unit %q (use: h,m for time or d,w,m,y for date)", unit)
+		return "", fmt.Errorf(i18n.T("template_datetime_error_invalid_unit"), unit)
 	}
 
 	debugf("DateTime: relative unit=%q num=%d result=%q", unit, num, result)

@@ -506,7 +506,7 @@ func (o *YouTube) GrabComments(videoId string) (ret []string, err error) {
 	call := o.service.CommentThreads.List([]string{"snippet", "replies"}).VideoId(videoId).TextFormat("plainText").MaxResults(100)
 	var response *youtube.CommentThreadListResponse
 	if response, err = call.Do(); err != nil {
-		log.Printf("Failed to fetch comments: %v", err)
+		log.Printf(i18n.T("youtube_failed_fetch_comments"), err)
 		return
 	}
 
@@ -677,7 +677,7 @@ func (o *YouTube) FetchAndSavePlaylist(playlistID, filename string) (err error) 
 		return
 	}
 
-	fmt.Println("Playlist saved to", filename)
+	fmt.Printf("%s\n", fmt.Sprintf(i18n.T("youtube_playlist_saved_to"), filename))
 	return
 }
 
@@ -688,8 +688,8 @@ func (o *YouTube) FetchAndPrintPlaylist(playlistID string) (err error) {
 		return
 	}
 
-	fmt.Printf("Playlist: %s\n", playlistID)
-	fmt.Printf("VideoId: Title\n")
+	fmt.Printf("%s\n", fmt.Sprintf(i18n.T("youtube_playlist_header"), playlistID))
+	fmt.Printf("%s\n", i18n.T("youtube_video_id_title_header"))
 	for _, video := range videos {
 		fmt.Printf("%s: %s\n", video.Id, video.Title)
 	}
@@ -831,7 +831,7 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		log.Fatal("Error: No URL provided.")
+		log.Fatalf("%s", i18n.T("youtube_no_url_provided"))
 	}
 
 	url := flag.Arg(0)
