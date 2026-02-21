@@ -4,7 +4,7 @@
   import { onMount } from 'svelte';
   import type { ToastMessage } from '$lib/store/toast-store';
 
-  export let toast: ToastMessage;
+  let { toast }: { toast: ToastMessage } = $props();
   const TOAST_TIMEOUT = 5000;
 
   onMount(() => {
