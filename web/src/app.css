@@ -3,6 +3,94 @@
 @import './themes/rocket.css';
 @import '../my-custom-theme.css';
 
+/* Skeleton theme color scales — bridge --th-* tokens into Tailwind v4 --color-* namespace */
+@theme inline {
+	--color-primary-50: var(--th-primary-50);
+	--color-primary-100: var(--th-primary-100);
+	--color-primary-200: var(--th-primary-200);
+	--color-primary-300: var(--th-primary-300);
+	--color-primary-400: var(--th-primary-400);
+	--color-primary-500: var(--th-primary-500);
+	--color-primary-600: var(--th-primary-600);
+	--color-primary-700: var(--th-primary-700);
+	--color-primary-800: var(--th-primary-800);
+	--color-primary-900: var(--th-primary-900);
+	--color-primary-950: var(--th-primary-950);
+
+	--color-secondary-50: var(--th-secondary-50);
+	--color-secondary-100: var(--th-secondary-100);
+	--color-secondary-200: var(--th-secondary-200);
+	--color-secondary-300: var(--th-secondary-300);
+	--color-secondary-400: var(--th-secondary-400);
+	--color-secondary-500: var(--th-secondary-500);
+	--color-secondary-600: var(--th-secondary-600);
+	--color-secondary-700: var(--th-secondary-700);
+	--color-secondary-800: var(--th-secondary-800);
+	--color-secondary-900: var(--th-secondary-900);
+	--color-secondary-950: var(--th-secondary-950);
+
+	--color-tertiary-50: var(--th-tertiary-50);
+	--color-tertiary-100: var(--th-tertiary-100);
+	--color-tertiary-200: var(--th-tertiary-200);
+	--color-tertiary-300: var(--th-tertiary-300);
+	--color-tertiary-400: var(--th-tertiary-400);
+	--color-tertiary-500: var(--th-tertiary-500);
+	--color-tertiary-600: var(--th-tertiary-600);
+	--color-tertiary-700: var(--th-tertiary-700);
+	--color-tertiary-800: var(--th-tertiary-800);
+	--color-tertiary-900: var(--th-tertiary-900);
+	--color-tertiary-950: var(--th-tertiary-950);
+
+	--color-success-50: var(--th-success-50);
+	--color-success-100: var(--th-success-100);
+	--color-success-200: var(--th-success-200);
+	--color-success-300: var(--th-success-300);
+	--color-success-400: var(--th-success-400);
+	--color-success-500: var(--th-success-500);
+	--color-success-600: var(--th-success-600);
+	--color-success-700: var(--th-success-700);
+	--color-success-800: var(--th-success-800);
+	--color-success-900: var(--th-success-900);
+	--color-success-950: var(--th-success-950);
+
+	--color-warning-50: var(--th-warning-50);
+	--color-warning-100: var(--th-warning-100);
+	--color-warning-200: var(--th-warning-200);
+	--color-warning-300: var(--th-warning-300);
+	--color-warning-400: var(--th-warning-400);
+	--color-warning-500: var(--th-warning-500);
+	--color-warning-600: var(--th-warning-600);
+	--color-warning-700: var(--th-warning-700);
+	--color-warning-800: var(--th-warning-800);
+	--color-warning-900: var(--th-warning-900);
+	--color-warning-950: var(--th-warning-950);
+
+	--color-error-50: var(--th-error-50);
+	--color-error-100: var(--th-error-100);
+	--color-error-200: var(--th-error-200);
+	--color-error-300: var(--th-error-300);
+	--color-error-400: var(--th-error-400);
+	--color-error-500: var(--th-error-500);
+	--color-error-600: var(--th-error-600);
+	--color-error-700: var(--th-error-700);
+	--color-error-800: var(--th-error-800);
+	--color-error-900: var(--th-error-900);
+	--color-error-950: var(--th-error-950);
+
+	--color-surface-50: var(--th-surface-50);
+	--color-surface-100: var(--th-surface-100);
+	--color-surface-200: var(--th-surface-200);
+	--color-surface-300: var(--th-surface-300);
+	--color-surface-400: var(--th-surface-400);
+	--color-surface-500: var(--th-surface-500);
+	--color-surface-600: var(--th-surface-600);
+	--color-surface-700: var(--th-surface-700);
+	--color-surface-800: var(--th-surface-800);
+	--color-surface-900: var(--th-surface-900);
+	--color-surface-950: var(--th-surface-950);
+}
+
+/* shadcn-svelte design tokens + fonts + animations */
 @theme {
 	--font-mono: 'Fira Code', monospace;
 

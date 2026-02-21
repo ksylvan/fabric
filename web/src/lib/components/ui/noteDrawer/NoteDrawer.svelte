@@ -5,7 +5,7 @@
 	import { toastStore } from '$lib/store/toast-store';
 	import { clickOutside } from '$lib/actions/clickOutside';
 
-	let textareaEl: HTMLTextAreaElement;
+	let textareaEl: HTMLTextAreaElement = $state(undefined!);
 	let saving = $state(false);
 
 	// Auto-resize textarea
@@ -119,7 +119,7 @@
 					onkeydown={handleKeydown}
 					class="w-full h-full min-h-[300px] resize-none p-2 rounded-lg bg-primary-800/30 border-none text-sm"
 					placeholder="Enter your text here..."
-				/>
+				></textarea>
 			</div>
 
 			<footer class="flex-none flex justify-between items-center p-2 border-t border-white/10">

@@ -132,7 +132,7 @@
 	onmouseenter={handleMouseEnter}
 	onmouseleave={handleMouseLeave}
 	class="particle-wave"
-/>
+></canvas>
 
 <style>
 	.particle-wave {
