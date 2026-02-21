@@ -1,7 +1,44 @@
 @import "tailwindcss";
 
-/* Preserve Tailwind 3 JS config for Skeleton plugin compatibility (Phase 03 will rework this) */
-@config "../tailwind.config.ts";
+/* Custom theme values migrated from tailwind.config.ts for Tailwind 4 CSS-first config.
+   Skeleton tw-plugin is incompatible with Tailwind 4 — Phase 03 will replace it with Skeleton v3. */
+@theme {
+	--font-mono: 'Fira Code', monospace;
+
+	--color-border: hsl(var(--border));
+	--color-input: hsl(var(--input));
+	--color-ring: hsl(var(--ring));
+	--color-background: hsl(var(--background));
+	--color-foreground: hsl(var(--foreground));
+
+	--color-primary: hsl(var(--primary));
+	--color-primary-foreground: hsl(var(--primary-foreground));
+	--color-secondary: hsl(var(--secondary));
+	--color-secondary-foreground: hsl(var(--secondary-foreground));
+	--color-destructive: hsl(var(--destructive));
+	--color-destructive-foreground: hsl(var(--destructive-foreground));
+	--color-muted: hsl(var(--muted));
+	--color-muted-foreground: hsl(var(--muted-foreground));
+	--color-accent: hsl(var(--accent));
+	--color-accent-foreground: hsl(var(--accent-foreground));
+	--color-popover: hsl(var(--popover));
+	--color-popover-foreground: hsl(var(--popover-foreground));
+	--color-card: hsl(var(--card));
+	--color-card-foreground: hsl(var(--card-foreground));
+
+	--animate-fab-gradient: fab-gradient 15s ease infinite;
+	--animate-blink: blink 1s step-end infinite;
+}
+
+@keyframes fab-gradient {
+	0%, 100% { background-size: 200% 200%; background-position: left center; }
+	50% { background-size: 200% 200%; background-position: right center; }
+}
+
+@keyframes blink {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0; }
+}
 
 html,
 body {

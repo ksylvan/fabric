@@ -136,6 +136,8 @@
 </div>
 
 <style>
+  @reference "tailwindcss";
+
   .terminal-window {
     @apply rounded-lg border border-gray-700/50 bg-gray-900/95 shadow-2xl;
     box-shadow: 0 0 60px -15px rgba(0, 0, 0, 0.3);
