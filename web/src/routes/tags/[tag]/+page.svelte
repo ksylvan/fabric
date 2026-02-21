@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { formatDistance } from 'date-fns';
-  import type { PageData } from './$types';
+	import { formatDistance } from 'date-fns';
+	import type { PageData } from './$types';
 
-  let { data }: { data: PageData } = $props();
+	let { data }: { data: PageData } = $props();
 
-  let tag = $derived(data.tag);
-  let posts = $derived(data.posts);
+	let tag = $derived(data.tag);
+	let posts = $derived(data.posts);
 </script>
 
 <div class="container py-12">

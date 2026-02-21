@@ -4,9 +4,10 @@ description: Create and manage your notes with Obsidian!
 aliases: Obsidian
 date: 2024-11-16
 updated: 2024-12-08
-tags: 
+tags:
   - obsidian
 ---
+
 <div align="center">
 <a href="https://obsidian.md" target="_blank" rel="noopener noreferrer">
   <img src="/obsidian-logo.png" alt="Obsidian Logo" style="max-width: 20%; height: auto;" />
@@ -31,15 +32,16 @@ Obsidian is a powerful knowledge base that works on top of a local folder of pla
 # Project Planning
 
 ## Goals
+
 - Define project scope
 - Set milestones
 - Assign resources
 
 ## Links
+
 [[Resources]]
 [[Timeline]]
 [[TeamMembers]]
-
 ```
 
 ### Why Use Obsidian?

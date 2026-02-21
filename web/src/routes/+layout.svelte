@@ -1,49 +1,48 @@
 <script>
-  import '../app.css';
-  import ToastContainer from '$lib/components/ui/toast/ToastContainer.svelte';
-  import Footer from '$lib/components/home/Footer.svelte';
-  import Header from '$lib/components/home/Header.svelte';
-  import { page } from '$app/stores';
-  import { fly } from 'svelte/transition';
-  import { onMount } from 'svelte';
-  import { toastStore } from '$lib/store/toast-store';
+	import '../app.css';
+	import ToastContainer from '$lib/components/ui/toast/ToastContainer.svelte';
+	import Footer from '$lib/components/home/Footer.svelte';
+	import Header from '$lib/components/home/Header.svelte';
+	import { page } from '$app/stores';
+	import { fly } from 'svelte/transition';
+	import { onMount } from 'svelte';
+	import { toastStore } from '$lib/store/toast-store';
 
-  let { children } = $props();
+	let { children } = $props();
 
-  onMount(() => {
-    toastStore.info("👋 Welcome to the site! Tell people about yourself and what you do.");
-  });
+	onMount(() => {
+		toastStore.info('👋 Welcome to the site! Tell people about yourself and what you do.');
+	});
 </script>
 
 <ToastContainer />
 
 {#key $page.url.pathname}
-  <div class="app-shell relative flex flex-col h-full overflow-hidden">
-    <div class="fixed inset-0 bg-gradient-to-br from-primary-500/20 via-tertiary-500/20 to-secondary-500/20 -z-10"></div>
+	<div class="app-shell relative flex flex-col h-full overflow-hidden">
+		<div
+			class="fixed inset-0 bg-gradient-to-br from-primary-500/20 via-tertiary-500/20 to-secondary-500/20 -z-10"
+		></div>
 
-    <header>
-      <Header />
-      <div class="h-2 py-4"></div>
-    </header>
+		<header>
+			<Header />
+			<div class="h-2 py-4"></div>
+		</header>
 
-    <div
-      class="flex-1 overflow-y-auto"
-      in:fly={{ duration: 500, delay: 100, y: 100 }}
-    >
-      <main class="main m-auto">
-        {@render children()}
-      </main>
-    </div>
+		<div class="flex-1 overflow-y-auto" in:fly={{ duration: 500, delay: 100, y: 100 }}>
+			<main class="main m-auto">
+				{@render children()}
+			</main>
+		</div>
 
-    <footer>
-      <Footer />
-    </footer>
-  </div>
+		<footer>
+			<Footer />
+		</footer>
+	</div>
 {/key}
 
 <style>
-main {
-  padding: 2rem;
-  box-sizing: border-box;
-}
+	main {
+		padding: 2rem;
+		box-sizing: border-box;
+	}
 </style>

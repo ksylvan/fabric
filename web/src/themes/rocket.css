@@ -10,7 +10,9 @@
 	--base-letter-spacing: 0em;
 	--heading-font-color: inherit;
 	--heading-font-color-dark: inherit;
-	--heading-font-family: Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed, sans-serif;
+	--heading-font-family:
+		Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow',
+		sans-serif-condensed, sans-serif;
 	--heading-font-weight: lighter;
 	--heading-font-style: normal;
 	--heading-letter-spacing: inherit;

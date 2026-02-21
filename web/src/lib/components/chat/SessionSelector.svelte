@@ -1,78 +1,78 @@
 <script lang="ts">
-  import { Select } from "$lib/components/ui/select";
-  import { Label } from "$lib/components/ui/label";
-  import { currentSession, setSession, messageStore } from '$lib/store/chat-store';
-  import { sessionAPI, sessions } from '$lib/store/session-store';
-  import { onMount } from 'svelte';
+	import { Select } from '$lib/components/ui/select';
+	import { Label } from '$lib/components/ui/label';
+	import { currentSession, setSession, messageStore } from '$lib/store/chat-store';
+	import { sessionAPI, sessions } from '$lib/store/session-store';
+	import { onMount } from 'svelte';
 
-  let sessionInput = $state('');
+	let sessionInput = $state('');
 
-  let sessionsList = $derived($sessions?.map(s => s.Name) ?? []);
+	let sessionsList = $derived($sessions?.map((s) => s.Name) ?? []);
 
-  function handleSessionInput() {
-    const trimmed = sessionInput.trim();
-    if (trimmed) {
-      setSession(trimmed);
-    } else {
-      sessionInput = '';
-      setSession(null);
-    }
-  }
+	function handleSessionInput() {
+		const trimmed = sessionInput.trim();
+		if (trimmed) {
+			setSession(trimmed);
+		} else {
+			sessionInput = '';
+			setSession(null);
+		}
+	}
 
-  let previousSessionInput = $state('');
+	let previousSessionInput = $state('');
 
-  async function handleSessionSelect() {
-    if (!sessionInput) {
-      sessionInput = previousSessionInput || $currentSession || '';
-      return;
-    }
+	async function handleSessionSelect() {
+		if (!sessionInput) {
+			sessionInput = previousSessionInput || $currentSession || '';
+			return;
+		}
 
-    if (sessionInput === $currentSession) {
-      return;
-    }
+		if (sessionInput === $currentSession) {
+			return;
+		}
 
-    previousSessionInput = sessionInput;
-    setSession(sessionInput);
+		previousSessionInput = sessionInput;
+		setSession(sessionInput);
 
-    try {
-      const messages = await sessionAPI.loadSessionMessages(sessionInput);
-      messageStore.set(messages);
-    } catch (error) {
-      console.error('Failed to load session messages:', error);
-    }
-  }
+		try {
+			const messages = await sessionAPI.loadSessionMessages(sessionInput);
+			messageStore.set(messages);
+		} catch (error) {
+			console.error('Failed to load session messages:', error);
+		}
+	}
 
-  onMount(async () => {
-    try {
-      await sessionAPI.loadSessions();
-    } catch (error) {
-      console.error('Failed to load sessions:', error);
-    }
-    sessionInput = $currentSession ?? '';
-  });
+	onMount(async () => {
+		try {
+			await sessionAPI.loadSessions();
+		} catch (error) {
+			console.error('Failed to load sessions:', error);
+		}
+		sessionInput = $currentSession ?? '';
+	});
 </script>
 
 <div>
-  <Label for="session-input" class="text-xs text-white/70 mb-1 block">Session Name</Label>
-  <input
-    id="session-input"
-    type="text"
-    bind:value={sessionInput}
-    onblur={handleSessionInput}
-    onkeydown={(e) => e.key === 'Enter' && handleSessionInput()}
-    placeholder="Enter session name..."
-    class="w-full px-3 py-2 text-sm bg-primary-800/30 border-none rounded-md hover:bg-primary-800/40 transition-colors text-white placeholder-white/50 focus:ring-1 focus:ring-white/20 focus:outline-none"
-  />
-  {#if sessionsList.length > 0}
-    <Select
-      bind:value={sessionInput}
-      onchange={handleSessionSelect}
-      class="mt-2 bg-primary-800/30 border-none hover:bg-primary-800/40 transition-colors"
-    >
-      <option value="">Load existing session...</option>
-      {#each sessionsList as session}
-        <option value={session}>{session}</option>
-      {/each}
-    </Select>
-  {/if}
+	<Label for="session-input" class="text-xs text-white/70 mb-1 block">Session Name</Label>
+	<input
+		id="session-input"
+		type="text"
+		bind:value={sessionInput}
+		onblur={handleSessionInput}
+		onkeydown={(e) => e.key === 'Enter' && handleSessionInput()}
+		placeholder="Enter session name..."
+		class="w-full px-3 py-2 text-sm bg-primary-800/30 border-none rounded-md hover:bg-primary-800/40 transition-colors text-white placeholder-white/50 focus:ring-1 focus:ring-white/20 focus:outline-none"
+	/>
+	{#if sessionsList.length > 0}
+		<Select
+			bind:value={sessionInput}
+			onchange={handleSessionSelect}
+			class="mt-2 bg-primary-800/30 border-none hover:bg-primary-800/40 transition-colors"
+		>
+			<option value="">Load existing session...</option>
+			{#each sessionsList as session}
+				<option value={session}>{session}</option>
+			{/each}
+		</Select>
+	{/if}
 </div>

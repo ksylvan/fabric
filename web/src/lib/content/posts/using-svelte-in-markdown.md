@@ -6,6 +6,7 @@ updated:
 aliases: Using Svelte in Markdown and Markdown in Svelte
 tags: [markdown, svelte, web-dev, docs, learn]
 ---
+
 **Ref:** [Mdsvex](https://mdsvex.pngwn.io/docs#install-it)
 
 Here are some examples illustrating how to use Mdsvex in a Svelte application:
@@ -15,7 +16,7 @@ Create a file named example.svx:
 
 ```markdown
 ---
-title: "Interactive Markdown Example"
+title: 'Interactive Markdown Example'
 ---
 
 <script>
@@ -36,16 +37,16 @@ In this example:
 
 **Example 2**: Custom Layouts with Mdsvex
 Assuming you have a layout component at src/lib/layouts/BlogLayout.svelte:
-  
+
 ```svelte
 <!-- BlogLayout.svelte -->
 <script>
-  export let title;
+	export let title;
 </script>
 
 <div class="blog-post">
-  <h1>{title}</h1>
-  <slot />
+	<h1>{title}</h1>
+	<slot />
 </div>
 ```
 
@@ -53,8 +54,8 @@ Now, to use this layout in your Markdown:
 
 ```markdown
 ---
-title: "My Favorite Layout"
-layout: "../lib/layouts/BlogLayout.svelte"
+title: 'My Favorite Layout'
+layout: '../lib/layouts/BlogLayout.svelte'
 ---
 
 ## Markdown with Custom Layout
@@ -66,8 +67,8 @@ This Markdown file will be wrapped by the `BlogLayout`.
 
 ```markdown
 ---
-author: "John Doe"
-date: "2024-11-15"
+author: 'John Doe'
+date: '2024-11-15'
 ---
 
 # Blog Post
@@ -81,7 +82,7 @@ Here's some markdown content. You can reference frontmatter values directly in t
 
 ```markdown
 ---
-title: "Interactive Chart"
+title: 'Interactive Chart'
 ---
 
 <script>
@@ -116,19 +117,16 @@ import { mdsvex } from 'mdsvex';
 
 /** @type {import('mdsvex').MdsvexOptions} */
 const mdsvexOptions = {
-  extensions: ['.svx'],
+	extensions: ['.svx']
 };
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  extensions: ['.svelte', '.svx'],
-  preprocess: [
-    vitePreprocess(),
-    mdsvex(mdsvexOptions),
-  ],
-  kit: {
-    adapter: adapter()
-  }
+	extensions: ['.svelte', '.svx'],
+	preprocess: [vitePreprocess(), mdsvex(mdsvexOptions)],
+	kit: {
+		adapter: adapter()
+	}
 };
 
 export default config;

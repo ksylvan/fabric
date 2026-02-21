@@ -1,79 +1,79 @@
 <script lang="ts">
-  import { cn } from "$lib/utils/utils";
+	import { cn } from '$lib/utils/utils';
 
-  let {
-    value = $bindable(0),
-    min = 0,
-    max = 100,
-    step = 1,
-    class: className = undefined,
-  }: {
-    value?: number;
-    min?: number;
-    max?: number;
-    step?: number;
-    class?: string;
-  } = $props();
+	let {
+		value = $bindable(0),
+		min = 0,
+		max = 100,
+		step = 1,
+		class: className = undefined
+	}: {
+		value?: number;
+		min?: number;
+		max?: number;
+		step?: number;
+		class?: string;
+	} = $props();
 
-  let sliderEl: HTMLDivElement;
-  let isDragging = $state(false);
+	let sliderEl: HTMLDivElement;
+	let isDragging = $state(false);
 
-  let percentage = $derived(((value - min) / (max - min)) * 100);
+	let percentage = $derived(((value - min) / (max - min)) * 100);
 
-  function handleMouseDown(e: MouseEvent) {
-    isDragging = true;
-    updateValue(e);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-  }
+	function handleMouseDown(e: MouseEvent) {
+		isDragging = true;
+		updateValue(e);
+		window.addEventListener('mousemove', handleMouseMove);
+		window.addEventListener('mouseup', handleMouseUp);
+	}
 
-  function handleMouseMove(e: MouseEvent) {
-    if (!isDragging) return;
-    updateValue(e);
-  }
+	function handleMouseMove(e: MouseEvent) {
+		if (!isDragging) return;
+		updateValue(e);
+	}
 
-  function handleMouseUp() {
-    isDragging = false;
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('mouseup', handleMouseUp);
-  }
+	function handleMouseUp() {
+		isDragging = false;
+		window.removeEventListener('mousemove', handleMouseMove);
+		window.removeEventListener('mouseup', handleMouseUp);
+	}
 
-  function updateValue(e: MouseEvent) {
-    if (!sliderEl) return;
-    const rect = sliderEl.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    const rawValue = min + (max - min) * pos;
-    const steppedValue = Math.round(rawValue / step) * step;
-    value = Math.max(min, Math.min(max, steppedValue));
-  }
+	function updateValue(e: MouseEvent) {
+		if (!sliderEl) return;
+		const rect = sliderEl.getBoundingClientRect();
+		const pos = (e.clientX - rect.left) / rect.width;
+		const rawValue = min + (max - min) * pos;
+		const steppedValue = Math.round(rawValue / step) * step;
+		value = Math.max(min, Math.min(max, steppedValue));
+	}
 
-  function handleKeyDown(e: KeyboardEvent) {
-    switch (e.key) {
-      case 'ArrowLeft':
-      case 'ArrowDown':
-        e.preventDefault();
-        value = Math.max(min, value - step);
-        break;
-      case 'ArrowRight':
-      case 'ArrowUp':
-        e.preventDefault();
-        value = Math.min(max, value + step);
-        break;
-      case 'Home':
-        e.preventDefault();
-        value = min;
-        break;
-      case 'End':
-        e.preventDefault();
-        value = max;
-        break;
-    }
-  }
+	function handleKeyDown(e: KeyboardEvent) {
+		switch (e.key) {
+			case 'ArrowLeft':
+			case 'ArrowDown':
+				e.preventDefault();
+				value = Math.max(min, value - step);
+				break;
+			case 'ArrowRight':
+			case 'ArrowUp':
+				e.preventDefault();
+				value = Math.min(max, value + step);
+				break;
+			case 'Home':
+				e.preventDefault();
+				value = min;
+				break;
+			case 'End':
+				e.preventDefault();
+				value = max;
+				break;
+		}
+	}
 </script>
 
 <div
 	bind:this={sliderEl}
-	class={cn("relative flex w-full touch-none select-none items-center", className)}
+	class={cn('relative flex w-full touch-none select-none items-center', className)}
 	onmousedown={handleMouseDown}
 	onkeydown={handleKeyDown}
 	role="slider"
@@ -83,10 +83,7 @@
 	aria-valuenow={value}
 >
 	<div class="relative h-0.5 w-full grow overflow-hidden rounded-full bg-white/10">
-		<div
-			class="absolute h-full bg-white/30 transition-all"
-			style="width: {percentage}%"
-		/>
+		<div class="absolute h-full bg-white/30 transition-all" style="width: {percentage}%" />
 	</div>
 	<div
 		class="absolute h-2.5 w-2.5 rounded-full bg-white/70 ring-1 ring-white/10 shadow-sm transition-all hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 disabled:pointer-events-none disabled:opacity-50"

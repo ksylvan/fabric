@@ -1,14 +1,14 @@
 <script lang="ts">
-  import type { PageData } from './$types';
-  import PostContent from '$lib/components/posts/PostContent.svelte';
-  import PostMeta from '$lib/components/posts/PostMeta.svelte';
+	import type { PageData } from './$types';
+	import PostContent from '$lib/components/posts/PostContent.svelte';
 
-  let { data }: { data: PageData } = $props();
-  console.log('Page data:', data);
+	let { data }: { data: PageData } = $props();
 </script>
 
-<PostContent post={{
-    content: data.content,
-    metadata: data.metadata,
-    slug: data.slug
-}} />
+<PostContent
+	post={{
+		content: data.content,
+		metadata: data.metadata,
+		slug: data.slug
+	}}
+/>

@@ -1,62 +1,62 @@
 <script lang="ts">
-  import { formatDistance } from 'date-fns';
-  import type { PageData } from './$types';
-  import Card from '$lib/components/ui/cards/card.svelte';
-  import { slide } from 'svelte/transition';
-  import { elasticOut, quintOut } from 'svelte/easing';
+	import { formatDistance } from 'date-fns';
+	import type { PageData } from './$types';
 
-  let cards = $state(false);
-  let searchQuery = $state('');
-  let selectedTags: string[] = $state([]);
-  let inputValue = $state('');
+	let searchQuery = $state('');
+	let selectedTags: string[] = $state([]);
+	let inputValue = $state('');
 
-  let { data }: { data: PageData } = $props();
-  let posts = $derived(data.posts);
+	let { data }: { data: PageData } = $props();
+	let posts = $derived(data.posts);
 
-  // Extract all unique tags from Posts
-  let allTags = $derived((() => {
-    const tagSet = new Set<string>();
-    posts.forEach(post => {
-      post.metadata?.tags?.forEach(tag => tagSet.add(tag));
-    });
-    return Array.from(tagSet);
-  })());
+	// Extract all unique tags from Posts
+	let allTags = $derived(
+		(() => {
+			const tagSet = new Set<string>();
+			posts.forEach((post) => {
+				post.metadata?.tags?.forEach((tag) => tagSet.add(tag));
+			});
+			return Array.from(tagSet);
+		})()
+	);
 
-  // Filter posts based on selected tags-container
-  let filteredPosts = $derived(posts.filter(post => {
-    if (selectedTags.length === 0) return true;
-    return selectedTags.every(tag =>
-      post.metadata?.tags?.some((postTag: string) => postTag.toLowerCase() === tag.toLowerCase())
-    );
-  }));
+	// Filter posts based on selected tags-container
+	let filteredPosts = $derived(
+		posts.filter((post) => {
+			if (selectedTags.length === 0) return true;
+			return selectedTags.every((tag) =>
+				post.metadata?.tags?.some((postTag: string) => postTag.toLowerCase() === tag.toLowerCase())
+			);
+		})
+	);
 
-  function validateTag(value: string): boolean {
-    return allTags.some(tag => tag.toLowerCase() === value.toLowerCase());
-  }
+	function validateTag(value: string): boolean {
+		return allTags.some((tag) => tag.toLowerCase() === value.toLowerCase());
+	}
 
-  function addTag() {
-    const value = inputValue.trim();
-    if (value && validateTag(value) && !selectedTags.includes(value)) {
-      selectedTags = [...selectedTags, value];
-      inputValue = '';
-    }
-  }
+	function addTag() {
+		const value = inputValue.trim();
+		if (value && validateTag(value) && !selectedTags.includes(value)) {
+			selectedTags = [...selectedTags, value];
+			inputValue = '';
+		}
+	}
 
-  function removeTag(tag: string) {
-    selectedTags = selectedTags.filter(t => t !== tag);
-  }
+	function removeTag(tag: string) {
+		selectedTags = selectedTags.filter((t) => t !== tag);
+	}
 
-  function handleChipKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      addTag();
-    }
-    if (event.key === 'Backspace' && !inputValue && selectedTags.length > 0) {
-      selectedTags = selectedTags.slice(0, -1);
-    }
-  }
+	function handleChipKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			addTag();
+		}
+		if (event.key === 'Backspace' && !inputValue && selectedTags.length > 0) {
+			selectedTags = selectedTags.slice(0, -1);
+		}
+	}
 
-  let visible: boolean = $state(true);
+	let visible: boolean = $state(true);
 </script>
 
 <!-- This file can be deleted, It think it has better search functionality but it needs work to ...work
@@ -173,123 +173,129 @@ Could this be the new component for the search bar?
 	</div>
 -->
 
-	<!-- Tag search and filter section -->
+<!-- Tag search and filter section -->
 <div class="mb-6">
-  <div class="flex flex-col gap-4">
-    <div class="flex flex-col gap-2">
-      <div class="flex flex-wrap items-center gap-2 rounded-md border border-white/20 bg-transparent px-3 py-2 focus-within:ring-2 focus-within:ring-primary-500">
-        {#each selectedTags as tag}
-          <span class="inline-flex items-center gap-1 rounded-full bg-primary-500/20 px-2.5 py-0.5 text-sm text-primary-300">
-            {tag}
-            <button
-              type="button"
-              class="ml-1 text-primary-300 hover:text-white"
-              onclick={() => removeTag(tag)}
-            >&times;</button>
-          </span>
-        {/each}
-        <input
-          type="text"
-          name="tags"
-          placeholder="Search and press Enter to add tags..."
-          class="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm placeholder:text-white/50"
-          bind:value={inputValue}
-          onkeydown={handleChipKeydown}
-        />
-      </div>
-      <div class="tags-container overflow-x-auto pb-2">
-        <div class="flex gap-2">
-          {#each allTags.filter(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) as tag}
-            <button
-              class="tag-button px-3 py-1 rounded-full text-sm font-medium transition-colors
-              {selectedTags.includes(tag.toLowerCase()) 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-secondary hover:bg-secondary/80'}"
-              onclick={() => {
-                const tagLower = tag.toLowerCase();
-                if (!selectedTags.includes(tagLower)) {
-                  selectedTags = [...selectedTags, tagLower];
-                }
-                searchQuery = '';
-              }}
-            >
-              {tag}
-            </button>
-          {/each}
-        </div>
-      </div>
-    </div>
-  </div>
+	<div class="flex flex-col gap-4">
+		<div class="flex flex-col gap-2">
+			<div
+				class="flex flex-wrap items-center gap-2 rounded-md border border-white/20 bg-transparent px-3 py-2 focus-within:ring-2 focus-within:ring-primary-500"
+			>
+				{#each selectedTags as tag}
+					<span
+						class="inline-flex items-center gap-1 rounded-full bg-primary-500/20 px-2.5 py-0.5 text-sm text-primary-300"
+					>
+						{tag}
+						<button
+							type="button"
+							class="ml-1 text-primary-300 hover:text-white"
+							onclick={() => removeTag(tag)}>&times;</button
+						>
+					</span>
+				{/each}
+				<input
+					type="text"
+					name="tags"
+					placeholder="Search and press Enter to add tags..."
+					class="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm placeholder:text-white/50"
+					bind:value={inputValue}
+					onkeydown={handleChipKeydown}
+				/>
+			</div>
+			<div class="tags-container overflow-x-auto pb-2">
+				<div class="flex gap-2">
+					{#each allTags.filter((tag) => tag
+							.toLowerCase()
+							.includes(searchQuery.toLowerCase())) as tag}
+						<button
+							class="tag-button px-3 py-1 rounded-full text-sm font-medium transition-colors
+              {selectedTags.includes(tag.toLowerCase())
+								? 'bg-primary text-primary-foreground'
+								: 'bg-secondary hover:bg-secondary/80'}"
+							onclick={() => {
+								const tagLower = tag.toLowerCase();
+								if (!selectedTags.includes(tagLower)) {
+									selectedTags = [...selectedTags, tagLower];
+								}
+								searchQuery = '';
+							}}
+						>
+							{tag}
+						</button>
+					{/each}
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 
 {#if filteredPosts.length === 0}
-  {#if !visible}
-    <aside class="rounded-lg border border-white/10 bg-white/5 p-4">
-      <div>(icon)</div>
-      <slot:fragment href="./+error.svelte" />
-      <div class="alert-actions">(buttons)</div>
-    </aside>
-  {/if}
+	{#if !visible}
+		<aside class="rounded-lg border border-white/10 bg-white/5 p-4">
+			<div>(icon)</div>
+			<!-- eslint-disable-next-line svelte/valid-compile -->
+			<slot:fragment href="./+error.svelte"></slot:fragment>
+			<div class="alert-actions">(buttons)</div>
+		</aside>
+	{/if}
 {:else}
-  <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-    {#each filteredPosts as post}
-      <article class="group relative rounded-lg border bg-gray-800/50 p-6 shadow-sm transition-colors hover:bg-muted/50">
-        <a href="/posts/{post.slug}" class="absolute inset-0">
-          <span class="sr-only">View {post.metadata?.title}</span>
-        </a>
-        <div class="flex flex-col justify-between space-y-4">
-          <div class="space-y-2">
-            <h2 class="text-xl font-semibold tracking-tight">{post.metadata?.title}</h2>
-            <p class="text-muted-foreground">{post.metadata?.description}</p>
-          </div>
-          <div class="flex items-center space-x-4 text-sm text-muted-foreground">
-            <time datetime={post.metadata?.date}>
-              {formatDistance(new Date(post.metadata?.date ?? ''), new Date(), { addSuffix: true })}
-            </time>
-            {#if post.metadata?.tags?.length}
-              <span class="text-xs">•</span>
-              <div class="flex flex-wrap gap-2">
-                {#each post.metadata?.tags ?? [] as tag}
-                  <a
-                    href="/tags/{tag}"
-                    class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold transition-colors hover:bg-secondary"
-                  >
-                    {tag}
-                  </a>
-                {/each}
-              </div>
-            {/if}
-          </div>
-        </div>
-
-      </article>
-    {/each}
-    <!-- 	<Paginator records={posts} limit={6} buttonClass="btn" /> -->
-  </div>
+	<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+		{#each filteredPosts as post}
+			<article
+				class="group relative rounded-lg border bg-gray-800/50 p-6 shadow-sm transition-colors hover:bg-muted/50"
+			>
+				<a href="/posts/{post.slug}" class="absolute inset-0">
+					<span class="sr-only">View {post.metadata?.title}</span>
+				</a>
+				<div class="flex flex-col justify-between space-y-4">
+					<div class="space-y-2">
+						<h2 class="text-xl font-semibold tracking-tight">{post.metadata?.title}</h2>
+						<p class="text-muted-foreground">{post.metadata?.description}</p>
+					</div>
+					<div class="flex items-center space-x-4 text-sm text-muted-foreground">
+						<time datetime={post.metadata?.date}>
+							{formatDistance(new Date(post.metadata?.date ?? ''), new Date(), { addSuffix: true })}
+						</time>
+						{#if post.metadata?.tags?.length}
+							<span class="text-xs">•</span>
+							<div class="flex flex-wrap gap-2">
+								{#each post.metadata?.tags ?? [] as tag}
+									<a
+										href="/tags/{tag}"
+										class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold transition-colors hover:bg-secondary"
+									>
+										{tag}
+									</a>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
+			</article>
+		{/each}
+		<!-- 	<Paginator records={posts} limit={6} buttonClass="btn" /> -->
+	</div>
 {/if}
 
-
-
 <style>
-.tags-container {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) transparent;
-}
+	.tags-container {
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-primary) transparent;
+	}
 
-.tags-container::-webkit-scrollbar {
-  height: 6px;
-}
+	.tags-container::-webkit-scrollbar {
+		height: 6px;
+	}
 
-.tags-container::-webkit-scrollbar-track {
-  background: transparent;
-}
+	.tags-container::-webkit-scrollbar-track {
+		background: transparent;
+	}
 
-.tags-container::-webkit-scrollbar-thumb {
-  background-color: var(--color-primary);
-  border-radius: 6px;
-}
+	.tags-container::-webkit-scrollbar-thumb {
+		background-color: var(--color-primary);
+		border-radius: 6px;
+	}
 
-.tag-button {
-  white-space: nowrap;
-}
+	.tag-button {
+		white-space: nowrap;
+	}
 </style>

@@ -3,9 +3,13 @@ import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ params }) => {
 	const postFiles = import.meta.glob('/src/lib/content/posts/*.{md,svx}', { eager: true });
-	
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const posts = Object.entries(postFiles).map(([path, post]: [string, any]) => {
-		const slug = path.split('/').pop()?.replace(/\.(md|svx)$/, '');
+		const slug = path
+			.split('/')
+			.pop()
+			?.replace(/\.(md|svx)$/, '');
 		return {
 			slug,
 			meta: {

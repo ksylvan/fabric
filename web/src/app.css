@@ -1,7 +1,7 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-@import "./themes/rocket.css";
-@import "../my-custom-theme.css";
+@import './themes/rocket.css';
+@import '../my-custom-theme.css';
 
 @theme {
 	--font-mono: 'Fira Code', monospace;
@@ -32,13 +32,25 @@
 }
 
 @keyframes fab-gradient {
-	0%, 100% { background-size: 200% 200%; background-position: left center; }
-	50% { background-size: 200% 200%; background-position: right center; }
+	0%,
+	100% {
+		background-size: 200% 200%;
+		background-position: left center;
+	}
+	50% {
+		background-size: 200% 200%;
+		background-position: right center;
+	}
 }
 
 @keyframes blink {
-	0%, 100% { opacity: 1; }
-	50% { opacity: 0; }
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0;
+	}
 }
 
 html,
@@ -64,5 +76,5 @@ body {
 /* Typography: remove backtick quotes around inline code (migrated from tailwind.config.ts) */
 .prose code::before,
 .prose code::after {
-	content: "" !important;
+	content: '' !important;
 }

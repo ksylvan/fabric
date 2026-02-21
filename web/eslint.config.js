@@ -16,6 +16,16 @@ export default tseslint.config(
 				...globals.browser,
 				...globals.node
 			}
+		},
+		rules: {
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_'
+				}
+			]
 		}
 	},
 	{
@@ -24,6 +34,10 @@ export default tseslint.config(
 			parserOptions: {
 				parser: tseslint.parser
 			}
+		},
+		rules: {
+			'svelte/valid-compile': 'warn',
+			'svelte/no-at-html-tags': 'warn'
 		}
 	},
 	{

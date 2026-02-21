@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { PageData } from './$types';
+	import type { PageData } from './$types';
 
-  let { data }: { data: PageData } = $props();
+	let { data }: { data: PageData } = $props();
 
-  let tags = $derived(data.tags);
-  let postsCount = $derived(data.postsCount);
+	let tags = $derived(data.tags);
+	let postsCount = $derived(data.postsCount);
 </script>
 
 <div class="container py-12">

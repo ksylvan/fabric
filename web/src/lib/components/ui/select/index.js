@@ -1,6 +1,3 @@
-import Root from "./select.svelte";
+import Root from './select.svelte';
 
-export {
-	Root,
-	Root as Select
-};
+export { Root, Root as Select };
