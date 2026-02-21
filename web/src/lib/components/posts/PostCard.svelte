@@ -14,7 +14,7 @@
   }
 </script>
 
-<article class="card card-hover group relative rounded-lg border p-6 hover:bg-primary-500/50 {className}">
+<article class="group relative rounded-lg border bg-gray-800/50 p-6 shadow-sm transition-colors hover:bg-primary-500/50 {className}">
   <a 
     href="/posts/{post.slug}"
     class="absolute inset-0" 

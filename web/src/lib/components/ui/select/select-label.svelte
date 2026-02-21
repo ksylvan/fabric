@@ -5,6 +5,6 @@
   export { className as class };
 </script>
 
-<SelectPrimitive.Label class={cn("px-2 py-1.5 text-sm variant-filled-secondary font-semibold", className)} {...$$restProps}>
+<SelectPrimitive.Label class={cn("px-2 py-1.5 text-sm bg-secondary-500 text-white rounded font-semibold", className)} {...$$restProps}>
 	<slot />
 </SelectPrimitive.Label>

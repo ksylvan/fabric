@@ -7,7 +7,7 @@
 	href={url}
 	target="_blank"
 	rel="noopener noreferrer"
-	class="text-sm px-3 py-1.5 btn variant-filled-tertiary hover:variant-filled-secondary transition-all duration-200 flex items-center gap-2"
+	class="text-sm px-3 py-1.5 rounded-md bg-tertiary-500 text-white hover:bg-secondary-500 transition-all duration-200 flex items-center gap-2"
 >
 	<svg
 		xmlns="http://www.w3.org/2000/svg"

@@ -85,7 +85,7 @@
 
   <!-- Drawer panel -->
   <aside
-    class="fixed top-0 right-0 h-full w-[40%] bg-surface-900 z-50 shadow-xl flex flex-col p-4 pt-20 transition-transform"
+    class="fixed top-0 right-0 h-full w-[40%] bg-gray-900 z-50 shadow-xl flex flex-col p-4 pt-20 transition-transform"
     use:clickOutside={closeDrawer}
   >
     <div class="flex flex-col h-full">

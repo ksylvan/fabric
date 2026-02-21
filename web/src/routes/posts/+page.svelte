@@ -4,13 +4,13 @@
   import Card from '$lib/components/ui/cards/card.svelte';
   import { Youtube } from 'svelte-youtube-lite';
   import PostCard from '$lib/components/posts/PostCard.svelte';
-  import { InputChip } from '@skeletonlabs/skeleton';
   import Connections from '$lib/components/ui/connections/Connections.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
 
   let searchQuery = '';
   let selectedTags: string[] = [];
   let allTags: string[] = [];
+  let inputValue = '';
 
   export let data: PageData;
   $: posts = data.posts || [];
@@ -46,6 +46,28 @@
   function validateTag(value: string): boolean {
     return allTags.some(tag => tag.toLowerCase() === value.toLowerCase());
   }
+
+  function addTag() {
+    const value = inputValue.trim();
+    if (value && validateTag(value) && !selectedTags.includes(value)) {
+      selectedTags = [...selectedTags, value];
+      inputValue = '';
+    }
+  }
+
+  function removeTag(tag: string) {
+    selectedTags = selectedTags.filter(t => t !== tag);
+  }
+
+  function handleChipKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addTag();
+    }
+    if (event.key === 'Backspace' && !inputValue && selectedTags.length > 0) {
+      selectedTags = selectedTags.slice(0, -1);
+    }
+  }
 </script>
 
 <!-- <Search /> -->
@@ -66,7 +88,7 @@
       <br>
       <hr class="!border-t-4" />
       <br>
-      <h4 class="h4"><b>Leverage Proven Patterns</b></h4>
+      <h4 class="text-lg font-bold"><b>Leverage Proven Patterns</b></h4>
       <br>
       <Youtube id="UbDyjIIGaxQ" title="Network Chuck Explains fabric" />
       <br>
@@ -116,7 +138,7 @@
         link="/tags/template"
       />
       <div class="container mx-auto justify-right">
-        <blockquote class="blockquote">
+        <blockquote class="border-l-4 border-primary-500 pl-4 italic text-muted-foreground">
           There are many patterns for different use cases. How will you use them to your advantage?
         </blockquote>
         <br>
@@ -143,29 +165,43 @@
       <div class="container mx-auto md:col-start-2 justify-left">
         <hr class="!border-t-4" />
         <br>
-        <h4 class="h4">Build Your Knowledge Network • Share Your Journey • Inspire Others</h4>
+        <h4 class="text-lg font-bold">Build Your Knowledge Network • Share Your Journey • Inspire Others</h4>
       </div>
     </div>
   </div>
   <br>
-  <div class="rounded-tl-container-token m-auto grid grid-cols-1 gap-4 mt-8">
+  <div class="rounded-tl-lg m-auto grid grid-cols-1 gap-4 mt-8">
     <div class="mx-auto max-h-52 max-w-52"><img src="/fabric-logo.png" alt="fabric-logo"></div>
   </div>
   <br>
   <div class="container mx-auto justify-center grid grid-cols-1 gap-4 mt-8">
       <hr class="!border-t-4" />
       <br>
-      <h4 class="h4">Showcase your interests. Tell people what you've been working on. Create your community.</h4>
+      <h4 class="text-lg font-bold">Showcase your interests. Tell people what you've been working on. Create your community.</h4>
   </div>
 </div>
 <div class="container py-12">
   <div class="my-4">
-    <InputChip
-      name="tags"
-      placeholder="Filter by tags..."
-      validation={validateTag}
-      bind:value={selectedTags}
-    />
+    <div class="flex flex-wrap items-center gap-2 rounded-md border border-white/20 bg-transparent px-3 py-2 focus-within:ring-2 focus-within:ring-primary-500">
+      {#each selectedTags as tag}
+        <span class="inline-flex items-center gap-1 rounded-full bg-primary-500/20 px-2.5 py-0.5 text-sm text-primary-300">
+          {tag}
+          <button
+            type="button"
+            class="ml-1 text-primary-300 hover:text-white"
+            on:click={() => removeTag(tag)}
+          >&times;</button>
+        </span>
+      {/each}
+      <input
+        type="text"
+        name="tags"
+        placeholder="Filter by tags..."
+        class="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm placeholder:text-white/50"
+        bind:value={inputValue}
+        on:keydown={handleChipKeydown}
+      />
+    </div>
   </div>
   <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
     {#each searchResults as post}

@@ -4,12 +4,12 @@
   import Card from '$lib/components/ui/cards/card.svelte';
   import { slide } from 'svelte/transition';
   import { elasticOut, quintOut } from 'svelte/easing';
-  import { InputChip } from '@skeletonlabs/skeleton';
 
   let cards = false;
   let searchQuery = '';
   let selectedTags: string[] = [];
   let allTags: string[] = [];
+  let inputValue = '';
 
   export let data: PageData;
   $: posts = data.posts;
@@ -35,6 +35,28 @@
     return allTags.some(tag => tag.toLowerCase() === value.toLowerCase());
   }
 
+  function addTag() {
+    const value = inputValue.trim();
+    if (value && validateTag(value) && !selectedTags.includes(value)) {
+      selectedTags = [...selectedTags, value];
+      inputValue = '';
+    }
+  }
+
+  function removeTag(tag: string) {
+    selectedTags = selectedTags.filter(t => t !== tag);
+  }
+
+  function handleChipKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addTag();
+    }
+    if (event.key === 'Backspace' && !inputValue && selectedTags.length > 0) {
+      selectedTags = selectedTags.slice(0, -1);
+    }
+  }
+
   let visible: boolean = true;
 </script>
 
@@ -48,8 +70,6 @@ Could this be the new component for the search bar?
   	import { Youtube } from 'svelte-youtube-lite';
 	import { slide } from 'svelte/transition';
 	import { elasticOut, quintOut } from 'svelte/easing';
-	import { InputChip } from '@skeletonlabs/skeleton';
-
 	let cards = false;
 	let searchQuery = '';
 	let selectedTags: string[] = [];
@@ -158,14 +178,26 @@ Could this be the new component for the search bar?
 <div class="mb-6">
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-2">
-      <InputChip
-        bind:value={selectedTags}
-        name="tags"
-        placeholder="Search and press Enter to add tags..."
-        validation={validateTag}
-        allowDuplicates={false}
-        class="input"
-      />
+      <div class="flex flex-wrap items-center gap-2 rounded-md border border-white/20 bg-transparent px-3 py-2 focus-within:ring-2 focus-within:ring-primary-500">
+        {#each selectedTags as tag}
+          <span class="inline-flex items-center gap-1 rounded-full bg-primary-500/20 px-2.5 py-0.5 text-sm text-primary-300">
+            {tag}
+            <button
+              type="button"
+              class="ml-1 text-primary-300 hover:text-white"
+              on:click={() => removeTag(tag)}
+            >&times;</button>
+          </span>
+        {/each}
+        <input
+          type="text"
+          name="tags"
+          placeholder="Search and press Enter to add tags..."
+          class="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm placeholder:text-white/50"
+          bind:value={inputValue}
+          on:keydown={handleChipKeydown}
+        />
+      </div>
       <div class="tags-container overflow-x-auto pb-2">
         <div class="flex gap-2">
           {#each allTags.filter(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) as tag}
@@ -193,7 +225,7 @@ Could this be the new component for the search bar?
 
 {#if filteredPosts.length === 0}
   {#if !visible}
-    <aside class="alert variant-ghost">
+    <aside class="rounded-lg border border-white/10 bg-white/5 p-4">
       <div>(icon)</div>
       <slot:fragment href="./+error.svelte" />
       <div class="alert-actions">(buttons)</div>
@@ -202,7 +234,7 @@ Could this be the new component for the search bar?
 {:else}
   <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
     {#each filteredPosts as post}
-      <article class="card card-hover group relative rounded-lg border p-6 hover:bg-muted/50">
+      <article class="group relative rounded-lg border bg-gray-800/50 p-6 shadow-sm transition-colors hover:bg-muted/50">
         <a href="/posts/{post.slug}" class="absolute inset-0">
           <span class="sr-only">View {post.meta.title}</span>
         </a>
