@@ -1,6 +1,6 @@
 # Fabric Web App
 
-A user-friendly web interface for [Fabric](https://github.com/danielmiessler/Fabric) built with [Svelte](https://svelte.dev/), [Skeleton UI](https://www.skeleton.dev/), and [Mdsvex](https://mdsvex.pngwn.io/).
+A user-friendly web interface for [Fabric](https://github.com/danielmiessler/Fabric) built with [Svelte 5](https://svelte.dev/), [SvelteKit 2](https://svelte.dev/docs/kit), [Vite 6](https://vite.dev/), [Tailwind CSS 4](https://tailwindcss.com/), and [Mdsvex](https://mdsvex.pngwn.io/).
 
 ![Fabric Web App Preview](../docs/images/svelte-preview.png)
 _Alt: Screenshot of the Fabric web app dashboard showing pattern inputs and outputs._
@@ -9,21 +9,27 @@ _Alt: Screenshot of the Fabric web app dashboard showing pattern inputs and outp
 
 - [Fabric Web App](#fabric-web-app)
   - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-  - [Running the App](#running-the-app)
-    - [Prerequisites](#prerequisites)
-    - [Launch the Svelte App](#launch-the-svelte-app)
-  - [Streamlit UI](#streamlit-ui)
-    - [Key Features](#key-features)
-    - [Setup and Run](#setup-and-run)
+  - [Development](#development)
+  - [Building for Production](#building-for-production)
+  - [Available Scripts](#available-scripts)
   - [Obsidian Integration](#obsidian-integration)
-    - [Quick Setup](#quick-setup)
   - [Contributing](#contributing)
 
-## Installation
+## Prerequisites
 
-> [!NOTE]
-> Requires Node.js ≥18 and Fabric installed globally (`fabric --version` to check).
+- **Node.js** >= 18
+- **Fabric** installed and available on your PATH (`fabric --version` to check)
+- **Fabric server** running for backend API connectivity:
+
+```bash
+fabric --serve
+```
+
+This exposes Fabric's API at <http://localhost:8080>, which the web app uses for pattern execution, model listing, and chat streaming.
+
+## Installation
 
 From the `web/` directory:
 
@@ -39,21 +45,9 @@ cd web && npm install
 cd web && pnpm install
 ```
 
-## Running the App
+## Development
 
-### Prerequisites
-
-Start Fabric's server in a separate terminal:
-
-```bash
-fabric --serve
-```
-
-(This exposes Fabric's API at <http://localhost:8080>)
-
-### Launch the Svelte App
-
-In the `web/` directory:
+Make sure `fabric --serve` is running in a separate terminal, then start the dev server:
 
 **Using npm:**
 
@@ -73,35 +67,30 @@ Visit [http://localhost:5173](http://localhost:5173) (default port).
 >
 > Sync Svelte types if needed: `npx svelte-kit sync`
 
-## Streamlit UI
-
-For Python enthusiasts, this alternative UI excels at data visualization and chaining complex patterns. It supports clipboard ops across platforms (install pyperclip on Windows, xclip on Linux).
-
-- **macOS**: Uses `pbcopy` and `pbpaste` (built-in)
-- **Windows**: Uses `pyperclip` library (install with `pip install pyperclip`)
-- **Linux**: Uses `xclip` (install with `sudo apt-get install xclip` or equivalent for your Linux distribution)
-
-### Key Features
-
-<!-- - Running and chaining patterns
-- Managing pattern outputs
-- Creating and editing patterns
-- Analyzing pattern results -->
-
-- Run and edit patterns with real-time previews.
-- Analyze outputs with charts (via Matplotlib/Seaborn).
-- Export results to Markdown or CSV.
-
-### Setup and Run
-
-From `web/`:
+## Building for Production
 
 ```bash
-pip install -r requirements.txt #Or: pip install streamlit pandas matplotlib seaborn numpy python-dotenv pyperclip
-streamlit run streamlit.py
+npm run build
 ```
 
-Access at [http://localhost:8501](http://localhost:8501) (default port).
+Preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start the development server |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview the production build |
+| `npm run check` | Run `svelte-check` for type checking |
+| `npm run check:watch` | Run `svelte-check` in watch mode |
+| `npm run test` | Run tests with Vitest |
+| `npm run lint` | Check formatting (Prettier) and linting (ESLint) |
+| `npm run format` | Apply Prettier formatting to all files |
 
 ## Obsidian Integration
 
@@ -115,7 +104,7 @@ Turn `web/src/lib/content/` into an [Obsidian](https://obsidian.md) vault for no
 
 > [!TIP]
 >
-> When creating new posts, make sure to include a date (YYYY-MM-DD), description, tags (e.g., #ai #patterns), and aliases for SEO. Only a date is needed to display a note. Embed images `(![alt](path))`, link patterns `([[pattern-name]])`, or code blocks for reusable snippets—all in standard Markdown.
+> When creating new posts, make sure to include a date (YYYY-MM-DD), description, tags (e.g., #ai #patterns), and aliases for SEO. Only a date is needed to display a note. Embed images `(![alt](path))`, link patterns `([[pattern-name]])`, or code blocks for reusable snippets — all in standard Markdown.
 
 ## Contributing
 
