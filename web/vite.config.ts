@@ -1,4 +1,3 @@
-import { purgeCss } from 'vite-plugin-tailwind-purgecss';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
@@ -6,7 +5,7 @@ import { defineConfig } from 'vite';
 const FABRIC_BASE_URL = process.env.FABRIC_BASE_URL || 'http://localhost:8080';
 
 export default defineConfig({
-  plugins: [sveltekit(), purgeCss()],
+  plugins: [sveltekit()],
   optimizeDeps: {
     include: ['pdfjs-dist'],
     esbuildOptions: {
@@ -17,23 +16,9 @@ export default defineConfig({
     }
   },
   define: {
-    'process.env': {
-      NODE_ENV: JSON.stringify(process.env.NODE_ENV)
-    },
-    'process.platform': JSON.stringify(process.platform),
-    'process.cwd': JSON.stringify('/'),
-    'process.browser': true,
-    'process': {
-      cwd: () => ('/')
-    },
     // Inject Fabric configuration for client-side access
     '__FABRIC_CONFIG__': {
       FABRIC_BASE_URL: JSON.stringify(FABRIC_BASE_URL)
-    }
-  },
-  resolve: {
-    alias: {
-      process: 'process/browser'
     }
   },
   server: {
