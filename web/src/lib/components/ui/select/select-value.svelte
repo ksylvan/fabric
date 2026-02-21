@@ -1,18 +1,26 @@
 <script lang="ts">
-  import { Select as SelectPrimitive } from "bits-ui";
-  import { cn } from "$lib/utils";
+  import { cn } from "$lib/utils/utils";
 
-  type $$Props = SelectPrimitive.ValueProps;
-
-  let className: $$Props["class"] = undefined;
-  export { className as class };
-  export let placeholder: $$Props["placeholder"] = undefined;
+  let {
+    placeholder = undefined,
+    class: className = undefined,
+    children,
+    ...restProps
+  }: {
+    placeholder?: string;
+    class?: string;
+    children?: import('svelte').Snippet;
+    [key: string]: any;
+  } = $props();
 </script>
 
-<SelectPrimitive.Value
-	class={cn("text-sm", className)}
-	{placeholder}
-	{...$$restProps}
+<span
+  class={cn("text-sm", className)}
+  {...restProps}
 >
-	<slot />
-</SelectPrimitive.Value>
+  {#if children}
+    {@render children()}
+  {:else if placeholder}
+    {placeholder}
+  {/if}
+</span>
