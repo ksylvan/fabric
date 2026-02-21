@@ -3,8 +3,7 @@
   import { Textarea } from "$lib/components/ui/textarea";
   import { sendMessage, messageStore } from '$lib/store/chat-store';
   import { systemPrompt, selectedPatternName } from '$lib/store/pattern-store';
-  import { getToastStore } from '@skeletonlabs/skeleton';
-  import { FileButton } from '@skeletonlabs/skeleton';
+  import { toastStore } from '$lib/store/toast-store';
   import { Paperclip, Send, FileCheck } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
@@ -23,8 +22,8 @@
   const chatService = new ChatService();
   let userInput = "";
   let isYouTubeURL = false;
-  const toastStore = getToastStore();
   let files: FileList | undefined = undefined;
+  let fileInputEl: HTMLInputElement;
   let uploadedFiles: string[] = [];
   let fileContents: string[] = [];
   let isProcessingFiles = false;
@@ -87,10 +86,7 @@
   if (!files || files.length === 0) return;
 
   if (uploadedFiles.length >= 5 || (uploadedFiles.length + files.length) > 5) {
-    toastStore.trigger({
-      message: 'Maximum 5 files allowed',
-      background: 'variant-filled-error'
-    });
+    toastStore.error('Maximum 5 files allowed');
     return;
   }
 
@@ -126,10 +122,7 @@
     );
 
   } catch (error) {
-    toastStore.trigger({
-      message: 'Error processing files: ' + (error as Error).message,
-      background: 'variant-filled-error'
-    });
+    toastStore.error('Error processing files: ' + (error as Error).message);
     
     // Clean up processing message on error
     messageStore.update(messages => 
@@ -246,26 +239,17 @@ async function readFileContent(file: File): Promise<string> {
     }
     
     if (!$obsidianSettings.noteName) {
-      toastStore.trigger({
-        message: 'Please enter a note name in Obsidian settings',
-        background: 'variant-filled-error'
-      });
+      toastStore.error('Please enter a note name in Obsidian settings');
       return;
     }
 
     if (!$selectedPatternName) {
-      toastStore.trigger({
-        message: 'No pattern selected',
-        background: 'variant-filled-error'
-      });
+      toastStore.error('No pattern selected');
       return;
     }
 
     if (!content) {
-      toastStore.trigger({
-        message: 'No content to save',
-        background: 'variant-filled-error'
-      });
+      toastStore.error('No content to save');
       return;
     }
 
@@ -292,16 +276,10 @@ async function readFileContent(file: File): Promise<string> {
       saveToObsidian: false,  // Reset the save flag
       noteName: ''           // Clear the note name
       });
-      toastStore.trigger({
-        message: responseData.message || `Saved to Obsidian: ${responseData.fileName}`,
-        background: 'variant-filled-success'
-      });
+      toastStore.success(responseData.message || `Saved to Obsidian: ${responseData.fileName}`);
     } catch (error) {
       console.error('Failed to save to Obsidian:', error);
-      toastStore.trigger({
-        message: error instanceof Error ? error.message : 'Failed to save to Obsidian',
-        background: 'variant-filled-error'
-      });
+      toastStore.error(error instanceof Error ? error.message : 'Failed to save to Obsidian');
     }
   }
 
@@ -574,17 +552,22 @@ async function readFileContent(file: File): Promise<string> {
           </span>
         {/if}
       {#key fileButtonKey}
-        <FileButton
-          name="file-upload"
-          button="btn-icon variant-ghost"
-          bind:files
-          on:change={handleFileUpload}
+        <button
+          type="button"
           disabled={isProcessingFiles || uploadedFiles.length >= 5}
-          class="h-10 w-10 bg-primary-800/30 hover:bg-primary-800/50 rounded-full transition-colors"
+          class="h-10 w-10 bg-primary-800/30 hover:bg-primary-800/50 rounded-full transition-colors flex items-center justify-center disabled:opacity-30"
+          on:click={() => fileInputEl?.click()}
         >
-        <Paperclip class="w-5 h-5" /> 
-       
-        </FileButton>
+          <Paperclip class="w-5 h-5" />
+        </button>
+        <input
+          bind:this={fileInputEl}
+          bind:files
+          type="file"
+          class="hidden"
+          on:change={handleFileUpload}
+          multiple
+        />
       {/key}
         <Button
           type="button"
