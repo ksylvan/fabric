@@ -3,41 +3,44 @@
   import type { Post } from '$lib/interfaces/post-interface'
   import PostCard from '$lib/components/posts/PostCard.svelte';
 
-  let searchQuery = '';
-  let selectedTags: string[] = [];
-  let allTags: string[] = [];
-  let inputValue = '';
+  let searchQuery = $state('');
+  let selectedTags = $state<string[]>([]);
+  let inputValue = $state('');
 
   let data: PageData;
   let posts = data.posts || [];
 
   // Extract all unique tags from posts
-  $: {
+  let allTags = $derived.by(() => {
     const tagSet = new Set<string>();
     posts?.forEach(post => {
       post.metadata?.tags?.forEach(tag => tagSet.add(tag));
     });
-    allTags = Array.from(tagSet);
-  }
+    return Array.from(tagSet);
+  });
 
   // Filter posts based on selected tags
-  $: filteredPosts = posts?.filter(post => {
-    if (selectedTags.length === 0) return true;
-    return selectedTags.every(tag =>
-      post.metadata?.tags?.some(postTag => postTag.toLowerCase() === tag.toLowerCase())
-    );
-  }) || [];
+  let filteredPosts = $derived(
+    posts?.filter(post => {
+      if (selectedTags.length === 0) return true;
+      return selectedTags.every(tag =>
+        post.metadata?.tags?.some(postTag => postTag.toLowerCase() === tag.toLowerCase())
+      );
+    }) || []
+  );
 
   // Filter posts based on search query
-  $: searchResults = filteredPosts.filter(post => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      post.metadata?.title?.toLowerCase().includes(query) ||
-      post.metadata?.description?.toLowerCase().includes(query) ||
-      post.metadata?.tags?.some(tag => tag.toLowerCase().includes(query))
-    );
-  });
+  let searchResults = $derived(
+    filteredPosts.filter(post => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        post.metadata?.title?.toLowerCase().includes(query) ||
+        post.metadata?.description?.toLowerCase().includes(query) ||
+        post.metadata?.tags?.some(tag => tag.toLowerCase().includes(query))
+      );
+    })
+  );
 
   function validateTag(value: string): boolean {
     return allTags.some(tag => tag.toLowerCase() === value.toLowerCase());
@@ -76,7 +79,7 @@
 					<button
 						type="button"
 						class="ml-1 text-primary-300 hover:text-white"
-						on:click={() => removeTag(tag)}
+						onclick={() => removeTag(tag)}
 					>&times;</button>
 				</span>
 			{/each}
@@ -86,7 +89,7 @@
 				placeholder="Filter by tags..."
 				class="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm placeholder:text-white/50"
 				bind:value={inputValue}
-				on:keydown={handleKeydown}
+				onkeydown={handleKeydown}
 			/>
 		</div>
   </div>

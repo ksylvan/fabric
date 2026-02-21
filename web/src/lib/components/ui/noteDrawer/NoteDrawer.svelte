@@ -6,9 +6,7 @@
   import { clickOutside } from '$lib/actions/clickOutside';
 
   let textareaEl: HTMLTextAreaElement;
-  let saving = false;
-
-  let content = '';
+  let saving = $state(false);
 
   // Auto-resize textarea
   function adjustTextareaHeight() {
@@ -49,13 +47,15 @@
   }
 
   // Load saved content when drawer opens
-  $: if ($drawerStore) {
-    const savedContent = localStorage.getItem('savedText');
-    if (savedContent) {
-      noteStore.updateContent(savedContent);
-      noteStore.save();
+  $effect(() => {
+    if ($drawerStore) {
+      const savedContent = localStorage.getItem('savedText');
+      if (savedContent) {
+        noteStore.updateContent(savedContent);
+        noteStore.save();
+      }
     }
-  }
+  });
 
   // Keyboard shortcuts
   function handleKeydown(event: KeyboardEvent) {
@@ -77,8 +77,8 @@
   <!-- Backdrop -->
   <div
     class="fixed inset-0 bg-black/50 z-40 transition-opacity"
-    on:click={closeDrawer}
-    on:keydown={handleKeydown}
+    onclick={closeDrawer}
+    onkeydown={handleKeydown}
     role="button"
     tabindex="-1"
   ></div>
@@ -94,7 +94,7 @@
           <h2 class="text-lg font-semibold">Notes</h2>
           <button
             class="text-white/70 hover:text-white transition-colors text-xl leading-none"
-            on:click={closeDrawer}
+            onclick={closeDrawer}
             aria-label="Close drawer"
           >&times;</button>
         </div>
@@ -115,8 +115,8 @@
         <textarea
           bind:this={textareaEl}
           value={$noteStore.content}
-          on:input={e => noteStore.updateContent(e.currentTarget.value)}
-          on:keydown={handleKeydown}
+          oninput={e => noteStore.updateContent(e.currentTarget.value)}
+          onkeydown={handleKeydown}
           class="w-full h-full min-h-[300px] resize-none p-2 rounded-lg bg-primary-800/30 border-none text-sm"
           placeholder="Enter your text here..."
         />
@@ -131,13 +131,13 @@
         <div class="flex gap-2">
           <button
             class="px-3 py-1.5 text-sm rounded-md bg-white/10 hover:bg-white/20 transition-colors"
-            on:click={noteStore.reset}
+            onclick={noteStore.reset}
           >
             Reset
           </button>
           <button
             class="px-3 py-1.5 text-sm rounded-md bg-primary-500 hover:bg-primary-600 text-white transition-colors"
-            on:click={saveContent}
+            onclick={saveContent}
           >
             {#if saving}
               Saving...

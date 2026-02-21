@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
 
-  let toc = [];
+  let toc = $state([]);
 
   onMount(() => {
     // Get all headings from the content
@@ -33,7 +33,7 @@
           <a
             href="#{item.id}"
             class="text-xs hover:text-primary transition-colors"
-            on:click|preventDefault={() => scrollToSection(item.id)}
+            onclick={(e) => { e.preventDefault(); scrollToSection(item.id); }}
           >
             {item.text}
           </a>

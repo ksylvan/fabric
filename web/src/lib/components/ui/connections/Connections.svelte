@@ -3,10 +3,17 @@
   import { ParticleSystem } from './ParticleSystem';
   import { createParticleGradient } from '$lib/components/ui/connections/canvas';
 
-  export let particleCount = 100;
-  export let particleSize = 3;
-  export let particleSpeed = 0.5;
-  export let connectionDistance = 100;
+  let {
+    particleCount = 100,
+    particleSize = 3,
+    particleSpeed = 0.5,
+    connectionDistance = 100
+  }: {
+    particleCount?: number;
+    particleSize?: number;
+    particleSpeed?: number;
+    connectionDistance?: number;
+  } = $props();
 
   let canvas: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D;
@@ -121,9 +128,9 @@
   
 <canvas
   bind:this={canvas}
-  on:mousemove={handleMouseMove}
-  on:mouseenter={handleMouseEnter}
-  on:mouseleave={handleMouseLeave}
+  onmousemove={handleMouseMove}
+  onmouseenter={handleMouseEnter}
+  onmouseleave={handleMouseLeave}
   class="particle-wave"
 />
   
