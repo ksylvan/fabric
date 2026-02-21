@@ -1,19 +1,14 @@
 <script>
-  export let aliases
-  export let date 
-  export let tags
-  export let title
-  export let description
-  export let author
-  export let updated
-  //export let content
+  import { type Snippet } from 'svelte';
+
+  let { aliases, date, tags, title, description, author, updated, children } = $props();
 </script>
 
 <article class="prose prose-slate dark:prose-invert max-w-5xl flex-1">
   {#if aliases}
   <h1 class="inline-block text-4xl font-bold inherit-colors lg:text-5xl">{aliases}</h1>
   {/if}
-  <slot />
+  {@render children?.()}
 </article>
 
 <style lang="postcss">

@@ -4,7 +4,7 @@
   import Spinner from '$lib/components/ui/spinner/spinner.svelte';
   import Toc from '$lib/components/ui/toc/Toc.svelte';
 
-  export let post: Post; 
+  let { post }: { post: Post } = $props();
 </script>
 
 <article class="py-6">
@@ -22,8 +22,9 @@
     </div> 
     <div class="items-center py-8 mx-auto gap-8 max-w-7xl relative prose prose-slate dark:prose-invert">
       {#if typeof post.content === 'function'}
+        {@const Content = post.content}
         <Toc />
-        <svelte:component this={post.content} />
+        <Content />
       {:else if typeof post.content === 'string'}
         {post.content}
       {:else}

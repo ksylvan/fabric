@@ -3,8 +3,11 @@
   import { Select } from "$lib/components/ui/select";
   import { languageStore } from '$lib/store/language-store';
 
-  let selectedLanguage = $languageStore;
-  $: languageStore.set(selectedLanguage);
+  let selectedLanguage = $state($languageStore);
+
+  $effect(() => {
+    languageStore.set(selectedLanguage);
+  });
 
   const languages = [
     { code: '', name: 'Default' },

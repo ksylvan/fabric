@@ -5,8 +5,7 @@
   import Card from '$lib/components/ui/cards/card.svelte';
   import { cn } from '$lib/utils/utils';
 
-  export let post: Post;
-  export let className: string = '';
+  let { post, class: className = '' }: { post: Post; class?: string } = $props();
 
   function parseDate(dateStr: string): Date {
       // Handle both ISO strings and YYYY-MM-DD formats

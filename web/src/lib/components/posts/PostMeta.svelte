@@ -2,8 +2,7 @@
   import { formatDistance } from 'date-fns';
   import type { PostMetadata } from './post-interface';
 
-  export let data: PostMetadata;
-  export let showUpdated = true;
+  let { data, showUpdated = true }: { data: PostMetadata; showUpdated?: boolean } = $props();
 </script>
 
 <div class="flex flex-col gap-2 text-sm text-muted-foreground">
