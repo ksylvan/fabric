@@ -16,9 +16,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.27.0",
-    "@skeletonlabs/skeleton": "^4.12.0",
-    "@skeletonlabs/skeleton-svelte": "^4.12.0",
-    "@sveltejs/adapter-auto": "^3.3.1",
+"@sveltejs/adapter-auto": "^3.3.1",
     "@sveltejs/kit": "^2.15.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tailwindcss/vite": "^4.0.0",

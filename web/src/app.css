@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@import "@skeletonlabs/skeleton/themes/rocket";
+@import "./themes/rocket.css";
 @import "../my-custom-theme.css";
 
 @theme {
