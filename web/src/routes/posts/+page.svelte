@@ -1,5 +1,4 @@
 <script lang="ts">
-  //import Search from './Search.svelte';
   import type { PageData } from './$types';
   import Card from '$lib/components/ui/cards/card.svelte';
   import { Youtube } from 'svelte-youtube-lite';
@@ -68,8 +67,6 @@
     }
   }
 </script>
-
-<!-- <Search /> -->
 
 <div class="absolute inset-0 -z-10 overflow-hidden h-96">
   <Connections  particleCount={100} particleSize={3} particleSpeed={0.1} connectionDistance={100}/>

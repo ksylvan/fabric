@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  // import { fade } from 'svelte/transition';
   import { goto } from '$app/navigation';
 
   let mounted = $state(false);
@@ -167,15 +166,4 @@
     }
   }
 
-  /*::-webkit-scrollbar {*/
-  /*  @apply w-2;*/
-  /*}*/
-  /**/
-  /*::-webkit-scrollbar-track {*/
-  /*  @apply bg-gray-800/50 rounded-full;*/
-  /*}*/
-  /**/
-  /*::-webkit-scrollbar-thumb {*/
-  /*  @apply bg-gray-600/50 rounded-full hover:bg-gray-500/50 transition-colors;*/
-  /*}*/
 </style>
