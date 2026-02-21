@@ -1,6 +1,3 @@
-import { createPipeline, transformers } from "pdf-to-markdown-core/lib/src";
-import { PARSE_SCHEMA } from "pdf-to-markdown-core/lib/src/PdfParser";
-
 // pdfjs-dist v5+ requires browser APIs at import time, so we use dynamic imports
 let pdfjs: typeof import("pdfjs-dist") | null = null;
 
@@ -28,45 +25,50 @@ export class PdfConversionService {
 		const buffer = await file.arrayBuffer();
 		console.log("Buffer created:", buffer.byteLength);
 
-		const pipeline = createPipeline(pdfjsLib, {
-			transformConfig: {
-				transformers,
-			},
-		});
-		console.log("Pipeline created");
+		const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+		console.log("PDF loaded, pages:", pdf.numPages);
 
-		const result = await pipeline.parse(buffer, (progress) =>
-			console.log("Processing:", {
-				stage: progress.stages,
-				details: progress.stageDetails,
-				progress: progress.stageProgress,
-			}),
-		);
-		console.log("Parse complete, validating result");
+		const pages: string[] = [];
 
-		const transformed = result.transform();
-		console.log("Transform applied:", transformed);
+		for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+			const page = await pdf.getPage(pageNum);
+			const textContent = await page.getTextContent();
 
-		const markdown = transformed.convert({
-			convert: (items) => {
-				console.log("PDF Structure:", {
-					itemCount: items.length,
-					firstItem: items[0],
-					schema: PARSE_SCHEMA, // ['transform', 'width', 'height', 'str', 'fontName', 'dir']
-				});
+			let lastY: number | null = null;
+			const lines: string[] = [];
+			let currentLine = "";
 
-				const text = items
-					.map((item) => item.value("str")) // Using 'str' instead of 'text' based on PARSE_SCHEMA
-					.filter(Boolean)
-					.join("\n");
+			for (const item of textContent.items) {
+				if (!("str" in item)) continue;
+				const textItem = item as { str: string; transform: number[] };
+				const y = textItem.transform[5];
 
-				console.log("Converted text:", {
-					length: text.length,
-					preview: text.substring(0, 100),
-				});
+				if (lastY !== null && Math.abs(y - lastY) > 2) {
+					// New line detected (y position changed)
+					if (currentLine.trim()) {
+						lines.push(currentLine.trim());
+					}
+					currentLine = textItem.str;
+				} else {
+					currentLine += textItem.str;
+				}
+				lastY = y;
+			}
+			// Push the last line
+			if (currentLine.trim()) {
+				lines.push(currentLine.trim());
+			}
 
-				return text;
-			},
+			if (lines.length > 0) {
+				pages.push(lines.join("\n"));
+			}
+		}
+
+		const markdown = pages.join("\n\n");
+
+		console.log("PDF conversion completed:", {
+			resultLength: markdown.length,
+			preview: markdown.substring(0, 100),
 		});
 
 		return markdown;
