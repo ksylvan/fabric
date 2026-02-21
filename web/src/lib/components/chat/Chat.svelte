@@ -21,19 +21,19 @@
   }
 
   // Column width state (percentage values)
-  let leftColumnWidth = 50;
-  let rightColumnWidth = 50;
-  let isDragging = false;
-  
+  let leftColumnWidth = $state(50);
+  let rightColumnWidth = $state(50);
+  let isDragging = $state(false);
+
   // Message input height state (percentage values)
   const DEFAULT_INPUT_HEIGHT = 30; // Default percentage of the left column
   const MAX_INPUT_HEIGHT = DEFAULT_INPUT_HEIGHT * 2; // Maximum 200% of default height
   const MIN_SYSTEM_INSTRUCTIONS_HEIGHT = 20; // Minimum percentage for system instructions
-  let messageInputHeight = DEFAULT_INPUT_HEIGHT;
-  let systemInstructionsHeight = 100 - DEFAULT_INPUT_HEIGHT;
-  let isVerticalDragging = false;
-  let initialMouseY = 0; // Track initial mouse position
-  let initialInputHeight = 0; // Track initial input height
+  let messageInputHeight = $state(DEFAULT_INPUT_HEIGHT);
+  let systemInstructionsHeight = $state(100 - DEFAULT_INPUT_HEIGHT);
+  let isVerticalDragging = $state(false);
+  let initialMouseY = $state(0); // Track initial mouse position
+  let initialInputHeight = $state(0); // Track initial input height
   
   // Handle horizontal resize functionality
   function startResize(e: MouseEvent | KeyboardEvent) {
@@ -152,7 +152,7 @@
     };
   });
 
-  $: showObsidian = $featureFlags.enableObsidianIntegration;
+  let showObsidian = $derived($featureFlags.enableObsidianIntegration);
 </script>
 
 <div class="chat-container flex gap-0 p-2 w-full h-screen">
@@ -171,10 +171,10 @@
     </div>
 
     <!-- Vertical Resize Handle -->
-    <button 
-      class="vertical-resize-handle" 
-      on:mousedown={startVerticalResize}
-      on:keydown={handleVerticalKeyDown}
+    <button
+      class="vertical-resize-handle"
+      onmousedown={startVerticalResize}
+      onkeydown={handleVerticalKeyDown}
       type="button"
       aria-label="Resize message input and system instructions"
     ></button>
@@ -193,10 +193,10 @@
   </aside>
 
   <!-- Resize Handle -->
-  <button 
-    class="resize-handle" 
-    on:mousedown={startResize}
-    on:keydown={handleKeyDown}
+  <button
+    class="resize-handle"
+    onmousedown={startResize}
+    onkeydown={handleKeyDown}
     type="button"
     aria-label="Resize chat panels"
   ></button>
@@ -227,7 +227,7 @@
           </div>
         {/if}
       </div>
-      <Button variant="ghost" size="sm" class="h-6 px-2 text-xs opacity-70 hover:opacity-100" on:click={openDrawer}>
+      <Button variant="ghost" size="sm" class="h-6 px-2 text-xs opacity-70 hover:opacity-100" onclick={openDrawer}>
         <Tooltip text="Take Notes" position="left">
           <span>Take Notes</span>
         </Tooltip>

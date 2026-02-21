@@ -2,40 +2,42 @@
   import { onMount } from 'svelte';
   import { calculateTooltipPosition, formatPositionStyle, type TooltipPosition } from './positioning';
 
-  export let text: string;
-  // biome-ignore lint/style/useConst: Svelte props must use 'let' even when not reassigned
-  export let position: TooltipPosition = 'top';
+  let {
+    text,
+    position = 'top',
+    children
+  }: {
+    text: string;
+    position?: TooltipPosition;
+    children?: import('svelte').Snippet;
+  } = $props();
 
-  let tooltipVisible = false;
-  // eslint-disable-next-line no-unassigned-vars -- Assigned via bind:this in template
-  let triggerElement: HTMLDivElement;
-  let isBrowser = false;
-  // biome-ignore lint/correctness/noUnusedVariables: Used in template for aria-describedby and id
+  let tooltipVisible = $state(false);
+  let triggerElement: HTMLDivElement = undefined!;
+  let isBrowser = $state(false);
   const tooltipId = `tooltip-${Math.random().toString(36).substring(2, 9)}`;
 
-  // Reactive tooltip positioning - recalculates when position or element changes
-  $: tooltipStyle = triggerElement && tooltipVisible
-    ? formatPositionStyle(calculateTooltipPosition(triggerElement.getBoundingClientRect(), position))
-    : '';
+  let tooltipStyle = $derived(
+    triggerElement && tooltipVisible
+      ? formatPositionStyle(calculateTooltipPosition(triggerElement.getBoundingClientRect(), position))
+      : ''
+  );
 
   function updatePosition() {
     if (triggerElement && tooltipVisible) {
-      tooltipStyle = formatPositionStyle(calculateTooltipPosition(triggerElement.getBoundingClientRect(), position));
+      // Force re-evaluation by touching reactive state
+      tooltipVisible = tooltipVisible;
     }
   }
 
-  // biome-ignore lint/correctness/noUnusedVariables: Used in template event handlers
   function showTooltip() {
     tooltipVisible = true;
   }
 
-  // biome-ignore lint/correctness/noUnusedVariables: Used in template event handlers
   function hideTooltip() {
     tooltipVisible = false;
   }
 
-  // Handle window scroll and resize to keep tooltip positioned correctly
-  // Only runs in browser (not during SSR)
   onMount(() => {
     isBrowser = true;
     return () => {
@@ -46,39 +48,40 @@
     };
   });
 
-  // Add/remove event listeners reactively when tooltip visibility changes
-  $: if (isBrowser && tooltipVisible) {
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
-  } else if (isBrowser && !tooltipVisible) {
-    window.removeEventListener('scroll', updatePosition, true);
-    window.removeEventListener('resize', updatePosition);
-  }
+  $effect(() => {
+    if (isBrowser && tooltipVisible) {
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+    } else if (isBrowser && !tooltipVisible) {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    }
+  });
 </script>
 
 <div class="tooltip-container">
   <div
     bind:this={triggerElement}
     class="tooltip-trigger"
-    on:mouseenter={showTooltip}
-    on:mouseleave={hideTooltip}
-    on:focusin={showTooltip}
-    on:focusout={hideTooltip}
+    onmouseenter={showTooltip}
+    onmouseleave={hideTooltip}
+    onfocusin={showTooltip}
+    onfocusout={hideTooltip}
     aria-describedby={tooltipVisible ? tooltipId : undefined}
     role="button"
     tabindex="0"
   >
-    <slot />
+    {#if children}{@render children()}{/if}
   </div>
 
   {#if tooltipVisible}
     <div
       id={tooltipId}
       class="tooltip fixed z-[9999] px-2 py-1 text-xs rounded bg-gray-900/90 text-white whitespace-nowrap shadow-lg backdrop-blur-sm"
-      class:top="{position === 'top'}"
-      class:bottom="{position === 'bottom'}"
-      class:left="{position === 'left'}"
-      class:right="{position === 'right'}"
+      class:top={position === 'top'}
+      class:bottom={position === 'bottom'}
+      class:left={position === 'left'}
+      class:right={position === 'right'}
       style={tooltipStyle}
       role="tooltip"
     >

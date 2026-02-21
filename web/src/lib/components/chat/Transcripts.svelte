@@ -3,11 +3,11 @@
   import { Button } from "$lib/components/ui/button";
   import Input from '$lib/components/ui/input/Input.svelte';
 
-  let url = '';
-  let transcript = '';
-  let loading = false;
-  let error = '';
-  let title = '';
+  let url = $state('');
+  let transcript = $state('');
+  let loading = $state(false);
+  let error = $state('');
+  let title = $state('');
 
 
   async function fetchTranscript() {
@@ -71,7 +71,7 @@
   />
   <Button
     variant="secondary"
-    on:click={fetchTranscript}
+    onclick={fetchTranscript}
     disabled={loading || !url}
   >
     {#if loading}
@@ -93,7 +93,7 @@
       <Button
         variant="outline"
         size="sm"
-        on:click={copyToClipboard}
+        onclick={copyToClipboard}
       >
         Copy to Clipboard
       </Button>

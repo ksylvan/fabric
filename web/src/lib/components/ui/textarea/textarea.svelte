@@ -1,9 +1,12 @@
 <script>
   import { cn } from "$lib/utils/utils";
-  let className = undefined;
-  export let value = undefined;
-  export { className as class };
-  export let readonly = undefined;
+
+  let {
+    value = $bindable(undefined),
+    class: className = undefined,
+    readonly: readonlyProp = undefined,
+    ...restProps
+  } = $props();
 </script>
 
 <textarea
@@ -12,18 +15,6 @@
 		className
 	)}
 	bind:value
-	{readonly}
-	on:blur
-	on:change
-	on:click
-	on:focus
-	on:keydown
-	on:keypress
-	on:keyup
-	on:mouseover
-	on:mouseenter
-	on:mouseleave
-	on:paste
-	on:input
-	{...$$restProps}
+	readonly={readonlyProp}
+	{...restProps}
 ></textarea>

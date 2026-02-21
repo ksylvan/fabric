@@ -21,7 +21,7 @@
     { code: 'it', name: 'Italian' }
   ];
 
-  let variablesJsonString = '';
+  let variablesJsonString = $state('');
 
   // Parse JSON string and update variables store
   function updateVariables() {
@@ -81,7 +81,7 @@
       <textarea
         id="pattern-variables"
         bind:value={variablesJsonString}
-        on:input={updateVariables}
+        oninput={updateVariables}
         placeholder="{`{\"lang_code\": \"fr\", \"role\": \"expert\"}`}"
         class="w-full h-20 px-3 py-2 text-sm bg-primary-800/30 border-none rounded-md hover:bg-primary-800/40 transition-colors text-white placeholder-white/50 resize-none focus:ring-1 focus:ring-white/20 focus:outline-none"
         style="font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;"

@@ -1,17 +1,24 @@
 <script lang="ts">
   import { cn } from "$lib/utils/utils";
 
-  let className: string | undefined = undefined;
-  export let value = 0;
-  export let min = 0;
-  export let max = 100;
-  export let step = 1;
-  export { className as class };
+  let {
+    value = $bindable(0),
+    min = 0,
+    max = 100,
+    step = 1,
+    class: className = undefined,
+  }: {
+    value?: number;
+    min?: number;
+    max?: number;
+    step?: number;
+    class?: string;
+  } = $props();
 
   let sliderEl: HTMLDivElement;
-  let isDragging = false;
+  let isDragging = $state(false);
 
-  $: percentage = ((value - min) / (max - min)) * 100;
+  let percentage = $derived(((value - min) / (max - min)) * 100);
 
   function handleMouseDown(e: MouseEvent) {
     isDragging = true;
@@ -41,7 +48,6 @@
   }
 
   function handleKeyDown(e: KeyboardEvent) {
-    const stepSize = e.shiftKey ? 10 : 1;
     switch (e.key) {
       case 'ArrowLeft':
       case 'ArrowDown':
@@ -68,8 +74,8 @@
 <div
 	bind:this={sliderEl}
 	class={cn("relative flex w-full touch-none select-none items-center", className)}
-	on:mousedown={handleMouseDown}
-	on:keydown={handleKeyDown}
+	onmousedown={handleMouseDown}
+	onkeydown={handleKeyDown}
 	role="slider"
 	tabindex="0"
 	aria-valuemin={min}
@@ -77,9 +83,9 @@
 	aria-valuenow={value}
 >
 	<div class="relative h-0.5 w-full grow overflow-hidden rounded-full bg-white/10">
-		<div 
-			class="absolute h-full bg-white/30 transition-all" 
-			style="width: {percentage}%" 
+		<div
+			class="absolute h-full bg-white/30 transition-all"
+			style="width: {percentage}%"
 		/>
 	</div>
 	<div

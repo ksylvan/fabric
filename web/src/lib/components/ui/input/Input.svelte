@@ -1,13 +1,23 @@
 <script lang="ts">
   import { cn } from "$lib/utils/utils";
 
-  export let value: string = '';
-  export let placeholder: string | undefined = undefined;
-  export let id: string | undefined = undefined;
-  export let disabled: boolean = false;
-  export let required: boolean = false;
-  let className: string | undefined = undefined;
-  export { className as class };
+  let {
+    value = $bindable(''),
+    placeholder = undefined,
+    id = undefined,
+    disabled = false,
+    required = false,
+    class: className = undefined,
+    ...restProps
+  }: {
+    value?: string;
+    placeholder?: string;
+    id?: string;
+    disabled?: boolean;
+    required?: boolean;
+    class?: string;
+    [key: string]: any;
+  } = $props();
 </script>
 
 <input
@@ -21,4 +31,5 @@
     "block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm disabled:cursor-not-allowed disabled:opacity-50",
     className
   )}
+  {...restProps}
 />

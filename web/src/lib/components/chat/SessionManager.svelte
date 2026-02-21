@@ -5,13 +5,16 @@
   import { chatState, clearMessages, revertLastMessage, currentSession, messageStore } from '$lib/store/chat-store';
   import { Button } from '$lib/components/ui/button';
   import { toastService } from '$lib/services/toast-service';
-  
-  let sessionsList: string[] = [];
-  $: sessionName = $currentSession;
-  $: if ($sessions) {
-    sessionsList = $sessions.map(s => s.Name);
-  }
-  
+
+  let sessionsList: string[] = $state([]);
+  let sessionName = $derived($currentSession);
+
+  $effect(() => {
+    if ($sessions) {
+      sessionsList = $sessions.map(s => s.Name);
+    }
+  });
+
   onMount(async () => {
     try {
       await sessionAPI.loadSessions();
@@ -19,7 +22,7 @@
       console.error('Failed to load sessions:', error);
     }
   });
-  
+
   async function saveSession() {
     try {
       await sessionAPI.exportToFile($chatState.messages);
@@ -49,19 +52,19 @@
 
 <div class="p-1 m-1 mr-2">
   <div class="flex gap-2">
-    <Button variant="outline" size="icon" aria-label="Revert Last Message" on:click={revertLastMessage}>
+    <Button variant="outline" size="icon" aria-label="Revert Last Message" onclick={revertLastMessage}>
         <RotateCcw class="h-4 w-4" />
     </Button>
-    <Button variant="outline" size="icon" aria-label="Clear Chat" on:click={clearMessages}>
+    <Button variant="outline" size="icon" aria-label="Clear Chat" onclick={clearMessages}>
         <Trash2 class="h-4 w-4" />
     </Button>
-    <Button variant="outline" size="icon" aria-label="Copy Chat" on:click={copyToClipboard}>
+    <Button variant="outline" size="icon" aria-label="Copy Chat" onclick={copyToClipboard}>
         <Copy class="h-4 w-4" />
     </Button>
-    <Button variant="outline" size="icon" aria-label="Load Session" on:click={loadSession}>
+    <Button variant="outline" size="icon" aria-label="Load Session" onclick={loadSession}>
         <FileIcon class="h-4 w-4" />
     </Button>
-    <Button variant="outline" size="icon" aria-label="Save Session" on:click={saveSession}>
+    <Button variant="outline" size="icon" aria-label="Save Session" onclick={saveSession}>
         <Save class="h-4 w-4" />
     </Button>
   </div>

@@ -5,31 +5,28 @@
   import { sessionAPI, sessions } from '$lib/store/session-store';
   import { onMount } from 'svelte';
 
-  let sessionInput = '';
+  let sessionInput = $state('');
 
-  $: sessionsList = $sessions?.map(s => s.Name) ?? [];
+  let sessionsList = $derived($sessions?.map(s => s.Name) ?? []);
 
   function handleSessionInput() {
     const trimmed = sessionInput.trim();
     if (trimmed) {
       setSession(trimmed);
     } else {
-      // Clear session when input is empty
       sessionInput = '';
       setSession(null);
     }
   }
 
-  let previousSessionInput = '';
+  let previousSessionInput = $state('');
 
   async function handleSessionSelect() {
-    // If the placeholder option (empty value) is selected, restore to previous value
     if (!sessionInput) {
       sessionInput = previousSessionInput || $currentSession || '';
       return;
     }
 
-    // Skip if session hasn't changed
     if (sessionInput === $currentSession) {
       return;
     }
@@ -37,7 +34,6 @@
     previousSessionInput = sessionInput;
     setSession(sessionInput);
 
-    // Load the selected session's message history so the chat reflects prior context
     try {
       const messages = await sessionAPI.loadSessionMessages(sessionInput);
       messageStore.set(messages);
@@ -62,15 +58,15 @@
     id="session-input"
     type="text"
     bind:value={sessionInput}
-    on:blur={handleSessionInput}
-    on:keydown={(e) => e.key === 'Enter' && handleSessionInput()}
+    onblur={handleSessionInput}
+    onkeydown={(e) => e.key === 'Enter' && handleSessionInput()}
     placeholder="Enter session name..."
     class="w-full px-3 py-2 text-sm bg-primary-800/30 border-none rounded-md hover:bg-primary-800/40 transition-colors text-white placeholder-white/50 focus:ring-1 focus:ring-white/20 focus:outline-none"
   />
   {#if sessionsList.length > 0}
     <Select
       bind:value={sessionInput}
-      on:change={handleSessionSelect}
+      onchange={handleSessionSelect}
       class="mt-2 bg-primary-800/30 border-none hover:bg-primary-800/40 transition-colors"
     >
       <option value="">Load existing session...</option>

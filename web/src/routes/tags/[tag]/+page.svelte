@@ -2,9 +2,10 @@
   import { formatDistance } from 'date-fns';
   import type { PageData } from './$types';
 
-  export let data: PageData;
+  let { data }: { data: PageData } = $props();
 
-  $: ({ tag, posts } = data);
+  let tag = $derived(data.tag);
+  let posts = $derived(data.posts);
 </script>
 
 <div class="container py-12">

@@ -3,7 +3,7 @@
   import PostContent from '$lib/components/posts/PostContent.svelte';
   import PostMeta from '$lib/components/posts/PostMeta.svelte';
 
-  export let data: PageData;
+  let { data }: { data: PageData } = $props();
   console.log('Page data:', data);
 </script>
 

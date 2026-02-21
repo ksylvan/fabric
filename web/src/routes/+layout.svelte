@@ -8,6 +8,8 @@
   import { onMount } from 'svelte';
   import { toastStore } from '$lib/store/toast-store';
 
+  let { children } = $props();
+
   onMount(() => {
     toastStore.info("👋 Welcome to the site! Tell people about yourself and what you do.");
   });
@@ -29,7 +31,7 @@
       in:fly={{ duration: 500, delay: 100, y: 100 }}
     >
       <main class="main m-auto">
-        <slot />
+        {@render children()}
       </main>
     </div>
 

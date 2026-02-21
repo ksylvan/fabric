@@ -2,10 +2,10 @@
   import type { PageData } from './$types';
   // import TagList from '$components/ui/tag-list/TagList.svelte';
 
-  export let data: PageData;
+  let { data }: { data: PageData } = $props();
 
-  $: tags = data.tags;
-  $: postsCount = data.postsCount;
+  let tags = $derived(data.tags);
+  let postsCount = $derived(data.postsCount);
 </script>
 
 <div class="container py-12">

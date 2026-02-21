@@ -1,5 +1,4 @@
 <script lang="ts">
-  export {};
   import { Label } from "$lib/components/ui/label";
   import { Slider } from "$lib/components/ui/slider";
   import { modelConfig } from "$lib/store/model-store";
@@ -11,11 +10,10 @@
 
   // Load expanded state from localStorage
   const STORAGE_KEY = 'modelConfigExpanded';
-  let isExpanded = false;
-  if (browser) {
+  let isExpanded = $state(browser ? (() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    isExpanded = stored ? JSON.parse(stored) : false;
-  }
+    return stored ? JSON.parse(stored) : false;
+  })() : false);
 
   // Save expanded state
   function toggleExpanded() {
@@ -48,7 +46,7 @@
 <div class="w-full" use:clickOutside={handleClickOutside}>
   <button 
     class="w-full flex items-center py-2 px-2 hover:text-white/90 transition-colors rounded-t"
-    on:click={toggleExpanded}
+    onclick={toggleExpanded}
   >
     <span class="text-sm font-semibold">Model Configuration</span>
     <span class="transform transition-transform duration-200 opacity-70 ml-1 text-xs" class:rotate-180={isExpanded}>

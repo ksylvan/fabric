@@ -1,11 +1,17 @@
 <script lang="ts">
   import { cn } from "$lib/utils/utils";
-  
-  export let checked: boolean = false;
-  export let id: string | undefined = undefined;
-  export let disabled: boolean = false;
-  let className: string | undefined = undefined;
-  export { className as class };
+
+  let {
+    checked = $bindable(false),
+    id = undefined,
+    disabled = false,
+    class: className = undefined,
+  }: {
+    checked?: boolean;
+    id?: string;
+    disabled?: boolean;
+    class?: string;
+  } = $props();
 </script>
 
 <div class="flex items-center">

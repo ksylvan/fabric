@@ -1,6 +1,6 @@
 <script lang="ts">
   import { chatState, errorStore, streamingStore } from '$lib/store/chat-store';
-  import { afterUpdate, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import { toastStore } from '$lib/store/toast-store';
   import { marked } from 'marked';
   import SessionManager from './SessionManager.svelte';
@@ -13,11 +13,11 @@
   import { selectedPatternName } from '$lib/store/pattern-store';
 
 
-  let showPatternModal = false;
+  let showPatternModal = $state(false);
 
-  let messagesContainer: HTMLDivElement | null = null;
-  let showScrollButton = false;
-  let isUserMessage = false;
+  let messagesContainer: HTMLDivElement | null = $state(null);
+  let showScrollButton = $state(false);
+  let isUserMessage = $state(false);
 
   function scrollToBottom() {
     if (messagesContainer) {
@@ -32,17 +32,21 @@
   }
 
   // Watch for changes in messages
-  $: if ($chatState.messages.length > 0) {
-    const lastMessage = $chatState.messages[$chatState.messages.length - 1];
-    isUserMessage = lastMessage.role === 'user';
-    // Auto-scroll on both user messages and assistant messages
-    setTimeout(scrollToBottom, 100);
-  }
+  $effect(() => {
+    if ($chatState.messages.length > 0) {
+      const lastMessage = $chatState.messages[$chatState.messages.length - 1];
+      isUserMessage = lastMessage.role === 'user';
+      // Auto-scroll on both user messages and assistant messages
+      setTimeout(scrollToBottom, 100);
+    }
+  });
 
   // Also watch for streaming state changes to ensure scrolling when streaming completes
-  $: if ($streamingStore === false) {
-    setTimeout(scrollToBottom, 100);
-  }
+  $effect(() => {
+    if ($streamingStore === false) {
+      setTimeout(scrollToBottom, 100);
+    }
+  });
 
   onMount(() => {
     if (messagesContainer) {
@@ -103,9 +107,9 @@ function renderContent(message: Message): string {
 
   <Modal
     show={showPatternModal}
-    on:close={() => showPatternModal = false}
+    onclose={() => showPatternModal = false}
   >
-    <PatternList on:close={() => showPatternModal = false} />
+    <PatternList onclose={() => showPatternModal = false} />
   </Modal>
 
   {#if $errorStore}
@@ -167,7 +171,7 @@ function renderContent(message: Message): string {
     {#if showScrollButton}
       <button
         class="absolute bottom-4 right-4 bg-primary/20 hover:bg-primary/30 rounded-full p-2 transition-opacity"
-        on:click={scrollToBottom}
+        onclick={scrollToBottom}
         transition:fade
       >
         <ArrowDown class="w-4 h-4" />

@@ -7,33 +7,32 @@
   import Connections from '$lib/components/ui/connections/Connections.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
 
-  let searchQuery = '';
-  let selectedTags: string[] = [];
-  let allTags: string[] = [];
-  let inputValue = '';
+  let searchQuery = $state('');
+  let selectedTags: string[] = $state([]);
+  let inputValue = $state('');
 
-  export let data: PageData;
-  $: posts = data.posts || [];
+  let { data }: { data: PageData } = $props();
+  let posts = $derived(data.posts || []);
 
   // Extract all unique tags from posts
-  $: {
+  let allTags = $derived((() => {
     const tagSet = new Set<string>();
     posts?.forEach(post => {
       post.metadata?.tags?.forEach(tag => tagSet.add(tag));
     });
-    allTags = Array.from(tagSet);
-  }
+    return Array.from(tagSet);
+  })());
 
   // Filter posts based on selected tags
-  $: filteredPosts = posts?.filter(post => {
+  let filteredPosts = $derived(posts?.filter(post => {
     if (selectedTags.length === 0) return true;
-    return selectedTags.every(tag => 
+    return selectedTags.every(tag =>
       post.metadata?.tags?.some(postTag => postTag.toLowerCase() === tag.toLowerCase())
     );
-  }) || [];
+  }) || []);
 
   // Filter posts based on search query
-  $: searchResults = filteredPosts.filter(post => {
+  let searchResults = $derived(filteredPosts.filter(post => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -41,7 +40,7 @@
       post.metadata?.description?.toLowerCase().includes(query) ||
       post.metadata?.tags?.some(tag => tag.toLowerCase().includes(query))
     );
-  });
+  }));
 
   function validateTag(value: string): boolean {
     return allTags.some(tag => tag.toLowerCase() === value.toLowerCase());
@@ -189,7 +188,7 @@
           <button
             type="button"
             class="ml-1 text-primary-300 hover:text-white"
-            on:click={() => removeTag(tag)}
+            onclick={() => removeTag(tag)}
           >&times;</button>
         </span>
       {/each}
@@ -199,7 +198,7 @@
         placeholder="Filter by tags..."
         class="flex-1 min-w-[120px] bg-transparent border-none outline-none text-sm placeholder:text-white/50"
         bind:value={inputValue}
-        on:keydown={handleChipKeydown}
+        onkeydown={handleChipKeydown}
       />
     </div>
   </div>

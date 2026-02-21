@@ -20,15 +20,15 @@
 
 
   const chatService = new ChatService();
-  let userInput = "";
-  let isYouTubeURL = false;
-  let files: FileList | undefined = undefined;
+  let userInput = $state("");
+  let isYouTubeURL = $state(false);
+  let files: FileList | undefined = $state(undefined);
   let fileInputEl: HTMLInputElement;
-  let uploadedFiles: string[] = [];
-  let fileContents: string[] = [];
-  let isProcessingFiles = false;
-  let isFileIndicatorVisible = false; // Add new variable
-  let fileButtonKey = false; // Add new key variable for FileButton
+  let uploadedFiles: string[] = $state([]);
+  let fileContents: string[] = $state([]);
+  let isProcessingFiles = $state(false);
+  let isFileIndicatorVisible = $state(false);
+  let fileButtonKey = $state(false);
   function detectYouTubeURL(input: string): boolean {
     const youtubePattern = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)/i;
     const isYoutube = youtubePattern.test(input);
@@ -539,8 +539,8 @@ async function readFileContent(file: File): Promise<string> {
   <div class="relative flex-1 min-h-0 bg-primary-800/30 rounded-lg">
     <Textarea
       bind:value={userInput}
-      on:input={handleInput}
-      on:keydown={handleKeydown}
+      oninput={handleInput}
+      onkeydown={handleKeydown}
       placeholder="Enter your message (YouTube URLs will be automatically processed)..."
       class="w-full h-full resize-none bg-transparent border-none text-sm focus:ring-0 transition-colors p-3 pb-[48px]"
     />
@@ -556,7 +556,7 @@ async function readFileContent(file: File): Promise<string> {
           type="button"
           disabled={isProcessingFiles || uploadedFiles.length >= 5}
           class="h-10 w-10 bg-primary-800/30 hover:bg-primary-800/50 rounded-full transition-colors flex items-center justify-center disabled:opacity-30"
-          on:click={() => fileInputEl?.click()}
+          onclick={() => fileInputEl?.click()}
         >
           <Paperclip class="w-5 h-5" />
         </button>
@@ -565,7 +565,7 @@ async function readFileContent(file: File): Promise<string> {
           bind:files
           type="file"
           class="hidden"
-          on:change={handleFileUpload}
+          onchange={handleFileUpload}
           multiple
         />
       {/key}
@@ -574,7 +574,7 @@ async function readFileContent(file: File): Promise<string> {
           variant="ghost"
           size="icon"
           name="send"
-          on:click={handleSubmit}
+          onclick={handleSubmit}
           disabled={isProcessingFiles || !userInput.trim()}
           class="h-10 w-10 bg-primary-800/30 hover:bg-primary-800/50 rounded-full transition-colors disabled:opacity-30"
         >

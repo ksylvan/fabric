@@ -10,10 +10,10 @@
   import HelpModal from '$lib/components/ui/help/HelpModal.svelte';
   import { selectedPatternName } from '$lib/store/pattern-store';
 
-  let isMenuOpen = false;
-  let showPatternModal = false;
-  let showPatternTilesModal = false;
-  let showHelpModal = false;
+  let isMenuOpen = $state(false);
+  let showPatternModal = $state(false);
+  let showPatternTilesModal = $state(false);
+  let showHelpModal = $state(false);
 
   function goToGithub() {
     window.open('https://github.com/danielmiessler/fabric', '_blank');
@@ -23,22 +23,20 @@
     isMenuOpen = !isMenuOpen;
   }
 
-  $: currentPath = $page.url.pathname;
-  $: isDarkMode = $theme === 'my-custom-theme';
+  let currentPath = $derived($page.url.pathname);
+  let isDarkMode = $derived($theme === 'my-custom-theme');
 
   const navItems = [
     { href: '/', label: 'Home' },
     { href: '/posts', label: 'Posts' },
-    // { href: '/tags', label: 'Tags' },
     { href: '/chat', label: 'Chat' },
-    //{ href: '/obsidian', label: 'Obsidian' },
     { href: '/contact', label: 'Contact' },
     { href: '/about', label: 'About' },
   ];
 
   onMount(() => {
     initTheme();
-  }); 
+  });
 </script>
 
 <header class="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -75,20 +73,20 @@
       <div class="flex items-center gap-3 mr-4">
         <!-- Pattern Tiles Button -->
         <button name="pattern-tiles"
-          on:click={() => showPatternTilesModal = true}
+          onclick={() => showPatternTilesModal = true}
           class="inline-flex h-10 items-center justify-center rounded-full border bg-background px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground gap-2"
           aria-label="Pattern Tiles"
         >
           <FileText class="h-4 w-4" />
           <span>Pattern Tiles</span>
         </button>
-        
+
         <!-- Or text -->
         <span class="text-sm text-foreground/60 mx-1">or</span>
-        
+
         <!-- Pattern List Button -->
         <button name="pattern-list"
-          on:click={() => showPatternModal = true}
+          onclick={() => showPatternModal = true}
           class="inline-flex h-10 items-center justify-center rounded-full border bg-background px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground gap-2"
           aria-label="Pattern List"
         >
@@ -99,7 +97,7 @@
 
 
       <button name="github"
-        on:click={goToGithub}
+        onclick={goToGithub}
         class="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         aria-label="GitHub"
       >
@@ -108,7 +106,7 @@
       </button>
 
       <button name="toggle-theme"
-        on:click={cycleTheme}
+        onclick={cycleTheme}
         class="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         aria-label="Toggle theme"
       >
@@ -121,7 +119,7 @@
       </button>
 
       <button name="help"
-        on:click={() => showHelpModal = true}
+        onclick={() => showHelpModal = true}
         class="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-background text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ml-3"
         aria-label="Help"
       >
@@ -132,7 +130,7 @@
       <!-- Mobile Menu Button -->
       <button name="toggle-menu"
         class="inline-flex h-9 w-9 items-center justify-center rounded-lg border bg-background text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground md:hidden"
-        on:click={toggleMenu}
+        onclick={toggleMenu}
         aria-expanded={isMenuOpen}
         aria-label="Toggle menu"
       >
@@ -153,7 +151,7 @@
           <a
             {href}
             class="text-base font-medium transition-colors hover:text-primary {currentPath === href ? 'text-primary' : 'text-foreground/60'}"
-            on:click={() => (isMenuOpen = false)}
+            onclick={() => (isMenuOpen = false)}
           >
             {label}
           </a>
@@ -165,12 +163,12 @@
 
 <Modal
   show={showPatternModal}
-  on:close={() => showPatternModal = false}
+  onclose={() => showPatternModal = false}
 >
   <PatternList
-    on:close={() => showPatternModal = false}
-    on:select={(e) => {
-      selectedPatternName.set(e.detail);
+    onclose={() => showPatternModal = false}
+    onselect={(patternName) => {
+      selectedPatternName.set(patternName);
       showPatternModal = false;
     }}
   />
@@ -178,21 +176,21 @@
 
 <Modal
   show={showHelpModal}
-  on:close={() => showHelpModal = false}
+  onclose={() => showHelpModal = false}
 >
   <HelpModal
-    on:close={() => showHelpModal = false}
+    onclose={() => showHelpModal = false}
   />
 </Modal>
 
 <Modal
   show={showPatternTilesModal}
-  on:close={() => showPatternTilesModal = false}
+  onclose={() => showPatternTilesModal = false}
 >
   <PatternTilesModal
-    on:close={() => showPatternTilesModal = false}
-    on:select={(e) => {
-      selectedPatternName.set(e.detail);
+    onclose={() => showPatternTilesModal = false}
+    onselect={(patternName) => {
+      selectedPatternName.set(patternName);
       showPatternTilesModal = false;
     }}
   />

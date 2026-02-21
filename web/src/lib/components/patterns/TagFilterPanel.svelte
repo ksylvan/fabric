@@ -1,21 +1,24 @@
 <script lang="ts">
     import type { Pattern } from '$lib/interfaces/pattern-interface';
-    import { createEventDispatcher } from 'svelte';
-    
-    const dispatch = createEventDispatcher<{
-        tagsChanged: string[];
-    }>();
 
-    export let patterns: Pattern[];
-    export let hideToggleButton = false; // New prop to hide the toggle button when used in modal
-    let selectedTags: string[] = [];
-    let isExpanded = false;
+    let {
+        patterns,
+        ontagsChanged,
+        hideToggleButton = false,
+    }: {
+        patterns: Pattern[];
+        ontagsChanged?: (tags: string[]) => void;
+        hideToggleButton?: boolean;
+    } = $props();
+
+    let selectedTags: string[] = $state([]);
+    let isExpanded = $state(false);
 
     function toggleTag(tag: string) {
         selectedTags = selectedTags.includes(tag)
             ? selectedTags.filter(t => t !== tag)
             : [...selectedTags, tag];
-        dispatch('tagsChanged', selectedTags);
+        ontagsChanged?.(selectedTags);
     }
 
     function togglePanel() {
@@ -25,35 +28,35 @@
     export function reset() {
         selectedTags = [];
         isExpanded = false;
-        dispatch('tagsChanged', selectedTags);
+        ontagsChanged?.(selectedTags);
     }
 </script>
 
 <div class="tag-panel {isExpanded ? 'expanded' : ''} {hideToggleButton ? 'embedded' : ''}" style="z-index: 50">
     {#if !hideToggleButton}
     <div class="panel-header">
-        <button class="close-btn" on:click={togglePanel}>
+        <button class="close-btn" onclick={togglePanel}>
             {isExpanded ? 'Close Filter Tags ◀' : 'Open Filter Tags ▶'}
         </button>
     </div>
     {/if}
-    
+
     <div class="panel-content {hideToggleButton ? 'always-visible' : ''}">
         <div class="reset-container">
-            <button 
+            <button
                 class="reset-btn"
-                on:click={() => {
+                onclick={() => {
                     selectedTags = [];
-                    dispatch('tagsChanged', selectedTags);
+                    ontagsChanged?.(selectedTags);
                 }}
             >
                 Reset All Tags
             </button>
         </div>
         {#each Array.from(new Set(patterns.flatMap(p => p.tags || []))).sort() as tag}
-            <button 
+            <button
                 class="tag-brick {selectedTags.includes(tag) ? 'selected' : ''}"
-                on:click={() => toggleTag(tag)}
+                onclick={() => toggleTag(tag)}
             >
                 {tag}
             </button>

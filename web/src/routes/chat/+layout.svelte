@@ -2,6 +2,8 @@
   import { disableScrollHandling } from "$app/navigation";
   import { onMount } from "svelte";
 
+  let { children } = $props();
+
   onMount(() => {
     disableScrollHandling();
   });
@@ -9,7 +11,7 @@
 
 <div id="page" class="page-wrapper">
   <div class="viewport-container flex h-[calc(100vh-8rem)]">
-    <slot />
+    {@render children()}
   </div>
 </div>
 
