@@ -1,7 +1,13 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
 
-  let toc = $state([]);
+  interface TocItem {
+    id: string;
+    text: string | null;
+    level: number;
+  }
+
+  let toc: TocItem[] = $state([]);
 
   onMount(() => {
     // Get all headings from the content
@@ -16,7 +22,7 @@
     }
   });
 
-  function scrollToSection(id) {
+  function scrollToSection(id: string) {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });

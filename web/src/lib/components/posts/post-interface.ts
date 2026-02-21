@@ -8,6 +8,6 @@ export interface Post {
     slug: string;
     /** Post metadata from frontmatter */
     metadata: PostMetadata;
-    /** Compiled Svelte component or HTML string */
-    content: string | typeof SvelteComponent;
+    /** Compiled Svelte component or HTML string (optional for list views) */
+    content?: string | typeof SvelteComponent;
 }

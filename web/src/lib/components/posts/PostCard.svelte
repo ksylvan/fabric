@@ -33,7 +33,7 @@
           {formatDistance(parseDate(post.metadata.date), new Date(), { addSuffix: false })}
         {/if}
       </time>
-      {#if post.metadata?.tags?.length > 0}
+      {#if (post.metadata?.tags?.length ?? 0) > 0}
         <span class="text-xs">•</span>
         <div class="flex flex-wrap gap-2">
           {#each post.metadata?.tags as tag}

@@ -10,7 +10,7 @@
   let terminalContent = $state('');
   let typing = $state(false);
   
-  const pages = {
+  const pages: Record<string, string> = {
     home: 'Welcome to Fabric\n\nType `help` to see available commands.',
     about: 'About Fabric',
     chat: 'Enter `chat` to start a chat session.',
@@ -156,8 +156,6 @@
 
   .animate-blink {
     animation: blink 1s step-end infinite;
-    flex-col: 1; 
-
   }
 
   @keyframes blink {
