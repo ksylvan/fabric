@@ -1,5 +1,5 @@
 <script>
-  import '../app.postcss';
+  import '../app.css';
   import { AppShell } from '@skeletonlabs/skeleton';
   import ToastContainer from '$lib/components/ui/toast/ToastContainer.svelte';
   import Footer from '$lib/components/home/Footer.svelte';

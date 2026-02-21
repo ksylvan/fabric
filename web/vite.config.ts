@@ -1,11 +1,12 @@
 import { sveltekit } from '@sveltejs/kit/vite';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 // Get the Fabric base URL from environment variable with fallback
 const FABRIC_BASE_URL = process.env.FABRIC_BASE_URL || 'http://localhost:8080';
 
 export default defineConfig({
-  plugins: [sveltekit()],
+  plugins: [tailwindcss(), sveltekit()],
   optimizeDeps: {
     include: ['pdfjs-dist'],
     esbuildOptions: {

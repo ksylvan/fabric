@@ -1,7 +1,5 @@
 import { join } from 'path';
 import type { Config } from 'tailwindcss';
-import forms from '@tailwindcss/forms';
-import typography from '@tailwindcss/typography';
 import { skeleton } from '@skeletonlabs/tw-plugin';
 import { myCustomTheme } from './my-custom-theme.ts'
 
@@ -87,8 +85,6 @@ export default {
     },
   },
   plugins: [
-    forms,
-    typography,
     skeleton({
       themes: {
         preset: [
@@ -139,4 +135,4 @@ export default {
       }
     })
   ]
-}
+} satisfies Config;
