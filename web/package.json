@@ -25,7 +25,7 @@
     "@types/node": "^20.17.50",
     "eslint-plugin-svelte": "^2.46.1",
     "lucide-svelte": "^0.309.0",
-    "mdsvex": "^0.11.2",
+    "mdsvex": "^0.12.6",
     "pdfjs-dist": "^5.4.449",
     "postcss": "^8.5.3",
     "rehype-autolink-headings": "^7.1.0",
