@@ -1,12 +1,5 @@
 <script>
-  export let header = '';
-  export let imageUrl = '';
-  export let imageAlt = 'Post';
-  export let title = '';
-  export let content = '';
-  export let authorName = '';
-  export let authorAvatarUrl = '';
-  export let link = '';
+  let { header = '', imageUrl = '', imageAlt = 'Post', title = '', content = '', authorName = '', authorAvatarUrl = '', link = '' } = $props();
 </script>
 
 <div class="w-full grid grid-cols-1 md:grid-cols-1 justify-end gap-4">
