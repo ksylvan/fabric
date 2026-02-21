@@ -1,7 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { Sun, Moon, Menu, X, Github, FileText } from 'lucide-svelte';
-  import { Avatar } from '@skeletonlabs/skeleton';
   import { fade } from 'svelte/transition';
   import { theme, cycleTheme, initTheme } from '$lib/store/theme-store';
   import { onMount } from 'svelte';
@@ -45,11 +44,10 @@
 <header class="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
   <div class="container flex h-16 items-center justify-between px-4">
     <div class="flex items-center gap-4">
-      <Avatar 
-        src="/fabric-logo.png" 
-        width="w-10" 
-        rounded="rounded-full" 
-        class="border-2 border-primary/20"
+      <img
+        src="/fabric-logo.png"
+        alt="fabric logo"
+        class="w-10 h-10 rounded-full border-2 border-primary/20 object-cover"
       />
       <a href="/" class="flex items-center">
         <span class="text-lg font-semibold">fabric</span>
