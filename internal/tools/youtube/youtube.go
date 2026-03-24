@@ -602,6 +602,13 @@ func (o *YouTube) Grab(url string, options *Options) (ret *VideoInfo, err error)
 		}
 	}
 
+	if options.Visual {
+		// Currently defaults to 'en' and no extra args, similar to transcript default behavior in Grab
+		if ret.VisualText, err = o.GrabVisual(videoId, "en", ""); err != nil {
+			return
+		}
+	}
+
 	return
 }
 
@@ -762,6 +769,7 @@ type Options struct {
 	Duration                 bool
 	Transcript               bool
 	TranscriptWithTimestamps bool
+	Visual                   bool
 	Comments                 bool
 	Lang                     string
 	Metadata                 bool
@@ -769,6 +777,7 @@ type Options struct {
 
 type VideoInfo struct {
 	Transcript string         `json:"transcript"`
+	VisualText string         `json:"visualText,omitempty"`
 	Duration   int            `json:"duration"`
 	Comments   []string       `json:"comments"`
 	Metadata   *VideoMetadata `json:"metadata,omitempty"`
@@ -826,6 +835,7 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 	flag.BoolVar(&options.Duration, "duration", false, "Output only the duration")
 	flag.BoolVar(&options.Transcript, "transcript", false, "Output only the transcript")
 	flag.BoolVar(&options.TranscriptWithTimestamps, "transcriptWithTimestamps", false, "Output only the transcript with timestamps")
+	flag.BoolVar(&options.Visual, "visual", false, "Output visual text extracted from video frames")
 	flag.BoolVar(&options.Comments, "comments", false, "Output the comments on the video")
 	flag.StringVar(&options.Lang, "lang", "en", "Language for the transcript (default: English)")
 	flag.BoolVar(&options.Metadata, "metadata", false, "Output video metadata")
@@ -838,4 +848,63 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 	url := flag.Arg(0)
 	ret, err = o.Grab(url, options)
 	return
+}
+
+// GrabVisual retrieves visual data from the video by extracting frames via FFmpeg and OCR parsing them via Tesseract.
+func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs string) (ret string, err error) {
+	if _, err = exec.LookPath("yt-dlp"); err != nil {
+		return "", errors.New("yt-dlp is required for visual extraction but not found in PATH")
+	}
+	if _, err = exec.LookPath("ffmpeg"); err != nil {
+		return "", errors.New("ffmpeg is required for visual extraction but not found in PATH")
+	}
+	if _, err = exec.LookPath("tesseract"); err != nil {
+		return "", errors.New("tesseract is required for visual extraction but not found in PATH")
+	}
+
+	tempDir := filepath.Join(os.TempDir(), "fabric-vfabric-"+videoId)
+	if err = os.MkdirAll(tempDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	videoURL := "https://www.youtube.com/watch?v=" + videoId
+
+	cmdUrl := exec.Command("yt-dlp", "-f", "best", "--get-url", videoURL)
+	urlBytes, err := cmdUrl.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get stream URL via yt-dlp: %v", err)
+	}
+	streamUrl := strings.TrimSpace(string(urlBytes))
+
+	framePattern := filepath.Join(tempDir, "frame_%04d.jpg")
+	cmdFfmpeg := exec.Command("ffmpeg", "-i", streamUrl, "-vf", "select='gt(scene,0.4)'", "-vsync", "vfr", framePattern)
+	if err = cmdFfmpeg.Run(); err != nil {
+		return "", fmt.Errorf("ffmpeg frame extraction failed: %v", err)
+	}
+
+	files, err := filepath.Glob(filepath.Join(tempDir, "frame_*.jpg"))
+	if err != nil {
+		return "", err
+	}
+
+	var sb strings.Builder
+	for i, file := range files {
+		cmdOcr := exec.Command("tesseract", file, "-", "stdout")
+		ocrBytes, _ := cmdOcr.Output()
+		text := strings.TrimSpace(string(ocrBytes))
+		
+		if text != "" && len(text) > 10 {
+			sb.WriteString(fmt.Sprintf("\n00:00:%02d.000 --> 00:00:%02d.999\n", i, i))
+			sb.WriteString("[VISUAL FRAME CUE]\n")
+			sb.WriteString(text)
+			sb.WriteString("\n")
+		}
+	}
+	
+	ret = sb.String()
+	if ret == "" {
+		return "", errors.New("no clear text found in video visual frames")
+	}
+	return ret, nil
 }
