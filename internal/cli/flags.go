@@ -57,6 +57,8 @@ type Flags struct {
 	YouTubeTranscript               bool                 `long:"transcript" description:"Grab transcript from YouTube video and send to chat (it is used per default)."`
 	YouTubeTranscriptWithTimestamps bool                 `long:"transcript-with-timestamps" description:"Grab transcript from YouTube video with timestamps and send to chat"`
 	YouTubeVisual                   bool                 `long:"visual" description:"Extract visual data from video using OCR and FFmpeg"`
+	YouTubeVisualSensitivity        float64              `long:"visual-sensitivity" default:"0.4" description:"Tolerance for FFmpeg scene detection (0.0 - 1.0)"`
+	YouTubeVisualFps                int                  `long:"visual-fps" default:"0" description:"Extract a specific number of frames per second instead of using scene detection"`
 	YouTubeComments                 bool                 `long:"comments" description:"Grab comments from YouTube video and send to chat"`
 	YouTubeMetadata                 bool                 `long:"metadata" description:"Output video metadata"`
 	YtDlpArgs                       string               `long:"yt-dlp-args" yaml:"ytDlpArgs" description:"Additional arguments to pass to yt-dlp (e.g. '--cookies-from-browser brave')"`

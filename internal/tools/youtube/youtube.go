@@ -836,6 +836,8 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 	flag.BoolVar(&options.Transcript, "transcript", false, "Output only the transcript")
 	flag.BoolVar(&options.TranscriptWithTimestamps, "transcriptWithTimestamps", false, "Output only the transcript with timestamps")
 	flag.BoolVar(&options.Visual, "visual", false, "Output visual text extracted from video frames")
+	flag.Float64Var(&options.VisualSensitivity, "visual-sensitivity", 0.4, "Tolerance for FFmpeg scene detection (0.0 - 1.0)")
+	flag.IntVar(&options.VisualFps, "visual-fps", 0, "Extract a specific number of frames per second instead of using scene detection")
 	flag.BoolVar(&options.Comments, "comments", false, "Output the comments on the video")
 	flag.StringVar(&options.Lang, "lang", "en", "Language for the transcript (default: English)")
 	flag.BoolVar(&options.Metadata, "metadata", false, "Output video metadata")
@@ -851,7 +853,7 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 }
 
 // GrabVisual retrieves visual data from the video by extracting frames via FFmpeg and OCR parsing them via Tesseract.
-func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs string) (ret string, err error) {
+func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs string, sensitivity float64, fps int) (ret string, err error) {
 	if _, err = exec.LookPath("yt-dlp"); err != nil {
 		return "", errors.New("yt-dlp is required for visual extraction but not found in PATH")
 	}
@@ -878,8 +880,18 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 	streamUrls := strings.Split(strings.TrimSpace(string(urlBytes)), "\n")
 	streamUrl := streamUrls[0]
 
+	var filter string
+	if fps > 0 {
+		filter = fmt.Sprintf("fps=%d", fps)
+	} else {
+		if sensitivity == 0 {
+			sensitivity = 0.4
+		}
+		filter = fmt.Sprintf("select='gt(scene,%f)'", sensitivity)
+	}
+
 	framePattern := filepath.Join(tempDir, "frame_%04d.jpg")
-	cmdFfmpeg := exec.Command("ffmpeg", "-i", streamUrl, "-vf", "select='gt(scene,0.4)'", "-fps_mode", "vfr", framePattern)
+	cmdFfmpeg := exec.Command("ffmpeg", "-i", streamUrl, "-vf", filter, "-fps_mode", "vfr", framePattern)
 	if err = cmdFfmpeg.Run(); err != nil {
 		return "", fmt.Errorf("ffmpeg frame extraction failed: %v", err)
 	}
