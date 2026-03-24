@@ -25,6 +25,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"runtime"
 	"time"
 
 	"github.com/danielmiessler/fabric/internal/i18n"
@@ -604,7 +606,7 @@ func (o *YouTube) Grab(url string, options *Options) (ret *VideoInfo, err error)
 
 	if options.Visual {
 		// Currently defaults to 'en' and no extra args, similar to transcript default behavior in Grab
-		if ret.VisualText, err = o.GrabVisual(videoId, "en", ""); err != nil {
+		if ret.VisualText, err = o.GrabVisual(videoId, options.Lang, options.YtDlpArgs, options.VisualSensitivity, options.VisualFps); err != nil {
 			return
 		}
 	}
@@ -770,9 +772,12 @@ type Options struct {
 	Transcript               bool
 	TranscriptWithTimestamps bool
 	Visual                   bool
+	VisualSensitivity        float64
+	VisualFps                int
 	Comments                 bool
 	Lang                     string
 	Metadata                 bool
+	YtDlpArgs                string
 }
 
 type VideoInfo struct {
@@ -841,6 +846,7 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 	flag.BoolVar(&options.Comments, "comments", false, "Output the comments on the video")
 	flag.StringVar(&options.Lang, "lang", "en", "Language for the transcript (default: English)")
 	flag.BoolVar(&options.Metadata, "metadata", false, "Output video metadata")
+	flag.StringVar(&options.YtDlpArgs, "yt-dlp-args", "", "Additional arguments to pass to yt-dlp")
 	flag.Parse()
 
 	if flag.NArg() == 0 {
@@ -853,47 +859,65 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 }
 
 // GrabVisual retrieves visual data from the video by extracting frames via FFmpeg and OCR parsing them via Tesseract.
-func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs string, sensitivity float64, fps int) (ret string, err error) {
-	if _, err = exec.LookPath("yt-dlp"); err != nil {
+func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs string, sensitivity float64, fps int) (string, error) {
+	if _, err := exec.LookPath("yt-dlp"); err != nil {
 		return "", errors.New("yt-dlp is required for visual extraction but not found in PATH")
 	}
-	if _, err = exec.LookPath("ffmpeg"); err != nil {
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
 		return "", errors.New("ffmpeg is required for visual extraction but not found in PATH")
 	}
-	if _, err = exec.LookPath("tesseract"); err != nil {
+	if _, err := exec.LookPath("tesseract"); err != nil {
 		return "", errors.New("tesseract is required for visual extraction but not found in PATH")
 	}
 
-	tempDir := filepath.Join(os.TempDir(), "fabric-vfabric-"+videoId)
-	if err = os.MkdirAll(tempDir, 0755); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+
+	tempDir, err := os.MkdirTemp("", "fabric-vfabric-"+videoId+"-*")
+	if err != nil {
 		return "", fmt.Errorf("failed to create temp directory: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 
 	videoURL := "https://www.youtube.com/watch?v=" + videoId
 
-	cmdUrl := exec.Command("yt-dlp", "-f", "best", "--get-url", videoURL)
+	ytArgs := []string{"-f", "best", "--get-url"}
+	if additionalArgs != "" {
+		if parsed, err := shellquote.Split(additionalArgs); err == nil {
+			ytArgs = append(ytArgs, parsed...)
+		}
+	}
+	ytArgs = append(ytArgs, "--", videoURL)
+
+	cmdUrl := exec.CommandContext(ctx, "yt-dlp", ytArgs...)
 	urlBytes, err := cmdUrl.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get stream URL via yt-dlp: %v", err)
 	}
+
 	streamUrls := strings.Split(strings.TrimSpace(string(urlBytes)), "\n")
-	streamUrl := streamUrls[0]
+	var streamUrl string
+	for _, u := range streamUrls {
+		if strings.HasPrefix(u, "http") {
+			streamUrl = strings.TrimSpace(u)
+			break
+		}
+	}
+	if streamUrl == "" {
+		return "", errors.New("failed to parse valid http stream url from yt-dlp output")
+	}
 
 	var filter string
 	if fps > 0 {
 		filter = fmt.Sprintf("fps=%d", fps)
 	} else {
-		if sensitivity == 0 {
-			sensitivity = 0.4
-		}
 		filter = fmt.Sprintf("select='gt(scene,%f)'", sensitivity)
 	}
 
 	framePattern := filepath.Join(tempDir, "frame_%04d.jpg")
-	cmdFfmpeg := exec.Command("ffmpeg", "-i", streamUrl, "-vf", filter, "-fps_mode", "vfr", framePattern)
-	if err = cmdFfmpeg.Run(); err != nil {
-		return "", fmt.Errorf("ffmpeg frame extraction failed: %v", err)
+	cmdFfmpeg := exec.CommandContext(ctx, "ffmpeg", "-i", streamUrl, "-vf", filter, "-fps_mode", "vfr", framePattern)
+	if out, err := cmdFfmpeg.CombinedOutput(); err != nil {
+		return "", fmt.Errorf("ffmpeg frame extraction failed: %v, output: %s", err, string(out))
 	}
 
 	files, err := filepath.Glob(filepath.Join(tempDir, "frame_*.jpg"))
@@ -901,21 +925,56 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 		return "", err
 	}
 
-	var sb strings.Builder
+	var wg sync.WaitGroup
+	var mut sync.Mutex
+	type result struct {
+		index int
+		text  string
+	}
+	results := make([]result, len(files))
+	errChan := make(chan error, len(files))
+	sem := make(chan struct{}, runtime.NumCPU())
+
 	for i, file := range files {
-		cmdOcr := exec.Command("tesseract", file, "-", "stdout")
-		ocrBytes, _ := cmdOcr.Output()
-		text := strings.TrimSpace(string(ocrBytes))
-		
-		if text != "" && len(text) > 10 {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(idx int, f string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+			
+			cmdOcr := exec.CommandContext(ctx, "tesseract", f, "-", "stdout")
+			ocrBytes, err := cmdOcr.CombinedOutput()
+			if err != nil {
+				errChan <- fmt.Errorf("tesseract failed on frame %d: %v, out: %s", idx, err, string(ocrBytes))
+				return
+			}
+			
+			text := strings.TrimSpace(string(ocrBytes))
+			if text != "" && len(text) > 10 {
+				mut.Lock()
+				results[idx] = result{index: idx, text: text}
+				mut.Unlock()
+			}
+		}(i, file)
+	}
+	wg.Wait()
+	close(errChan)
+
+	if len(errChan) > 0 {
+		return "", <-errChan
+	}
+
+	var sb strings.Builder
+	for i, res := range results {
+		if res.text != "" {
 			sb.WriteString(fmt.Sprintf("\n00:00:%02d.000 --> 00:00:%02d.999\n", i, i))
 			sb.WriteString("[VISUAL FRAME CUE]\n")
-			sb.WriteString(text)
+			sb.WriteString(res.text)
 			sb.WriteString("\n")
 		}
 	}
 	
-	ret = sb.String()
+	ret := sb.String()
 	if ret == "" {
 		return "", errors.New("no clear text found in video visual frames")
 	}
