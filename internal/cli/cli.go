@@ -144,6 +144,8 @@ func processYoutubeVideo(
 		var language = "en"
 		if flags.Language != "" {
 			language = flags.Language
+		} else if registry.Language.DefaultLanguage.Value != "" {
+			language = registry.Language.DefaultLanguage.Value
 		}
 		if visualText, err = registry.YouTube.GrabVisual(videoId, language, flags.YtDlpArgs, flags.YouTubeVisualSensitivity, flags.YouTubeVisualFps); err != nil {
 			return

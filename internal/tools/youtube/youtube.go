@@ -23,10 +23,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
-	"runtime"
 	"time"
 
 	"github.com/danielmiessler/fabric/internal/i18n"
@@ -881,11 +881,13 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 
 	videoURL := "https://www.youtube.com/watch?v=" + videoId
 
-	ytArgs := []string{"-f", "best", "--get-url"}
+	ytArgs := []string{"-f", "bv", "--get-url"}
 	if additionalArgs != "" {
-		if parsed, err := shellquote.Split(additionalArgs); err == nil {
-			ytArgs = append(ytArgs, parsed...)
+		parsed, parseErr := shellquote.Split(additionalArgs)
+		if parseErr != nil {
+			return "", fmt.Errorf("invalid yt-dlp-args: %v", parseErr)
 		}
+		ytArgs = append(ytArgs, parsed...)
 	}
 	ytArgs = append(ytArgs, "--", videoURL)
 
@@ -926,13 +928,9 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 	}
 
 	var wg sync.WaitGroup
-	var mut sync.Mutex
-	type result struct {
-		index int
-		text  string
-	}
-	results := make([]result, len(files))
-	errChan := make(chan error, len(files))
+	results := make([]string, len(files))
+	var errs []error
+	var errMut sync.Mutex
 	sem := make(chan struct{}, runtime.NumCPU())
 
 	for i, file := range files {
@@ -943,33 +941,39 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 			defer func() { <-sem }()
 			
 			cmdOcr := exec.CommandContext(ctx, "tesseract", f, "-", "stdout")
-			ocrBytes, err := cmdOcr.CombinedOutput()
-			if err != nil {
-				errChan <- fmt.Errorf("tesseract failed on frame %d: %v, out: %s", idx, err, string(ocrBytes))
+			var stdoutBuf, stderrBuf bytes.Buffer
+			cmdOcr.Stdout = &stdoutBuf
+			cmdOcr.Stderr = &stderrBuf
+			ocrErr := cmdOcr.Run()
+			if ocrErr != nil {
+				errMut.Lock()
+				errs = append(errs, fmt.Errorf("tesseract failed on frame %d: %v, stderr: %s", idx, ocrErr, stderrBuf.String()))
+				errMut.Unlock()
 				return
 			}
 			
-			text := strings.TrimSpace(string(ocrBytes))
+			text := strings.TrimSpace(stdoutBuf.String())
 			if text != "" && len(text) > 10 {
-				mut.Lock()
-				results[idx] = result{index: idx, text: text}
-				mut.Unlock()
+				results[idx] = text
 			}
 		}(i, file)
 	}
 	wg.Wait()
-	close(errChan)
 
-	if len(errChan) > 0 {
-		return "", <-errChan
+	if len(errs) > 0 {
+		return "", errs[0]
 	}
 
 	var sb strings.Builder
-	for i, res := range results {
-		if res.text != "" {
-			sb.WriteString(fmt.Sprintf("\n00:00:%02d.000 --> 00:00:%02d.999\n", i, i))
+	for i, text := range results {
+		if text != "" {
+			secs := i
+			hours := secs / 3600
+			mins := (secs % 3600) / 60
+			sec := secs % 60
+			sb.WriteString(fmt.Sprintf("\n%02d:%02d:%02d.000 --> %02d:%02d:%02d.999\n", hours, mins, sec, hours, mins, sec))
 			sb.WriteString("[VISUAL FRAME CUE]\n")
-			sb.WriteString(res.text)
+			sb.WriteString(text)
 			sb.WriteString("\n")
 		}
 	}
