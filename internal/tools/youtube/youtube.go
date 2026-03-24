@@ -875,10 +875,11 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 	if err != nil {
 		return "", fmt.Errorf("failed to get stream URL via yt-dlp: %v", err)
 	}
-	streamUrl := strings.TrimSpace(string(urlBytes))
+	streamUrls := strings.Split(strings.TrimSpace(string(urlBytes)), "\n")
+	streamUrl := streamUrls[0]
 
 	framePattern := filepath.Join(tempDir, "frame_%04d.jpg")
-	cmdFfmpeg := exec.Command("ffmpeg", "-i", streamUrl, "-vf", "select='gt(scene,0.4)'", "-vsync", "vfr", framePattern)
+	cmdFfmpeg := exec.Command("ffmpeg", "-i", streamUrl, "-vf", "select='gt(scene,0.4)'", "-fps_mode", "vfr", framePattern)
 	if err = cmdFfmpeg.Run(); err != nil {
 		return "", fmt.Errorf("ffmpeg frame extraction failed: %v", err)
 	}
