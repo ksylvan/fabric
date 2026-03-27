@@ -939,7 +939,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 		go func(idx int, f string) {
 			defer wg.Done()
 			defer func() { <-sem }()
-			
+
 			cmdOcr := exec.CommandContext(ctx, "tesseract", f, "-", "stdout")
 			var stdoutBuf, stderrBuf bytes.Buffer
 			cmdOcr.Stdout = &stdoutBuf
@@ -951,7 +951,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 				errMut.Unlock()
 				return
 			}
-			
+
 			text := strings.TrimSpace(stdoutBuf.String())
 			if text != "" && len(text) > 10 {
 				results[idx] = text
@@ -977,7 +977,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 			sb.WriteString("\n")
 		}
 	}
-	
+
 	ret := sb.String()
 	if ret == "" {
 		return "", errors.New("no clear text found in video visual frames")
