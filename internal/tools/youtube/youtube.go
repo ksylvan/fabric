@@ -918,8 +918,8 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 
 	framePattern := filepath.Join(tempDir, "frame_%04d.jpg")
 	cmdFfmpeg := exec.CommandContext(ctx, "ffmpeg", "-i", streamUrl, "-vf", filter, "-fps_mode", "vfr", framePattern)
-	if out, err := cmdFfmpeg.CombinedOutput(); err != nil {
-		return "", fmt.Errorf(i18n.T("youtube_ffmpeg_frame_extraction_failed"), err, string(out))
+	if _, err := cmdFfmpeg.CombinedOutput(); err != nil {
+		return "", fmt.Errorf(i18n.T("youtube_ffmpeg_frame_extraction_failed"), err)
 	}
 
 	files, err := filepath.Glob(filepath.Join(tempDir, "frame_*.jpg"))
@@ -947,7 +947,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 			ocrErr := cmdOcr.Run()
 			if ocrErr != nil {
 				errMut.Lock()
-				errs = append(errs, fmt.Errorf(i18n.T("youtube_tesseract_frame_failed"), idx, ocrErr, stderrBuf.String()))
+				errs = append(errs, fmt.Errorf(i18n.T("youtube_tesseract_frame_failed"), idx, ocrErr))
 				errMut.Unlock()
 				return
 			}

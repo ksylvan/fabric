@@ -24,11 +24,17 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
 
 ### Task 2: Check Go Idioms
 
-- [ ] **Error handling**: Verify Fabric's error patterns:
+- [x] **Error handling**: Verify Fabric's error patterns:
   - Errors are returned, not panicked (no `panic()` in library code)
   - Use `pkg/errors` for wrapping: `errors.Wrap(err, "context")`
   - Error messages are lowercase, no punctuation
   - Errors don't expose sensitive information
+  Notes from targeted review/fix on 2026-04-05:
+  - Reviewed the PR-touched Go files in scope: no PR-added `panic()` calls were introduced, and the new YouTube visual extraction path returns errors to callers instead of terminating the process.
+  - `internal/tools/youtube/youtube.go` originally returned raw `ffmpeg` output and `tesseract` stderr from `GrabVisual`; updated the implementation and localized error strings so returned errors preserve context without exposing direct stream URLs or subprocess diagnostics.
+  - The visual extraction error messages remain lowercase and do not add trailing punctuation after the cleanup.
+  - Scoped files still lean on `fmt.Errorf` and `errors.New` more than `pkg/errors.Wrap`, so wrap-style consistency should be carried into the later consolidated Go issues document if the project wants to enforce that convention repo-wide.
+  - Verified with `go test ./internal/tools/youtube ./internal/cli`.
 
 - [ ] **Context usage**: Check `context.Context` patterns:
   - Context is the first parameter where applicable
