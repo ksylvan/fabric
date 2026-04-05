@@ -118,13 +118,18 @@ Understand the scope and context of the Fabric pull request before diving into d
   - File-count flag: not triggered because the PR is well below the 50-file rejection threshold.
   - Note: local `git diff origin/main...HEAD` also includes this playbook file, so PR size classification is based on GitHub's PR file list rather than the local working branch diff.
 
-- [ ] **Identify high-risk areas**: Flag files that:
+- [x] **Identify high-risk areas**: Flag files that:
   - Handle API keys/credentials (`*.env`, config loading)
   - Implement AI provider interfaces
   - Modify core chat flow
   - Change plugin registry behavior
   - Alter pattern loading/parsing
   - Touch authentication/OAuth flows
+  Notes from targeted diff review on 2026-04-05:
+  - None of the 19 PR files touch Fabric's explicitly listed highest-risk cross-cutting areas: there are no API key or credential-loading changes, no AI provider or plugin registry edits, no authentication/OAuth changes, no pattern loading/parsing updates, and no `internal/core/` or `internal/chat/` modifications.
+  - `internal/tools/youtube/youtube.go` is the primary code-risk file because it adds a new subprocess-heavy path (`yt-dlp` -> `ffmpeg` -> `tesseract`), bounded OCR concurrency, temp-directory lifecycle handling, and VTT-style visual text output generation.
+  - `internal/cli/cli.go` is the secondary risk file because it changes the `youtube` command execution flow by wiring visual extraction into the message-building path and broadening the condition that triggers extraction work.
+  - `internal/cli/flags.go`, `internal/cli/help.go`, and the locale JSON files are low-to-medium risk surface changes because they expose the new CLI flags and i18n strings, but they do not alter core plugin, auth, or provider architecture.
 
 ### Task 4: Identify Review Focus
 
