@@ -133,13 +133,21 @@ Understand the scope and context of the Fabric pull request before diving into d
 
 ### Task 4: Identify Review Focus
 
-- [ ] **Pattern changes**: Are any `data/patterns/` directories added or modified?
+- [x] **Pattern changes**: Are any `data/patterns/` directories added or modified?
+  Confirmed from `git diff --name-only origin/main...HEAD` on 2026-04-05: no files under `data/patterns/` or `data/strategies/` are added or modified, so no pattern validation review is needed for this PR.
 
-- [ ] **Plugin changes**: Are any `internal/plugins/ai/` providers added or modified?
+- [x] **Plugin changes**: Are any `internal/plugins/ai/` providers added or modified?
+  Confirmed from `git diff --name-only origin/main...HEAD` on 2026-04-05: no files under `internal/plugins/ai/` or other plugin provider directories are changed, so no plugin architecture review is needed for this PR.
 
-- [ ] **API changes**: Are there changes to `internal/server/` endpoints?
+- [x] **API changes**: Are there changes to `internal/server/` endpoints?
+  Confirmed from `git diff --name-only origin/main...HEAD` on 2026-04-05: there are no `internal/server/` changes, so no API endpoint review is needed for this PR.
 
-- [ ] **CLI changes**: Are flags or commands modified in `internal/cli/`?
+- [x] **CLI changes**: Are flags or commands modified in `internal/cli/`?
+  Confirmed from `git diff origin/main...HEAD -- internal/cli/cli.go internal/cli/flags.go internal/cli/help.go` on 2026-04-05:
+  - `internal/cli/flags.go` adds the new `--visual`, `--visual-sensitivity`, and `--visual-fps` YouTube flags.
+  - `internal/cli/help.go` maps those flags to new i18n-backed help text keys.
+  - `internal/cli/cli.go` changes `processYoutubeVideo` so visual extraction can run independently of transcript/comments/metadata and appends OCR-derived VTT output when `--visual` is enabled.
+  - Review implication: yes, CLI behavior and flag-surface review are required for this PR.
 
 ### Task 5: Create Scope Document
 
