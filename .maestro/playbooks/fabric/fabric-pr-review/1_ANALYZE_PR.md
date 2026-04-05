@@ -151,7 +151,10 @@ Understand the scope and context of the Fabric pull request before diving into d
 
 ### Task 5: Create Scope Document
 
-- [ ] **Write REVIEW_SCOPE.md**: Create `/Users/kayvan/src/fabric/.maestro/playbooks/REVIEW_SCOPE.md` with:
+- [x] **Write REVIEW_SCOPE.md**: Created `/Users/kayvan/src/fabric/.maestro/playbooks/REVIEW_SCOPE.md` on 2026-04-05 with live GitHub PR metadata, categorized changed files, high-risk areas, and review focus/checklist status.
+  Note: the scope artifact uses the current GitHub PR file list (`20` files, `523` additions, `1` deletion), which now includes `.maestro/playbooks/fabric/fabric-pr-review/1_ANALYZE_PR.md`.
+
+Template used:
 
 ```markdown
 # Fabric PR Review Scope
