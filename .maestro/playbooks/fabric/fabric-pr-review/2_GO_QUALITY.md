@@ -88,11 +88,18 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - The package still contains older `Id` and `YtDlp` spellings such as `videoId`, `ChannelId`, and `YtDlpArgs`; those predate this task and should be treated as broader repo-level cleanup if strict Go initialism consistency is desired.
   - Verified with `go test ./internal/tools/youtube ./internal/cli`.
 
-- [ ] **Documentation**: Check:
+- [x] **Documentation**: Check:
   - Exported functions have doc comments
   - Package-level documentation exists
   - Complex logic is explained
   - No stale comments
+  Notes from targeted review/fix on 2026-04-05:
+  - Reviewed the PR-touched Go files in scope: `internal/tools/youtube/youtube.go`, `internal/cli/cli.go`, `internal/cli/flags.go`, and `internal/cli/help.go`; no task images were attached for this checklist item.
+  - `internal/tools/youtube/youtube.go` already ships package documentation, and the PR-added exported method `GrabVisual` now has a more explicit doc comment describing its frame-sampling modes and VTT-like OCR output.
+  - Added `internal/cli/doc.go` so the `internal/cli` package now has package-level documentation instead of relying only on file-local comments.
+  - Filled in missing `description` tags for the new `--visual`, `--visual-sensitivity`, and `--visual-fps` flags so the flag definitions, custom translated help, and README text stay aligned.
+  - Removed a stale inline comment in `Grab` that no longer matched the visual extraction call path after the PR started forwarding language, yt-dlp arguments, and sampling options.
+  - Added a CLI help regression test to assert the three new visual flags remain documented in generated help output, and verified with `go test ./internal/cli ./internal/tools/youtube`.
 
 ### Task 4: Review Concurrency
 

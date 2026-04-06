@@ -605,7 +605,6 @@ func (o *YouTube) Grab(url string, options *Options) (ret *VideoInfo, err error)
 	}
 
 	if options.Visual {
-		// Currently defaults to 'en' and no extra args, similar to transcript default behavior in Grab
 		if ret.VisualText, err = o.GrabVisual(videoId, options.Lang, options.YtDlpArgs, options.VisualSensitivity, options.VisualFPS); err != nil {
 			return
 		}
@@ -858,7 +857,9 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 	return
 }
 
-// GrabVisual retrieves visual data from the video by extracting frames via FFmpeg and OCR parsing them via Tesseract.
+// GrabVisual extracts OCR text from sampled video frames.
+// When fps is greater than zero it samples at a fixed frame rate; otherwise it
+// falls back to FFmpeg scene detection using sensitivity and returns VTT-like cues.
 func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs string, sensitivity float64, fps int) (string, error) {
 	if _, err := exec.LookPath("yt-dlp"); err != nil {
 		return "", errors.New(i18n.T("youtube_ytdlp_required_visual_extraction"))
@@ -911,6 +912,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 
 	var filter string
 	if fps > 0 {
+		// A fixed frame rate overrides scene detection when callers want denser sampling.
 		filter = fmt.Sprintf("fps=%d", fps)
 	} else {
 		filter = fmt.Sprintf("select='gt(scene,%f)'", sensitivity)
@@ -931,6 +933,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 	results := make([]string, len(files))
 	var errs []error
 	var errMut sync.Mutex
+	// Cap OCR subprocess fan-out so frame extraction does not spawn unbounded workers.
 	sem := make(chan struct{}, runtime.NumCPU())
 
 	for i, file := range files {
