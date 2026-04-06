@@ -130,10 +130,17 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
 
 ### Task 5: Review API Changes
 
-- [ ] **Breaking changes**: If public APIs change:
+- [x] **Breaking changes**: If public APIs change:
   - Are changes backward compatible?
   - Are deprecation notices added?
   - Is the CHANGELOG updated?
+  Notes from targeted review on 2026-04-05:
+  - Reviewed the PR-touched public surface in `internal/cli/cli.go`, `internal/cli/flags.go`, `internal/cli/help.go`, `README.md`, `README.zh.md`, and `cmd/generate_changelog/incoming/2073.txt`; no task images were attached for this checklist item.
+  - The user-facing CLI changes are additive rather than breaking: the PR adds `--visual`, `--visual-sensitivity`, and `--visual-fps` without removing or renaming existing flags, and existing YouTube transcript/comments/metadata flows keep their prior behavior unless callers opt into the new visual extraction path.
+  - The exported Go additions in `internal/tools/youtube/youtube.go` are also additive (`GrabVisual`, extra `Options`/`VideoInfo` fields) and live under `internal/`, so they do not widen Fabric's external module API surface; a repo-wide search found no positional composite literals or call sites that would break because of the new fields.
+  - Because no existing public behavior was removed or redefined, this PR does not need deprecation notices.
+  - Changelog coverage is present through `cmd/generate_changelog/incoming/2073.txt`, and the README help text was updated in both English and Chinese to document the new CLI flags.
+  - Verified the reviewed surface still builds and passes targeted regression coverage with `go test ./internal/cli ./internal/tools/youtube`.
 
 - [ ] **Function signatures**: Verify:
   - Context is first parameter
