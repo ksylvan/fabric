@@ -33,7 +33,8 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
   - Connection strings
   - OAuth credentials
 
-- [x] **Config file handling**: Verified that Fabric still sources secrets from `~/.config/fabric/.env` via `fsdb.LoadEnvFile()` and consumes them through environment variables instead of hardcoded runtime values. Tightened `.env` creation/save permissions from `0644` to `0600`, confirmed the reviewed PR files only contain synthetic secret fixtures in tests, and resolved `.gitignore` merge markers so `.maestro/` remains ignored.
+- [x] **Config file handling**: Verified that Fabric still sources secrets from `~/.config/fabric/.env` via `fsdb.LoadEnvFile()` and consumes them through environment variables instead of hardcoded runtime values. Confirmed the reviewed PR files only contain synthetic secret fixtures in tests, and verified `.gitignore` still excludes repo-local secret files.
+  - Note: Hardened the user config path so `~/.config/fabric` is normalized to `0700` and `~/.config/fabric/.env` to `0600`, including repair of pre-existing insecure permissions during setup and DB initialization.
   - Secrets loaded from `~/.config/fabric/.env`
   - Environment variables used, not hardcoded values
   - No secrets in code comments

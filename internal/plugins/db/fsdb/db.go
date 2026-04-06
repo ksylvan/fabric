@@ -11,7 +11,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const EnvFilePerms os.FileMode = 0o600
+const (
+	ConfigDirPerms os.FileMode = 0o700
+	EnvFilePerms   os.FileMode = 0o600
+)
 
 func NewDb(dir string) (db *Db) {
 
@@ -46,7 +49,11 @@ type Db struct {
 }
 
 func (o *Db) Configure() (err error) {
-	if err = os.MkdirAll(o.Dir, os.ModePerm); err != nil {
+	if err = os.MkdirAll(o.Dir, ConfigDirPerms); err != nil {
+		return
+	}
+
+	if err = o.ensureSecureConfigDirPerms(); err != nil {
 		return
 	}
 
@@ -104,6 +111,17 @@ func (o *Db) SaveEnv(content string) (err error) {
 
 func (o *Db) FilePath(fileName string) (ret string) {
 	return filepath.Join(o.Dir, fileName)
+}
+
+func (o *Db) ensureSecureConfigDirPerms() error {
+	if _, err := os.Stat(o.Dir); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	return os.Chmod(o.Dir, ConfigDirPerms)
 }
 
 func (o *Db) ensureSecureEnvFilePerms() error {

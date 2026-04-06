@@ -2,6 +2,7 @@ package fsdb
 
 import (
 	"os"
+	"path/filepath"
 	"runtime"
 	"testing"
 )
@@ -55,6 +56,41 @@ func TestDb_SaveEnv(t *testing.T) {
 		t.Errorf("expected .env file to be saved")
 	}
 	assertSecureEnvFilePerms(t, db.EnvFilePath)
+}
+
+func TestDb_ConfigureSecuresExistingConfigPath(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "fabric")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("failed to create %s: %v", dir, err)
+	}
+
+	db := NewDb(dir)
+	if err := os.WriteFile(db.EnvFilePath, []byte("KEY=VALUE\n"), 0o644); err != nil {
+		t.Fatalf("failed to write %s: %v", db.EnvFilePath, err)
+	}
+
+	if err := db.Configure(); err != nil {
+		t.Fatalf("Configure() error = %v", err)
+	}
+
+	assertSecureConfigDirPerms(t, dir)
+	assertSecureEnvFilePerms(t, db.EnvFilePath)
+}
+
+func assertSecureConfigDirPerms(t *testing.T, path string) {
+	t.Helper()
+
+	if runtime.GOOS == "windows" {
+		return
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("failed to stat %s: %v", path, err)
+	}
+	if got := info.Mode().Perm(); got != ConfigDirPerms {
+		t.Fatalf("permissions for %s = %o, want %o", path, got, ConfigDirPerms)
+	}
 }
 
 func assertSecureEnvFilePerms(t *testing.T, path string) {

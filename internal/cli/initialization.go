@@ -10,9 +10,6 @@ import (
 	"github.com/danielmiessler/fabric/internal/plugins/db/fsdb"
 )
 
-const ConfigDirPerms os.FileMode = 0755
-const EnvFilePerms os.FileMode = 0o600
-
 // initializeFabric initializes the fabric database and plugin registry
 func initializeFabric() (registry *core.PluginRegistry, err error) {
 	var homedir string
@@ -42,16 +39,23 @@ func ensureEnvFile() (err error) {
 	configDir := filepath.Join(homedir, ".config", "fabric")
 	envPath := filepath.Join(configDir, ".env")
 
+	if err = os.MkdirAll(configDir, fsdb.ConfigDirPerms); err != nil {
+		return fmt.Errorf("%s", fmt.Sprintf(i18n.T("could_not_create_config_dir"), err))
+	}
+	if err = os.Chmod(configDir, fsdb.ConfigDirPerms); err != nil {
+		return fmt.Errorf("%s", fmt.Sprintf(i18n.T("could_not_create_config_dir"), err))
+	}
+
 	if _, statErr := os.Stat(envPath); statErr != nil {
 		if !os.IsNotExist(statErr) {
 			return fmt.Errorf("%s", fmt.Sprintf(i18n.T("could_not_stat_env_file"), statErr))
 		}
-		if err = os.MkdirAll(configDir, ConfigDirPerms); err != nil {
-			return fmt.Errorf("%s", fmt.Sprintf(i18n.T("could_not_create_config_dir"), err))
-		}
-		if err = os.WriteFile(envPath, []byte{}, EnvFilePerms); err != nil {
+		if err = os.WriteFile(envPath, []byte{}, fsdb.EnvFilePerms); err != nil {
 			return fmt.Errorf("%s", fmt.Sprintf(i18n.T("could_not_create_env_file"), err))
 		}
+	}
+	if err = os.Chmod(envPath, fsdb.EnvFilePerms); err != nil {
+		return fmt.Errorf("%s", fmt.Sprintf(i18n.T("could_not_create_env_file"), err))
 	}
 	return
 }
