@@ -735,7 +735,7 @@ Application Options:
       --thinking=                   Set reasoning/thinking level (e.g., off, low, medium, high, or
                                     numeric tokens for Anthropic or Google Gemini)
       --show-metadata               Print metadata (input/output tokens) to stderr
-      --debug=                     Set debug level (0: off, 1: basic, 2: detailed, 3: trace)
+      --debug=                     Set debug level (0: off, 1: basic, 2: detailed, 3: trace, 4: wire)
 Help Options:
   -h, --help                        Show this help message
 ```
@@ -748,6 +748,7 @@ Use the `--debug` flag to control runtime logging:
 - `1`: basic debug info
 - `2`: detailed debugging
 - `3`: trace level
+- `4`: wire-level request/response logging
 
 ### Dry Run Mode
 

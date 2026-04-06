@@ -12,6 +12,7 @@ import (
 	"github.com/danielmiessler/fabric/internal/core"
 	"github.com/danielmiessler/fabric/internal/domain"
 	"github.com/danielmiessler/fabric/internal/i18n"
+	debuglog "github.com/danielmiessler/fabric/internal/log"
 	"github.com/danielmiessler/fabric/internal/plugins/db/fsdb"
 	"github.com/gin-gonic/gin"
 )
@@ -78,8 +79,7 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 		return
 	}
 
-	// Add log to check received language field
-	log.Printf("Received chat request - Language: '%s', Prompts: %d", request.Language, len(request.Prompts))
+	debuglog.Debug(debuglog.Basic, "Received chat request - language=%q prompts=%d\n", request.Language, len(request.Prompts))
 
 	// Set headers for SSE
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
@@ -93,10 +93,10 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 	for i, prompt := range request.Prompts {
 		select {
 		case <-clientGone:
-			log.Printf("Client disconnected")
+			debuglog.Debug(debuglog.Basic, "Client disconnected from /chat stream\n")
 			return
 		default:
-			log.Printf("Processing prompt %d: Model=%s Pattern=%s Context=%s",
+			debuglog.Debug(debuglog.Basic, "Processing prompt %d: model=%s pattern=%s context=%s\n",
 				i+1, prompt.Model, prompt.PatternName, prompt.ContextName)
 
 			streamChan := make(chan domain.StreamUpdate, 16)

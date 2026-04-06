@@ -323,9 +323,38 @@ func loadYAMLConfig(configPath string) (*Flags, error) {
 		return nil, fmt.Errorf(i18n.T("error_parsing_config_file"), err)
 	}
 
-	debuglog.Debug(debuglog.Detailed, "Config: %v\n", config)
+	debuglog.Debug(
+		debuglog.Detailed,
+		"Loaded YAML config %s with keys: %s\n",
+		absPath,
+		strings.Join(summarizeConfiguredYAMLFields(config), ", "),
+	)
 
 	return config, nil
+}
+
+func summarizeConfiguredYAMLFields(config *Flags) []string {
+	if config == nil {
+		return []string{"(none)"}
+	}
+
+	configValue := reflect.ValueOf(config).Elem()
+	configType := configValue.Type()
+	fields := make([]string, 0, configValue.NumField())
+	for i := 0; i < configValue.NumField(); i++ {
+		yamlTag := configType.Field(i).Tag.Get("yaml")
+		if yamlTag == "" || configValue.Field(i).IsZero() {
+			continue
+		}
+		fields = append(fields, yamlTag)
+	}
+
+	if len(fields) == 0 {
+		return []string{"(none)"}
+	}
+
+	slices.Sort(fields)
+	return fields
 }
 
 // readStdin reads from stdin and returns the input as a string or an error

@@ -1,11 +1,14 @@
 package restapi
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
+	debuglog "github.com/danielmiessler/fabric/internal/log"
 	"github.com/gin-gonic/gin"
 )
 
@@ -102,4 +105,54 @@ func TestHandleChat_SetsEventStreamHeaders(t *testing.T) {
 	if got := recorder.Header().Get("Connection"); got != "keep-alive" {
 		t.Fatalf("expected keep-alive header, got %q", got)
 	}
+}
+
+func TestHandleChat_RequestLoggingRespectsDebugLevel(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	requestBody := `{"prompts":[],"language":"en"}`
+
+	t.Run("debug off", func(t *testing.T) {
+		oldLevel := debuglog.GetLevel()
+		defer debuglog.SetLevel(oldLevel)
+		debuglog.SetLevel(debuglog.Off)
+
+		var buf bytes.Buffer
+		debuglog.SetOutput(&buf)
+		defer debuglog.SetOutput(os.Stderr)
+
+		recorder := httptest.NewRecorder()
+		ctx, _ := gin.CreateTestContext(recorder)
+		ctx.Request = httptest.NewRequest("POST", "/chat", strings.NewReader(requestBody))
+		ctx.Request.Header.Set("Content-Type", "application/json")
+
+		handler := &ChatHandler{}
+		handler.HandleChat(ctx)
+
+		if got := buf.String(); got != "" {
+			t.Fatalf("expected no debug request logging with --debug=0, got %q", got)
+		}
+	})
+
+	t.Run("debug basic", func(t *testing.T) {
+		oldLevel := debuglog.GetLevel()
+		defer debuglog.SetLevel(oldLevel)
+		debuglog.SetLevel(debuglog.Basic)
+
+		var buf bytes.Buffer
+		debuglog.SetOutput(&buf)
+		defer debuglog.SetOutput(os.Stderr)
+
+		recorder := httptest.NewRecorder()
+		ctx, _ := gin.CreateTestContext(recorder)
+		ctx.Request = httptest.NewRequest("POST", "/chat", strings.NewReader(requestBody))
+		ctx.Request.Header.Set("Content-Type", "application/json")
+
+		handler := &ChatHandler{}
+		handler.HandleChat(ctx)
+
+		if got := buf.String(); !strings.Contains(got, `Received chat request - language="en" prompts=0`) {
+			t.Fatalf("expected debug request logging at basic level, got %q", got)
+		}
+	})
 }

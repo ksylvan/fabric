@@ -44,6 +44,23 @@ var videoPatternRegex *regexp.Regexp
 var playlistPatternRegex *regexp.Regexp
 var vttTagRegex *regexp.Regexp
 var durationRegex *regexp.Regexp
+var sensitiveYtArgRegex *regexp.Regexp
+var urlLogRegex *regexp.Regexp
+
+var sensitiveYtFlags = map[string]struct{}{
+	"--add-header":           {},
+	"--ap-password":          {},
+	"--ap-username":          {},
+	"--cookies":              {},
+	"--cookies-from-browser": {},
+	"--extractor-args":       {},
+	"--http-header":          {},
+	"--password":             {},
+	"--username":             {},
+	"--video-password":       {},
+	"-p":                     {},
+	"-u":                     {},
+}
 
 // TimeGapForRepeats defines the minimum gap in seconds before duplicate lines are kept.
 const TimeGapForRepeats = 10
@@ -61,6 +78,10 @@ func init() {
 	vttTagRegex = regexp.MustCompile(`<[^>]*>`)
 	// YouTube duration format PT1H2M3S
 	durationRegex = regexp.MustCompile(`(?i)PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?`)
+	// Match common inline key/value secrets that sometimes appear in yt-dlp diagnostics.
+	sensitiveYtArgRegex = regexp.MustCompile(`(?i)\b(token|auth|authorization|cookie|key|password|passwd|secret|signature|sig)=\S+`)
+	// Match URLs so debug logs do not expose signed stream links.
+	urlLogRegex = regexp.MustCompile(`https?://[^\s'"]+`)
 }
 
 // NewYouTube constructs the YouTube plugin and its setup prompts.
@@ -185,7 +206,7 @@ func detectError(ytOutput io.Reader) error {
 	scanner := bufio.NewScanner(ytOutput)
 	for scanner.Scan() {
 		curLine := scanner.Text()
-		debuglog.Debug(debuglog.Trace, "%s\n", curLine)
+		debuglog.Debug(debuglog.Trace, "%s\n", sanitizeYTLogText(curLine))
 		errorMessages := map[string]string{
 			"429":                                 i18n.T("youtube_rate_limit_exceeded"),
 			"Too Many Requests":                   i18n.T("youtube_rate_limit_exceeded"),
@@ -275,7 +296,7 @@ func (o *YouTube) tryMethodYtDlpInternal(videoId string, language string, additi
 	for retry := 1; retry >= 0; retry-- {
 		var ytOutput []byte
 		cmd := exec.Command("yt-dlp", args...)
-		debuglog.Debug(debuglog.Trace, "yt-dlp %+v\n", cmd.Args)
+		debuglog.Debug(debuglog.Trace, "yt-dlp %+v\n", sanitizeYTArgs(cmd.Args))
 		ytOutput, err = cmd.CombinedOutput()
 		ytReader := bytes.NewReader(ytOutput)
 		if err = detectError(ytReader); err == nil {
@@ -427,6 +448,42 @@ func isTimeStamp(s string) bool {
 func removeVTTTags(s string) string {
 	// Remove VTT tags like <c.colorE5E5E5>, </c>, etc.
 	return vttTagRegex.ReplaceAllString(s, "")
+}
+
+func sanitizeYTArgs(args []string) []string {
+	sanitized := make([]string, 0, len(args))
+	redactNext := false
+
+	for _, arg := range args {
+		if redactNext {
+			sanitized = append(sanitized, "<redacted>")
+			redactNext = false
+			continue
+		}
+
+		if _, ok := sensitiveYtFlags[arg]; ok {
+			sanitized = append(sanitized, arg)
+			redactNext = true
+			continue
+		}
+
+		if flagName, _, hasValue := strings.Cut(arg, "="); hasValue {
+			if _, ok := sensitiveYtFlags[flagName]; ok {
+				sanitized = append(sanitized, flagName+"=<redacted>")
+				continue
+			}
+		}
+
+		sanitized = append(sanitized, sanitizeYTLogText(arg))
+	}
+
+	return sanitized
+}
+
+func sanitizeYTLogText(text string) string {
+	text = urlLogRegex.ReplaceAllString(text, "<redacted-url>")
+	text = sensitiveYtArgRegex.ReplaceAllString(text, "${1}=<redacted>")
+	return text
 }
 
 // shouldIncludeRepeat determines if repeated content should be included based on time gap

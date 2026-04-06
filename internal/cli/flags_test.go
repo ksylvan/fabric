@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/danielmiessler/fabric/internal/domain"
+	debuglog "github.com/danielmiessler/fabric/internal/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -203,6 +204,54 @@ model: 123  # should be string
 		_, err = Init()
 		assert.Error(t, err)
 	})
+}
+
+func TestLoadYAMLConfigDebugOutputRedactsValues(t *testing.T) {
+	configContent := `
+model: gpt-4
+temperature: 0.4
+ServeAPIKey: super-secret-server-key
+`
+
+	tmpfile, err := os.CreateTemp("", "config-debug.*.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.Write([]byte(configContent)); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	oldLevel := debuglog.GetLevel()
+	defer debuglog.SetLevel(oldLevel)
+	debuglog.SetLevel(debuglog.Detailed)
+
+	var buf bytes.Buffer
+	debuglog.SetOutput(&buf)
+	defer debuglog.SetOutput(os.Stderr)
+
+	cfg, err := loadYAMLConfig(tmpfile.Name())
+	if err != nil {
+		t.Fatalf("loadYAMLConfig returned error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected config to be loaded")
+	}
+
+	logged := buf.String()
+	if strings.Contains(logged, "super-secret-server-key") {
+		t.Fatalf("expected debug output to redact config values, got %q", logged)
+	}
+	if !strings.Contains(logged, "Loaded YAML config") {
+		t.Fatalf("expected debug output to mention the config load, got %q", logged)
+	}
+	if !strings.Contains(logged, "model") || !strings.Contains(logged, "temperature") {
+		t.Fatalf("expected debug output to summarize configured yaml keys, got %q", logged)
+	}
 }
 
 func TestValidateImageFile(t *testing.T) {

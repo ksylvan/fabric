@@ -182,10 +182,17 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - Extended `internal/cli/flags_test.go` to cover both YAML loading and CLI override behavior for the new visual settings, which locks in the expected configuration precedence.
   - Verified with `go test ./internal/cli ./internal/plugins/db/fsdb`.
 
-- [ ] **Logging patterns**: For logging:
+- [x] **Logging patterns**: For logging:
   - Use standard `log` package
   - Debug levels via `--debug` flag
   - No sensitive data in logs
+  Notes from targeted review/fix on 2026-04-05:
+  - Reviewed the PR-touched logging paths in `internal/tools/youtube/youtube.go`, `internal/cli/flags.go`, `internal/server/chat.go`, `README.md`, and the related regression tests; no task images were attached for this checklist item.
+  - Preserved Fabric's existing split between standard `log` for operational errors and `internal/log` for debug output: server chat errors still use the standard logger, while request/progress messages now respect the configured `--debug` level instead of printing unconditionally.
+  - Removed two concrete sensitive-data leaks introduced by the branch's debug path: YouTube trace logging now redacts signed URLs, auth headers, cookie/browser args, and password-like values before logging `yt-dlp` arguments or stderr lines, and YAML config loading now logs only the configured YAML key names instead of dumping the full parsed struct.
+  - Updated the README debug-level documentation so the user-facing help matches the current `--debug` implementation, including level `4` (`wire`).
+  - Added regression coverage in `internal/tools/youtube/youtube_logging_test.go`, `internal/cli/flags_test.go`, and `internal/server/chat_test.go` to lock in trace redaction and debug-gated request logging.
+  - Verified with `go test ./internal/tools/youtube`, `go test ./internal/cli`, and `go test ./internal/server`.
 
 ### Task 7: Run Static Analysis
 
