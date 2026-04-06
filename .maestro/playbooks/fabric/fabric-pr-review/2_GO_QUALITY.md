@@ -116,10 +116,17 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - Added `TestGrabVisualParallelOCRPreservesFrameOrder` to exercise the parallel OCR path with out-of-order worker completion and confirm the final output remains deterministic while the race detector stays clean.
   - Verified with `go test ./internal/tools/youtube` and `go test -race ./internal/tools/youtube`.
 
-- [ ] **Streaming**: For streaming responses:
+- [x] **Streaming**: For streaming responses:
   - Channels are properly buffered
   - Errors are communicated correctly
   - Cleanup happens on cancellation
+  Notes from targeted review/fix on 2026-04-05:
+  - Reviewed the PR-touched Go files in scope (`internal/tools/youtube/youtube.go`, `internal/cli/cli.go`, `internal/cli/flags.go`, `internal/cli/help.go`) plus the adjacent streaming path in `internal/core/chatter.go` and `internal/server/chat.go`, because YouTube command output ultimately flows through Fabric's shared chat streaming pipeline; no task images were attached for this checklist item.
+  - The PR itself does not add a new Go streaming transport, but the existing SSE chat handler had two concrete issues that matter for stream correctness: it advertised `text/readystream` instead of `text/event-stream`, and it forwarded updates over an unbuffered server stream channel that could strand `Chatter.Send` after client cancellation.
+  - Fixed the shared stream forwarding path in `internal/core/chatter.go` so updates sent to `opts.UpdateChan` now respect `ctx.Done()` instead of blocking indefinitely when the downstream consumer disappears.
+  - Switched `internal/server/chat.go` to request-context cancellation (`c.Request.Context().Done()`), corrected the SSE content type to `text/event-stream`, and added a small buffer (`16`) on the handler-facing `streamChan` so HTTP writes do not have to rendezvous on every token.
+  - Added regression coverage with `TestChatter_Send_CanceledUpdateChanDoesNotDeadlock`, `TestWriteSSEResponse_FormatsEventStreamChunk`, and `TestHandleChat_SetsEventStreamHeaders` to lock in cancellation cleanup, SSE framing, and header behavior.
+  - Verified with `go test ./internal/core ./internal/server` and `go test ./...`.
 
 ### Task 5: Review API Changes
 

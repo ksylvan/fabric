@@ -1,6 +1,13 @@
 package restapi
 
-import "testing"
+import (
+	"encoding/json"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+)
 
 func TestBuildPromptChatRequest_PreservesStrategyAndUserInput(t *testing.T) {
 	prompt := PromptRequest{
@@ -41,5 +48,58 @@ func TestBuildPromptChatRequest_PreservesStrategyAndUserInput(t *testing.T) {
 	}
 	if got := request.PatternVariables["topic"]; got != "pipelines" {
 		t.Fatalf("expected variables to be preserved, got %q", got)
+	}
+}
+
+func TestWriteSSEResponse_FormatsEventStreamChunk(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+
+	response := StreamResponse{
+		Type:    "content",
+		Format:  "markdown",
+		Content: "hello",
+	}
+
+	if err := writeSSEResponse(ctx.Writer, response); err != nil {
+		t.Fatalf("expected SSE write to succeed, got %v", err)
+	}
+
+	payload := recorder.Body.String()
+	if !strings.HasPrefix(payload, "data: ") {
+		t.Fatalf("expected SSE payload prefix, got %q", payload)
+	}
+
+	var got StreamResponse
+	raw := strings.TrimSuffix(strings.TrimPrefix(payload, "data: "), "\n\n")
+	if err := json.Unmarshal([]byte(raw), &got); err != nil {
+		t.Fatalf("expected valid JSON payload, got %v", err)
+	}
+	if got != response {
+		t.Fatalf("expected %#v, got %#v", response, got)
+	}
+}
+
+func TestHandleChat_SetsEventStreamHeaders(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Request = httptest.NewRequest("POST", "/chat", strings.NewReader(`{"prompts":[],"language":"en"}`))
+	ctx.Request.Header.Set("Content-Type", "application/json")
+
+	handler := &ChatHandler{}
+	handler.HandleChat(ctx)
+
+	if got := recorder.Header().Get("Content-Type"); got != "text/event-stream" {
+		t.Fatalf("expected SSE content type, got %q", got)
+	}
+	if got := recorder.Header().Get("Cache-Control"); got != "no-cache" {
+		t.Fatalf("expected no-cache header, got %q", got)
+	}
+	if got := recorder.Header().Get("Connection"); got != "keep-alive" {
+		t.Fatalf("expected keep-alive header, got %q", got)
 	}
 }

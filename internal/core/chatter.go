@@ -56,6 +56,15 @@ func joinPromptSections(parts ...string) string {
 	return strings.Join(sections, "\n")
 }
 
+func forwardStreamUpdate(ctx context.Context, channel chan domain.StreamUpdate, update domain.StreamUpdate) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case channel <- update:
+		return nil
+	}
+}
+
 // Send processes a chat request and applies file changes for create_coding_feature pattern
 func (o *Chatter) Send(ctx context.Context, request *domain.ChatRequest, opts *domain.ChatOptions) (session *fsdb.Session, err error) {
 	// Use o.model (normalized) for NeedsRawMode check instead of opts.Model
@@ -120,7 +129,9 @@ func (o *Chatter) Send(ctx context.Context, request *domain.ChatRequest, opts *d
 				}
 			}
 			if opts.UpdateChan != nil {
-				opts.UpdateChan <- update
+				if forwardErr := forwardStreamUpdate(ctx, opts.UpdateChan, update); forwardErr != nil {
+					recordFirstStreamError(errChan, forwardErr)
+				}
 			}
 			switch update.Type {
 			case domain.StreamTypeContent:

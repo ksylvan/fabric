@@ -519,3 +519,63 @@ func TestChatter_Send_StreamingMetadataPropagation(t *testing.T) {
 		t.Error("Expected to receive a usage metadata update, but didn't")
 	}
 }
+
+func TestChatter_Send_CanceledUpdateChanDoesNotDeadlock(t *testing.T) {
+	tempDir := t.TempDir()
+	db := fsdb.NewDb(tempDir)
+
+	mockVendor := &mockVendor{
+		streamChunks: []domain.StreamUpdate{
+			{
+				Type:    domain.StreamTypeContent,
+				Content: "partial response",
+			},
+		},
+	}
+
+	chatter := &Chatter{
+		db:     db,
+		Stream: true,
+		vendor: mockVendor,
+		model:  "test-model",
+	}
+
+	request := &domain.ChatRequest{
+		Message: &chat.ChatCompletionMessage{
+			Role:    chat.ChatMessageRoleUser,
+			Content: "test message",
+		},
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	opts := &domain.ChatOptions{
+		Model:      "test-model",
+		UpdateChan: make(chan domain.StreamUpdate),
+		Quiet:      true,
+	}
+
+	type sendResult struct {
+		session *fsdb.Session
+		err     error
+	}
+
+	done := make(chan sendResult, 1)
+	go func() {
+		session, err := chatter.Send(ctx, request, opts)
+		done <- sendResult{session: session, err: err}
+	}()
+
+	select {
+	case result := <-done:
+		if !errors.Is(result.err, context.Canceled) {
+			t.Fatalf("expected context cancellation error, got %v", result.err)
+		}
+		if result.session == nil {
+			t.Fatal("expected session to be returned on cancellation")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("Send deadlocked while forwarding a canceled stream update")
+	}
+}
