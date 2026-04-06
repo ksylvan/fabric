@@ -96,6 +96,30 @@ func TestGrabVisualParallelOCRPreservesFrameOrder(t *testing.T) {
 	}
 }
 
+func TestGrabVisualRejectsDangerousYTDlpArgs(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unix shell fixture")
+	}
+
+	binDir := t.TempDir()
+	writeExecutable(t, binDir, "yt-dlp", "#!/bin/sh\nprintf '%s\\n' 'yt-dlp should not run' >&2\nexit 99\n")
+	writeExecutable(t, binDir, "ffmpeg", "#!/bin/sh\nexit 0\n")
+	writeExecutable(t, binDir, "tesseract", "#!/bin/sh\nexit 0\n")
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	yt := NewYouTube()
+	_, err := yt.GrabVisual("video123", "en", "--exec-before-download echo hacked", 0.4, 0)
+	if err == nil {
+		t.Fatal("expected invalid yt-dlp arguments error")
+	}
+	if !strings.Contains(err.Error(), "invalid yt-dlp arguments") {
+		t.Fatalf("expected yt-dlp validation error, got %q", err.Error())
+	}
+	if strings.Contains(err.Error(), "yt-dlp should not run") {
+		t.Fatalf("expected GrabVisual to reject args before invoking yt-dlp, got %q", err.Error())
+	}
+}
+
 func writeExecutable(t *testing.T, dir, name, content string) {
 	t.Helper()
 

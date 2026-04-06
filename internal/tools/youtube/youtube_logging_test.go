@@ -69,6 +69,7 @@ func TestBuildSafeYTDlpArgsRejectsDangerousFlags(t *testing.T) {
 
 	testCases := []string{
 		"--exec=sh -c 'echo hacked'",
+		"--exec-before-download echo hacked",
 		"--config-locations /tmp/yt-dlp.conf",
 		"--plugin-dirs=/tmp/plugins",
 		"--alias safe '--exec echo hacked'",

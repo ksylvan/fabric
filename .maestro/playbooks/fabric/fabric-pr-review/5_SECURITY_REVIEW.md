@@ -44,7 +44,8 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
 
 - [x] **Injection vulnerabilities**: Reviewed the PR's command-execution and request-construction surfaces. No direct shell, SQL, template, LDAP, or XPath injection path was introduced by the YouTube visual extraction changes.
   - Note: `internal/tools/youtube/youtube.go` invokes `yt-dlp`, `ffmpeg`, and `tesseract` through `exec.Command` / `exec.CommandContext` with discrete argv entries, so video IDs, URLs, OCR text, and CLI flags are not interpolated by a shell.
-  - Note: Hardened the `--yt-dlp-args` passthrough to always add `--ignore-config` and reject `--exec`, `--config-locations`, `--plugin-dirs`, and `--alias`, closing the delegated-command-execution path that `yt-dlp` itself could otherwise expose.
+  - Note: Hardened the `--yt-dlp-args` passthrough to always add `--ignore-config` and reject `--exec`, `--exec-before-download`, `--config-locations`, `--plugin-dirs`, and `--alias`, closing the delegated-command-execution path that `yt-dlp` itself could otherwise expose.
+  - Note: Added regression coverage for both the shared argument validator and the `GrabVisual()` call path so subprocess-expanding `yt-dlp` options are rejected before any child process starts.
   - Note: No database or server changes in this PR construct SQL, LDAP, or XPath expressions from user-controlled input.
   - Note: The PR does not add any new pattern/template evaluation step; existing pattern-variable handling remains unchanged from the pre-PR code path.
   - Command injection (shell commands with user input)

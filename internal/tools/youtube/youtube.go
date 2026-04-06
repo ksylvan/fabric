@@ -63,10 +63,11 @@ var sensitiveYtFlags = map[string]struct{}{
 }
 
 var blockedYtFlags = map[string]struct{}{
-	"--alias":            {},
-	"--config-locations": {},
-	"--exec":             {},
-	"--plugin-dirs":      {},
+	"--alias":                {},
+	"--config-locations":     {},
+	"--exec":                 {},
+	"--exec-before-download": {},
+	"--plugin-dirs":          {},
 }
 
 // TimeGapForRepeats defines the minimum gap in seconds before duplicate lines are kept.
