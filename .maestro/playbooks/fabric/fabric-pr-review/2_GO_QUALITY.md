@@ -157,11 +157,18 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
 
 ### Task 6: Check Fabric-Specific Patterns
 
-- [ ] **Plugin patterns**: For AI providers:
+- [x] **Plugin patterns**: For AI providers:
   - Implement `VendorPlugin` interface
   - Handle streaming via callbacks
   - Support model listing
   - Handle context cancellation
+  Notes from targeted review on 2026-04-05:
+  - Reviewed the PR diff (`git diff --name-only origin/main...HEAD`) plus the relevant provider wiring in `internal/plugins/ai/vendor.go`, `internal/plugins/ai/vendors.go`, and `internal/core/plugin_registry.go`; no task images were attached for this checklist item.
+  - The branch does not modify any `internal/plugins/ai/*` provider implementation or the registry wiring that registers AI vendors, so this PR does not introduce a Fabric plugin-pattern regression.
+  - Fabric's current provider contract is the `ai.Vendor` interface rather than a `VendorPlugin` type; `internal/core/plugin_registry.go` continues to register vendors through that interface, and the existing provider/registry tests still pass.
+  - Streaming and model discovery remain on the established provider methods `SendStream(...)` and `ListModels(...)`; the PR's YouTube and CLI changes do not bypass, replace, or widen that contract.
+  - Context cancellation is still a broader pre-existing inconsistency in some provider implementations because several `ListModels` and `SendStream` methods accept `context.Context` but ignore it via `_ context.Context`; that is worth carrying into the later consolidated Go issues document as existing tech debt, but it is not a regression introduced by this PR.
+  - Verified with `go test ./internal/plugins/... ./internal/core`.
 
 - [ ] **Configuration patterns**: For config changes:
   - Environment variables via `godotenv`
