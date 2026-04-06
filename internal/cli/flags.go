@@ -331,6 +331,13 @@ func loadYAMLConfig(configPath string) (*Flags, error) {
 	if err := decoder.Decode(config); err != nil {
 		return nil, fmt.Errorf(i18n.T("error_parsing_config_file"), err)
 	}
+	var extraDoc any
+	if err := decoder.Decode(&extraDoc); err != io.EOF {
+		if err == nil {
+			err = errors.New("multiple YAML documents are not supported")
+		}
+		return nil, fmt.Errorf(i18n.T("error_parsing_config_file"), err)
+	}
 
 	debuglog.Debug(
 		debuglog.Detailed,

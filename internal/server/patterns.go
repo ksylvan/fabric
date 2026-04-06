@@ -82,7 +82,7 @@ func (h *PatternsHandler) ApplyPattern(c *gin.Context) {
 	name := c.Param("name")
 
 	var request PatternApplyRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
+	if err := decodeStrictJSON(c, &request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

@@ -49,3 +49,33 @@ func TestPatternsHandler_ApplyPatternDoesNotTreatPatternNameAsFilePath(t *testin
 		t.Fatalf("expected response body to avoid disclosing local file contents, got %q", recorder.Body.String())
 	}
 }
+
+func TestPatternsHandler_ApplyPatternRejectsUnknownJSONFields(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	patternsDir := t.TempDir()
+	patterns := &fsdb.PatternsEntity{
+		StorageEntity: &fsdb.StorageEntity{
+			Dir:       patternsDir,
+			Label:     "patterns",
+			ItemIsDir: true,
+		},
+		SystemPatternFile: "system.md",
+	}
+
+	router := gin.New()
+	NewPatternsHandler(router, patterns)
+
+	req := httptest.NewRequest(http.MethodPost, "/patterns/example/apply", strings.NewReader(`{"input":"hello","unexpected":true}`))
+	req.Header.Set("Content-Type", "application/json")
+
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, recorder.Code)
+	}
+	if body := recorder.Body.String(); !strings.Contains(body, "unknown field") {
+		t.Fatalf("expected unknown field error, got %q", body)
+	}
+}

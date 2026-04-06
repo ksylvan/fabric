@@ -47,7 +47,7 @@ func NewYouTubeHandler(r *gin.Engine, registry *core.PluginRegistry) *YouTubeHan
 // @Router /youtube/transcript [post]
 func (h *YouTubeHandler) Transcript(c *gin.Context) {
 	var req YouTubeRequest
-	if err := c.BindJSON(&req); err != nil {
+	if err := decodeStrictJSON(c, &req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}

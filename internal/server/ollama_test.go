@@ -3,8 +3,12 @@ package restapi
 import (
 	"encoding/json"
 	"math"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestBuildFabricChatURL(t *testing.T) {
@@ -359,5 +363,23 @@ func TestParseOllamaNumCtx(t *testing.T) {
 				t.Errorf("parseOllamaNumCtx() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestOllamaChatRejectsUnknownJSONFields(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Request = httptest.NewRequest(http.MethodPost, "/api/chat", strings.NewReader(`{"model":"pattern:latest","messages":[],"stream":false,"unexpected":true}`))
+	ctx.Request.Header.Set("Content-Type", "application/json")
+
+	APIConvert{}.ollamaChat(ctx)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, recorder.Code)
+	}
+	if body := recorder.Body.String(); !strings.Contains(body, "unknown field") {
+		t.Fatalf("expected unknown field error, got %q", body)
 	}
 }

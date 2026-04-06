@@ -148,6 +148,25 @@ func TestHandleChat_DoesNotReflectUnexpectedOrigin(t *testing.T) {
 	}
 }
 
+func TestHandleChat_RejectsUnknownJSONFields(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Request = httptest.NewRequest(http.MethodPost, "/chat", strings.NewReader(`{"prompts":[],"language":"en","unexpected":true}`))
+	ctx.Request.Header.Set("Content-Type", "application/json")
+
+	handler := &ChatHandler{}
+	handler.HandleChat(ctx)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, recorder.Code)
+	}
+	if body := recorder.Body.String(); !strings.Contains(body, "unknown field") {
+		t.Fatalf("expected unknown field error, got %q", body)
+	}
+}
+
 func TestHandleChatOptions_AllowsLocalDevPreflight(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

@@ -261,17 +261,11 @@ func (f APIConvert) ollamaTags(c *gin.Context) {
 }
 
 func (f APIConvert) ollamaChat(c *gin.Context) {
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		log.Printf(i18n.T("ollama_error_reading_body"), err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("ollama_error_endpoint")})
-		return
-	}
 	var prompt OllamaRequestBody
-	err = json.Unmarshal(body, &prompt)
+	err := decodeStrictJSON(c, &prompt)
 	if err != nil {
 		log.Printf(i18n.T("ollama_error_unmarshalling_body"), err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("ollama_error_endpoint")})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf(i18n.T("server_invalid_request_format"), err)})
 		return
 	}
 

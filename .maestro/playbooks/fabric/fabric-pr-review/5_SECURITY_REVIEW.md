@@ -87,9 +87,10 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
   - CORS properly configured (if applicable)
 
 - [x] **Insecure deserialization**:
-  - Note: Hardened `internal/cli/flags.go` so YAML config loading now uses a strict `yaml.Decoder` with `KnownFields(true)`, rejecting unknown keys instead of silently ignoring unexpected input during deserialization.
-  - Note: Revalidated the reviewed JSON request paths in `internal/server/ollama.go` and `internal/chat/chat.go`; both deserialize into concrete structs or explicitly filtered maps, with no polymorphic type loading, reflection-based object construction, or code-executing unmarshal hooks introduced by this PR.
-  - Note: Added regression coverage in `internal/cli/flags_test.go` for unknown-key rejection and reran `go test ./internal/cli ./internal/server`.
+  - Note: Reviewed the PR-adjacent YAML and HTTP JSON parsing surfaces and found the main remaining gap in permissive server request decoding rather than in the new YouTube/OCR logic itself.
+  - Note: Hardened `/chat`, Ollama `/api/chat`, `/patterns/:name/apply`, and `/youtube/transcript` to use a shared strict JSON decoder that enforces a single JSON object, rejects unknown fields, caps request bodies at 16 MiB, and preserves untyped numbers as `json.Number` for explicit validation instead of lossy float coercion.
+  - Note: Hardened `internal/cli/flags.go` so YAML config loading now rejects multi-document payloads in addition to the existing `KnownFields(true)` unknown-key protection, preventing ambiguous or smuggled follow-on documents from being silently ignored.
+  - Note: Added regression coverage in `internal/server/request_json_test.go`, `internal/server/chat_test.go`, `internal/server/patterns_test.go`, `internal/server/ollama_test.go`, and `internal/cli/flags_test.go`, then reran `go test ./internal/server ./internal/cli`.
   - JSON/YAML parsing is safe
   - No unsafe unmarshaling of user input
   - Type checking before deserialization

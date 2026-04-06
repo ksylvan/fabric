@@ -297,6 +297,35 @@ notificationCommand: super-secret-server-key
 	}
 }
 
+func TestLoadYAMLConfigRejectsMultipleDocuments(t *testing.T) {
+	configContent := `
+model: gpt-4
+---
+temperature: 0.4
+`
+
+	tmpfile, err := os.CreateTemp("", "config-multidoc.*.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.Write([]byte(configContent)); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = loadYAMLConfig(tmpfile.Name())
+	if err == nil {
+		t.Fatal("expected multiple YAML documents to be rejected")
+	}
+	if !strings.Contains(err.Error(), "multiple YAML documents are not supported") {
+		t.Fatalf("expected multi-document error, got %q", err.Error())
+	}
+}
+
 func TestInitDebugOutputSummarizesAppliedYAMLKeysWithoutValues(t *testing.T) {
 	configContent := `
 model: gpt-4
