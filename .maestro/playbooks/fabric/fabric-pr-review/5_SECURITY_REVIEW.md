@@ -25,7 +25,8 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
 
 ### Task 2: Check for Secrets and Credentials
 
-- [ ] **Hardcoded secrets**: Search for:
+- [x] **Hardcoded secrets**: Searched the PR diff and changed files for provider key signatures, bearer tokens, private key headers, and connection-string patterns. No hardcoded credentials were added in runtime code.
+  - Note: False positives were limited to synthetic redaction fixtures in `internal/cli/flags_test.go` (`super-secret-server-key`) and `internal/tools/youtube/youtube_logging_test.go` (`super-secret-password`), plus secret-keyword redaction logic in `internal/tools/youtube/youtube.go`.
   - API keys (OpenAI, Anthropic, Gemini, etc.)
   - Passwords or tokens
   - Private keys
