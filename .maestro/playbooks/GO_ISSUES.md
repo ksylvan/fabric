@@ -24,7 +24,7 @@ No critical Go issues were identified in the reviewed scope. The branch does not
 ### Issue 1: OCR workflow does not accept caller-provided context
 
 - Severity: Major
-- Files: `internal/tools/youtube/youtube.go:936`, `internal/tools/youtube/youtube.go:947`, `internal/cli/cli.go:117`, `internal/cli/cli.go:150`
+- Files: `internal/tools/youtube/youtube.go:631`, `internal/tools/youtube/youtube.go:936`, `internal/tools/youtube/youtube.go:947`, `internal/cli/cli.go:117`, `internal/cli/cli.go:150`
 - Issue: `GrabVisual` creates its own `context.Background()` timeout internally and `processYoutubeVideo` calls it without a caller-supplied `context.Context`. This prevents CLI or request-scoped cancellation from propagating into long-running `yt-dlp`, `ffmpeg`, and `tesseract` subprocesses.
 - Suggested fix: Thread `context.Context` from the CLI/server entry points into `processYoutubeVideo`, `YouTube.Grab`, and `YouTube.GrabVisual`. Apply the 15-minute timeout as `context.WithTimeout(ctx, ...)` on top of the incoming context rather than starting from `context.Background()`.
 

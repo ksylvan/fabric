@@ -267,7 +267,7 @@ For each issue include:
 
 Notes from targeted review on 2026-04-05:
 - Created `/Users/kayvan/src/fabric/.maestro/playbooks/GO_ISSUES.md` with YAML front matter, cross-links to `[[REVIEW_SCOPE]]` and `[[2_GO_QUALITY]]`, and a PR-scoped summary of the Go issues identified during this review.
-- Captured two Major issues (missing caller-propagated context in the YouTube OCR path and provider implementations that ignore `context.Context`), two Minor issues (YouTube package/file organization and remaining initialism inconsistencies), and two Suggestions (error wrapping consistency and a `VisualOptions` refactor).
+- Captured three Major issues (missing caller-propagated context in the YouTube OCR path, the wide `GrabVisual` API surface, and provider implementations that ignore `context.Context`), two Minor issues (YouTube package/file organization and remaining initialism inconsistencies), and one Suggestion (error wrapping consistency).
 - Recorded the clean static-analysis results from `modernize`, `gofmt -l`, and `go vet`, plus positive observations about timeout usage, config/help alignment, and the targeted regression coverage added during the review.
 - No task images were attached for this checklist item.
 
