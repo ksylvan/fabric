@@ -215,11 +215,15 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - The command produced no output, so there are no currently unformatted Go files to carry into `GO_ISSUES.md`.
   - No task images were attached for this checklist item.
 
-- [ ] **Check vet**: Run:
+- [x] **Check vet**: Run:
   ```bash
   go vet ./...
   ```
   Note any issues.
+  Notes from targeted review on 2026-04-05:
+  - Ran `go vet ./...` from the repo root.
+  - The analyzer exited successfully with no diagnostics, so there are no new vet findings to carry into `GO_ISSUES.md` from this pass.
+  - No task images were attached for this checklist item.
 
 ### Task 8: Document Go Issues
 
