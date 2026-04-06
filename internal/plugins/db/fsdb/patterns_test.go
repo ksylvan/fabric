@@ -179,6 +179,15 @@ func TestPatternsEntity_Save(t *testing.T) {
 	assert.Equal(t, content, data)
 }
 
+func TestPatternsEntity_SaveRejectsTraversalName(t *testing.T) {
+	entity, cleanup := setupTestPatternsEntity(t)
+	defer cleanup()
+
+	err := entity.Save("../escape", []byte("secret"))
+	require.Error(t, err)
+	assert.ErrorIs(t, err, ErrInvalidStorageName)
+}
+
 func TestPatternsEntity_CustomPatterns(t *testing.T) {
 	// Create main patterns directory
 	mainDir, err := os.MkdirTemp("", "test-main-patterns-*")

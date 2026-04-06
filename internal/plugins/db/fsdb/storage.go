@@ -2,6 +2,7 @@ package fsdb
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,6 +17,23 @@ type StorageEntity struct {
 	Dir           string
 	ItemIsDir     bool
 	FileExtension string
+}
+
+var ErrInvalidStorageName = errors.New("invalid storage name")
+
+func ValidateStorageName(name string) error {
+	switch {
+	case name == "":
+		return fmt.Errorf("%w: name cannot be empty", ErrInvalidStorageName)
+	case name == "." || name == "..":
+		return fmt.Errorf("%w: %q", ErrInvalidStorageName, name)
+	case filepath.IsAbs(name):
+		return fmt.Errorf("%w: %q", ErrInvalidStorageName, name)
+	case strings.Contains(name, "/"), strings.Contains(name, `\`):
+		return fmt.Errorf("%w: %q", ErrInvalidStorageName, name)
+	default:
+		return nil
+	}
 }
 
 func (o *StorageEntity) Configure() (err error) {
@@ -68,34 +86,64 @@ func (o *StorageEntity) GetNames() (ret []string, err error) {
 }
 
 func (o *StorageEntity) Delete(name string) (err error) {
-	if err = os.RemoveAll(o.BuildFilePathByName(name)); err != nil {
+	path, err := o.pathForName(name)
+	if err != nil {
+		return err
+	}
+
+	if err = os.RemoveAll(path); err != nil {
 		err = fmt.Errorf(i18n.T("storage_error_delete"), name, err)
 	}
 	return
 }
 
 func (o *StorageEntity) Exists(name string) (ret bool) {
-	_, err := os.Stat(o.BuildFilePathByName(name))
+	path, err := o.pathForName(name)
+	if err != nil {
+		return false
+	}
+
+	_, err = os.Stat(path)
 	ret = !os.IsNotExist(err)
 	return
 }
 
 func (o *StorageEntity) Rename(oldName, newName string) (err error) {
-	if err = os.Rename(o.BuildFilePathByName(oldName), o.BuildFilePathByName(newName)); err != nil {
+	oldPath, err := o.pathForName(oldName)
+	if err != nil {
+		return err
+	}
+
+	newPath, err := o.pathForName(newName)
+	if err != nil {
+		return err
+	}
+
+	if err = os.Rename(oldPath, newPath); err != nil {
 		err = fmt.Errorf(i18n.T("storage_error_rename"), oldName, newName, err)
 	}
 	return
 }
 
 func (o *StorageEntity) Save(name string, content []byte) (err error) {
-	if err = os.WriteFile(o.BuildFilePathByName(name), content, 0644); err != nil {
+	path, err := o.pathForName(name)
+	if err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(path, content, 0644); err != nil {
 		err = fmt.Errorf(i18n.T("storage_error_save"), name, err)
 	}
 	return
 }
 
 func (o *StorageEntity) Load(name string) (ret []byte, err error) {
-	if ret, err = os.ReadFile(o.BuildFilePathByName(name)); err != nil {
+	path, err := o.pathForName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if ret, err = os.ReadFile(path); err != nil {
 		err = fmt.Errorf(i18n.T("storage_error_load"), name, err)
 	}
 	return
@@ -132,6 +180,14 @@ func (o *StorageEntity) BuildFilePath(fileName string) (ret string) {
 
 func (o *StorageEntity) buildFileName(name string) string {
 	return fmt.Sprintf("%s%v", name, o.FileExtension)
+}
+
+func (o *StorageEntity) pathForName(name string) (string, error) {
+	if err := ValidateStorageName(name); err != nil {
+		return "", err
+	}
+
+	return o.BuildFilePathByName(name), nil
 }
 
 func (o *StorageEntity) SaveAsJson(name string, item any) (err error) {

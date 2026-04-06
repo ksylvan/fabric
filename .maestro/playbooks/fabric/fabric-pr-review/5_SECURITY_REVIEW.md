@@ -64,7 +64,12 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
   - Errors don't expose internal paths
   - Responses don't leak system info
 
-- [ ] **Broken access control**:
+- [x] **Broken access control**:
+  - Note: Reviewed the main REST server path in `internal/server/serve.go` and revalidated that all non-Swagger routes remain behind `APIKeyMiddleware` whenever an API key is configured; added regression coverage for protected routes vs. the intentional `/swagger/*` exemption.
+  - Note: Hardened `internal/plugins/db/fsdb/storage.go` and the REST storage handlers so context/session/pattern names reject traversal-style identifiers (`..`, absolute paths, path separators) instead of resolving filesystem paths outside their configured storage roots.
+  - Note: Hardened REST pattern resolution so `/patterns/:name/apply` and `/chat` only resolve configured pattern names; HTTP callers can no longer coerce `GetApplyVariables()` into reading arbitrary local files such as `.env`, while the CLI keeps its documented file-path pattern support.
+  - Note: Revalidated custom-pattern precedence and tightened the lookup boundary in `internal/plugins/db/fsdb/patterns.go`, so custom patterns can still intentionally override same-name built-ins but cannot escape the configured custom/main pattern directories via crafted names.
+  - Note: Added regression coverage in `internal/server/auth_test.go`, `internal/server/patterns_test.go`, `internal/server/storage_handler_test.go`, `internal/core/chatter_test.go`, `internal/plugins/db/fsdb/storage_test.go`, and `internal/plugins/db/fsdb/patterns_test.go`, then reran `go test ./internal/plugins/db/fsdb ./internal/core ./internal/server ./internal/cli`.
   - Server endpoints check authorization
   - No path traversal vulnerabilities
   - Pattern loading respects boundaries

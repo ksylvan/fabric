@@ -263,6 +263,53 @@ func TestChatter_BuildSession_SeparatesSystemSections(t *testing.T) {
 	}
 }
 
+func TestChatter_BuildSession_PatternFileAccessDependsOnRequestSource(t *testing.T) {
+	workDir := t.TempDir()
+	t.Chdir(workDir)
+
+	patternFile := filepath.Join(workDir, ".env")
+	if err := os.WriteFile(patternFile, []byte("TOP_SECRET"), 0o644); err != nil {
+		t.Fatalf("failed to write pattern file: %v", err)
+	}
+
+	db := fsdb.NewDb(t.TempDir())
+	chatter := &Chatter{db: db}
+
+	cliRequest := &domain.ChatRequest{
+		PatternName:      ".env",
+		AllowPatternFile: true,
+		Message: &chat.ChatCompletionMessage{
+			Role:    chat.ChatMessageRoleUser,
+			Content: "user input",
+		},
+	}
+
+	session, err := chatter.BuildSession(cliRequest, false)
+	if err != nil {
+		t.Fatalf("expected CLI-style file pattern lookup to succeed, got %v", err)
+	}
+
+	messages := session.GetVendorMessages()
+	if len(messages) != 1 {
+		t.Fatalf("expected a single system message, got %d", len(messages))
+	}
+	if got := messages[0].Content; got != "TOP_SECRET\nuser input" {
+		t.Fatalf("expected file-backed pattern content, got %q", got)
+	}
+
+	serverRequest := &domain.ChatRequest{
+		PatternName: ".env",
+		Message: &chat.ChatCompletionMessage{
+			Role:    chat.ChatMessageRoleUser,
+			Content: "user input",
+		},
+	}
+
+	if _, err := chatter.BuildSession(serverRequest, false); err == nil {
+		t.Fatal("expected server-style pattern lookup to reject file-backed names")
+	}
+}
+
 func TestChatter_Send_StreamingErrorPropagation(t *testing.T) {
 	// Create a temporary database for testing
 	tempDir := t.TempDir()

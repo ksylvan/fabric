@@ -519,6 +519,7 @@ func (o *Flags) BuildChatRequest(Meta string) (ret *domain.ChatRequest, err erro
 		ContextName:           o.Context,
 		SessionName:           o.Session,
 		PatternName:           o.Pattern,
+		AllowPatternFile:      true,
 		StrategyName:          o.Strategy,
 		PatternVariables:      o.PatternVariables,
 		InputHasVars:          o.InputHasVars,

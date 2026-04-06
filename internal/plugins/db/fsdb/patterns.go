@@ -38,11 +38,31 @@ func (o *PatternsEntity) GetApplyVariables(
 	return
 }
 
+func (o *PatternsEntity) GetApplyVariablesFromDB(
+	name string, variables map[string]string, input string) (pattern *Pattern, err error) {
+
+	if pattern, err = o.getFromDB(name); err != nil {
+		return
+	}
+
+	err = o.applyVariables(pattern, variables, input)
+	return
+}
+
 // GetWithoutVariables returns a pattern with only the {{input}} placeholder processed
 // and skips template variable replacement
 func (o *PatternsEntity) GetWithoutVariables(source, input string) (pattern *Pattern, err error) {
 
 	if pattern, err = o.loadPattern(source); err != nil {
+		return
+	}
+
+	o.applyInput(pattern, input)
+	return
+}
+
+func (o *PatternsEntity) GetWithoutVariablesFromDB(name, input string) (pattern *Pattern, err error) {
+	if pattern, err = o.getFromDB(name); err != nil {
 		return
 	}
 
@@ -119,6 +139,10 @@ func (o *PatternsEntity) applyVariables(
 
 // retrieves a pattern from the database by name
 func (o *PatternsEntity) getFromDB(name string) (ret *Pattern, err error) {
+	if err = ValidateStorageName(name); err != nil {
+		return nil, err
+	}
+
 	// First check custom patterns directory if it exists
 	if o.CustomPatternsDir != "" {
 		customPatternPath := filepath.Join(o.CustomPatternsDir, name, o.SystemPatternFile)
@@ -264,10 +288,13 @@ func (o *PatternsEntity) ListNames(shellCompleteList bool) (err error) {
 
 // Get required for Storage interface
 func (o *PatternsEntity) Get(name string) (*Pattern, error) {
-	// Use GetPattern with no variables
-	return o.GetApplyVariables(name, nil, "")
+	return o.GetApplyVariablesFromDB(name, nil, "")
 }
 func (o *PatternsEntity) Save(name string, content []byte) (err error) {
+	if err = ValidateStorageName(name); err != nil {
+		return err
+	}
+
 	patternDir := filepath.Join(o.Dir, name)
 	if err = os.MkdirAll(patternDir, os.ModePerm); err != nil {
 		return fmt.Errorf(i18n.T("patterns_error_create_directory"), err)

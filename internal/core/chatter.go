@@ -275,10 +275,18 @@ func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *
 	inputUsed := false
 	if request.PatternName != "" {
 		var pattern *fsdb.Pattern
-		if request.NoVariableReplacement {
-			pattern, err = o.db.Patterns.GetWithoutVariables(request.PatternName, request.Message.Content)
+		if request.AllowPatternFile {
+			if request.NoVariableReplacement {
+				pattern, err = o.db.Patterns.GetWithoutVariables(request.PatternName, request.Message.Content)
+			} else {
+				pattern, err = o.db.Patterns.GetApplyVariables(request.PatternName, request.PatternVariables, request.Message.Content)
+			}
 		} else {
-			pattern, err = o.db.Patterns.GetApplyVariables(request.PatternName, request.PatternVariables, request.Message.Content)
+			if request.NoVariableReplacement {
+				pattern, err = o.db.Patterns.GetWithoutVariablesFromDB(request.PatternName, request.Message.Content)
+			} else {
+				pattern, err = o.db.Patterns.GetApplyVariablesFromDB(request.PatternName, request.PatternVariables, request.Message.Content)
+			}
 		}
 
 		if err != nil {

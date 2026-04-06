@@ -1,6 +1,7 @@
 package restapi
 
 import (
+	"errors"
 	"maps"
 	"net/http"
 
@@ -48,6 +49,10 @@ func (h *PatternsHandler) Get(c *gin.Context) {
 
 	pattern, err := h.patterns.GetRaw(name)
 	if err != nil {
+		if errors.Is(err, fsdb.ErrInvalidStorageName) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -91,8 +96,12 @@ func (h *PatternsHandler) ApplyPattern(c *gin.Context) {
 	}
 	maps.Copy(variables, request.Variables)
 
-	pattern, err := h.patterns.GetApplyVariables(name, variables, request.Input)
+	pattern, err := h.patterns.GetApplyVariablesFromDB(name, variables, request.Input)
 	if err != nil {
+		if errors.Is(err, fsdb.ErrInvalidStorageName) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}

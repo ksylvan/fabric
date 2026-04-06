@@ -16,6 +16,7 @@ type ChatRequest struct {
 	ContextName           string
 	SessionName           string
 	PatternName           string
+	AllowPatternFile      bool
 	PatternVariables      map[string]string
 	Message               *chat.ChatCompletionMessage
 	Language              string

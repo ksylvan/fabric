@@ -171,6 +171,8 @@ Manage reusable AI prompts.
 | `PUT` | `/patterns/rename/:oldName/:newName` | Rename pattern |
 | `POST` | `/patterns/:name/apply` | Apply pattern with variables |
 
+Pattern endpoints resolve configured pattern names only. Filesystem pattern paths remain a CLI-only feature and are not accepted over HTTP.
+
 **Example - Get pattern:**
 
 ```bash
@@ -208,6 +210,8 @@ Manage context snippets that prepend to prompts.
 | `POST` | `/contexts/:name` | Create or update context |
 | `DELETE` | `/contexts/:name` | Delete context |
 | `PUT` | `/contexts/rename/:oldName/:newName` | Rename context |
+
+Context and session resource names are treated as single identifiers and cannot include path separators.
 
 ### Sessions
 

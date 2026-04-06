@@ -1,11 +1,13 @@
 package restapi
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/danielmiessler/fabric/internal/plugins/db"
+	"github.com/danielmiessler/fabric/internal/plugins/db/fsdb"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,6 +33,10 @@ func (h *StorageHandler[T]) Get(c *gin.Context) {
 	name := c.Param("name")
 	item, err := h.storage.Get(name)
 	if err != nil {
+		if errors.Is(err, fsdb.ErrInvalidStorageName) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -52,6 +58,10 @@ func (h *StorageHandler[T]) Delete(c *gin.Context) {
 	name := c.Param("name")
 	err := h.storage.Delete(name)
 	if err != nil {
+		if errors.Is(err, fsdb.ErrInvalidStorageName) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -61,6 +71,10 @@ func (h *StorageHandler[T]) Delete(c *gin.Context) {
 // Exists handles the GET /storage/exists/:name route
 func (h *StorageHandler[T]) Exists(c *gin.Context) {
 	name := c.Param("name")
+	if err := fsdb.ValidateStorageName(name); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	exists := h.storage.Exists(name)
 	c.JSON(http.StatusOK, exists)
 }
@@ -71,6 +85,10 @@ func (h *StorageHandler[T]) Rename(c *gin.Context) {
 	newName := c.Param("newName")
 	err := h.storage.Rename(oldName, newName)
 	if err != nil {
+		if errors.Is(err, fsdb.ErrInvalidStorageName) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -94,6 +112,10 @@ func (h *StorageHandler[T]) Save(c *gin.Context) {
 	// Save the content to storage
 	err = h.storage.Save(name, content)
 	if err != nil {
+		if errors.Is(err, fsdb.ErrInvalidStorageName) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
