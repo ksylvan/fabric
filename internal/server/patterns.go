@@ -2,7 +2,6 @@ package restapi
 
 import (
 	"errors"
-	"io"
 	"maps"
 	"net/http"
 
@@ -122,8 +121,12 @@ func (h *PatternsHandler) ApplyPattern(c *gin.Context) {
 func (h *PatternsHandler) Save(c *gin.Context) {
 	name := c.Param("name")
 
-	body, err := io.ReadAll(c.Request.Body)
+	body, err := readLimitedRequestBody(c)
 	if err != nil {
+		if isRequestBodyTooLarge(err) {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": errRequestBodyTooLarge.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}

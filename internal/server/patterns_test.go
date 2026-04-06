@@ -1,6 +1,7 @@
 package restapi
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -191,5 +192,37 @@ func TestPatternsHandler_ApplyPatternRejectsTemplateDirectiveInjectionInVariable
 	}
 	if body := recorder.Body.String(); !strings.Contains(body, "cannot contain nested template directives") {
 		t.Fatalf("expected nested directive rejection, got %q", body)
+	}
+}
+
+func TestPatternsHandler_SaveRejectsOversizedRequestBody(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	patternsDir := t.TempDir()
+	patterns := &fsdb.PatternsEntity{
+		StorageEntity: &fsdb.StorageEntity{
+			Dir:       patternsDir,
+			Label:     "patterns",
+			ItemIsDir: true,
+		},
+		SystemPatternFile: "system.md",
+	}
+
+	router := gin.New()
+	NewPatternsHandler(router, patterns)
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/patterns/example",
+		io.LimitReader(repeatedByteReader('a'), int64(maxRequestBodyBytes)+1),
+	)
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("expected status %d, got %d", http.StatusRequestEntityTooLarge, recorder.Code)
+	}
+	if body := recorder.Body.String(); !strings.Contains(body, errRequestBodyTooLarge.Error()) {
+		t.Fatalf("expected oversized body error, got %q", body)
 	}
 }

@@ -89,6 +89,31 @@ func TestWriteSSEResponse_FormatsEventStreamChunk(t *testing.T) {
 	}
 }
 
+func TestWriteSSEResponse_EscapesEmbeddedEventContent(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+
+	response := StreamResponse{
+		Type:    "content",
+		Format:  "markdown",
+		Content: "line one\n\ndata: forged-event",
+	}
+
+	if err := writeSSEResponse(ctx.Writer, response); err != nil {
+		t.Fatalf("expected SSE write to succeed, got %v", err)
+	}
+
+	payload := recorder.Body.String()
+	if strings.Count(payload, "\n\n") != 1 {
+		t.Fatalf("expected a single SSE frame terminator, got %q", payload)
+	}
+	if strings.Contains(payload, "\n\ndata: forged-event\n\n") {
+		t.Fatalf("expected embedded content to stay JSON-escaped, got %q", payload)
+	}
+}
+
 func TestHandleChat_SetsEventStreamHeaders(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

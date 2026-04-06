@@ -491,6 +491,10 @@ Error responses include JSON with details:
 
 The server does not implement rate limiting. When deploying publicly, use a reverse proxy (nginx, Caddy) with rate limiting enabled.
 
+## Request Size Limits
+
+Fabric caps JSON and raw-body request payloads at 16 MiB. Oversized requests return `413 Request Entity Too Large`.
+
 ## CORS
 
 Fabric does not enable permissive global CORS. The `/chat` endpoint allows the local web development origin `http://localhost:5173` and responds to preflight requests for that origin only:

@@ -5,6 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/danielmiessler/fabric/internal/core"
+	"github.com/danielmiessler/fabric/internal/plugins/db/fsdb"
 	"github.com/gin-gonic/gin"
 )
 
@@ -62,6 +64,51 @@ func TestAPIKeyMiddleware(t *testing.T) {
 
 			if recorder.Code != tt.wantStatus {
 				t.Fatalf("expected status %d, got %d", tt.wantStatus, recorder.Code)
+			}
+		})
+	}
+}
+
+func TestRESTServerRoutesRequireAPIKeyWhenConfigured(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	db := fsdb.NewDb(t.TempDir())
+	registry := &core.PluginRegistry{Db: db}
+
+	router := gin.New()
+	router.Use(APIKeyMiddleware("secret"))
+	NewPatternsHandler(router, db.Patterns)
+	NewContextsHandler(router, db.Contexts)
+	NewSessionsHandler(router, db.Sessions)
+	NewChatHandler(router, registry, db)
+	NewYouTubeHandler(router, registry)
+	NewConfigHandler(router, db)
+	NewModelsHandler(router, nil)
+	NewStrategiesHandler(router)
+
+	tests := []struct {
+		name   string
+		method string
+		path   string
+	}{
+		{name: "chat", method: http.MethodPost, path: "/chat"},
+		{name: "patterns", method: http.MethodGet, path: "/patterns/names"},
+		{name: "contexts", method: http.MethodGet, path: "/contexts/names"},
+		{name: "sessions", method: http.MethodGet, path: "/sessions/names"},
+		{name: "youtube", method: http.MethodPost, path: "/youtube/transcript"},
+		{name: "config", method: http.MethodGet, path: "/config"},
+		{name: "models", method: http.MethodGet, path: "/models/names"},
+		{name: "strategies", method: http.MethodGet, path: "/strategies"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, tt.path, nil)
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			if recorder.Code != http.StatusUnauthorized {
+				t.Fatalf("expected status %d, got %d", http.StatusUnauthorized, recorder.Code)
 			}
 		})
 	}

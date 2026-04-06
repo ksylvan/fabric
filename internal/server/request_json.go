@@ -9,12 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const maxJSONRequestBytes = 16 << 20
+const maxRequestBodyBytes = 16 << 20
 
 var errMultipleJSONValues = errors.New("request body must contain a single JSON object")
+var errRequestBodyTooLarge = errors.New("request body too large")
 
 func decodeStrictJSON(c *gin.Context, dest any) error {
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxJSONRequestBytes)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBodyBytes)
 
 	decoder := json.NewDecoder(c.Request.Body)
 	decoder.DisallowUnknownFields()
@@ -33,4 +34,17 @@ func decodeStrictJSON(c *gin.Context, dest any) error {
 	}
 
 	return nil
+}
+
+func readLimitedRequestBody(c *gin.Context) ([]byte, error) {
+	limitedBody := http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBodyBytes)
+	defer limitedBody.Close()
+
+	c.Request.Body = limitedBody
+	return io.ReadAll(limitedBody)
+}
+
+func isRequestBodyTooLarge(err error) bool {
+	var maxBytesErr *http.MaxBytesError
+	return errors.As(err, &maxBytesErr)
 }

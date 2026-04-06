@@ -3,7 +3,6 @@ package restapi
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/danielmiessler/fabric/internal/plugins/db"
@@ -99,12 +98,12 @@ func (h *StorageHandler[T]) Rename(c *gin.Context) {
 func (h *StorageHandler[T]) Save(c *gin.Context) {
 	name := c.Param("name")
 
-	// Read the request body
-	body := c.Request.Body
-	defer body.Close()
-
-	content, err := io.ReadAll(body)
+	content, err := readLimitedRequestBody(c)
 	if err != nil {
+		if isRequestBodyTooLarge(err) {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": errRequestBodyTooLarge.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}

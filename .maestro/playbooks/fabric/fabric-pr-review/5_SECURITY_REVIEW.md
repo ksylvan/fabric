@@ -119,11 +119,12 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
   - No code execution via patterns
   - Template extensions are sandboxed
 
-- [ ] **Server mode security**:
-  - `/api/` endpoints are protected
-  - Rate limiting considered
-  - Input validation on all endpoints
-  - SSE streams don't leak data
+- [x] **Server mode security**:
+  - Note: Reviewed the main REST server registration path in `internal/server/serve.go` and added regression coverage in `internal/server/auth_test.go` to confirm the registered `/chat`, `/patterns`, `/contexts`, `/sessions`, `/youtube`, `/config`, `/models`, and `/strategies` routes all reject unauthenticated requests whenever `--api-key` is configured; the Swagger exemption remains the only intentional public route.
+  - Note: Hardened `internal/server/storage.go` and `internal/server/patterns.go` so the raw-body save endpoints (`/contexts/:name`, `/sessions/:name`, `/patterns/:name`) now enforce the same 16 MiB request cap as JSON endpoints and return `413 Request Entity Too Large` instead of reading unbounded uploads into memory.
+  - Note: Revalidated `internal/server/chat.go`; SSE frames are still emitted as JSON payloads under a single `data:` envelope, and added regression coverage that embedded newline / `data:` content stays escaped inside one event rather than breaking frame boundaries or leaking cross-event content.
+  - Note: Rate limiting remains intentionally outside the in-process server. `docs/rest-api.md` already documents reverse-proxy rate limiting for public deployments, which matches the hardened loopback-or-API-key exposure model reviewed earlier in this playbook.
+  - Note: Added regression coverage in `internal/server/storage_handler_test.go`, `internal/server/patterns_test.go`, `internal/server/chat_test.go`, and `internal/server/auth_test.go`, then reran `go test ./internal/server`.
 
 - [ ] **Ollama compatibility mode**:
   - Proper request validation
