@@ -3,6 +3,7 @@ package restapi
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
@@ -105,8 +106,70 @@ func TestHandleChat_SetsEventStreamHeaders(t *testing.T) {
 	if got := recorder.Header().Get("Connection"); got != "keep-alive" {
 		t.Fatalf("expected keep-alive header, got %q", got)
 	}
-	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:5173" {
-		t.Fatalf("expected restrictive CORS origin, got %q", got)
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Fatalf("expected no CORS header without a matching origin, got %q", got)
+	}
+}
+
+func TestHandleChat_AllowsLocalDevCORSOrigin(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Request = httptest.NewRequest(http.MethodPost, "/chat", strings.NewReader(`{"prompts":[],"language":"en"}`))
+	ctx.Request.Header.Set("Content-Type", "application/json")
+	ctx.Request.Header.Set("Origin", localDevCORSOrigin)
+
+	handler := &ChatHandler{}
+	handler.HandleChat(ctx)
+
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != localDevCORSOrigin {
+		t.Fatalf("expected local dev origin to be allowed, got %q", got)
+	}
+	if got := recorder.Header().Get("Access-Control-Allow-Methods"); !strings.Contains(got, http.MethodPost) {
+		t.Fatalf("expected allow methods to include POST, got %q", got)
+	}
+}
+
+func TestHandleChat_DoesNotReflectUnexpectedOrigin(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Request = httptest.NewRequest(http.MethodPost, "/chat", strings.NewReader(`{"prompts":[],"language":"en"}`))
+	ctx.Request.Header.Set("Content-Type", "application/json")
+	ctx.Request.Header.Set("Origin", "https://example.com")
+
+	handler := &ChatHandler{}
+	handler.HandleChat(ctx)
+
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Fatalf("expected unexpected origin to receive no CORS header, got %q", got)
+	}
+}
+
+func TestHandleChatOptions_AllowsLocalDevPreflight(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	NewChatHandler(router, nil, nil)
+
+	req := httptest.NewRequest(http.MethodOptions, "/chat", nil)
+	req.Header.Set("Origin", localDevCORSOrigin)
+	req.Header.Set("Access-Control-Request-Method", http.MethodPost)
+	req.Header.Set("Access-Control-Request-Headers", "Content-Type")
+
+	recorder := httptest.NewRecorder()
+	router.ServeHTTP(recorder, req)
+
+	if recorder.Code != http.StatusNoContent {
+		t.Fatalf("expected status %d, got %d", http.StatusNoContent, recorder.Code)
+	}
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != localDevCORSOrigin {
+		t.Fatalf("expected local dev origin to be allowed, got %q", got)
+	}
+	if got := recorder.Header().Get("Access-Control-Allow-Headers"); !strings.Contains(got, "Content-Type") {
+		t.Fatalf("expected allow headers to include Content-Type, got %q", got)
 	}
 }
 

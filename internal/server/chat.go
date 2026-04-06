@@ -47,6 +47,8 @@ type StreamResponse struct {
 	Usage   *domain.UsageMetadata `json:"usage,omitempty"`
 }
 
+const localDevCORSOrigin = "http://localhost:5173"
+
 func NewChatHandler(r *gin.Engine, registry *core.PluginRegistry, db *fsdb.Db) *ChatHandler {
 	handler := &ChatHandler{
 		registry: registry,
@@ -54,6 +56,7 @@ func NewChatHandler(r *gin.Engine, registry *core.PluginRegistry, db *fsdb.Db) *
 	}
 
 	r.POST("/chat", handler.HandleChat)
+	r.OPTIONS("/chat", handler.HandleChatOptions)
 
 	return handler
 }
@@ -71,6 +74,7 @@ func NewChatHandler(r *gin.Engine, registry *core.PluginRegistry, db *fsdb.Db) *
 // @Router /chat [post]
 func (h *ChatHandler) HandleChat(c *gin.Context) {
 	var request ChatRequest
+	applyLocalDevCORSHeaders(c)
 
 	if err := c.BindJSON(&request); err != nil {
 		log.Printf("Error binding JSON: %v", err)
@@ -85,7 +89,6 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
-	c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 
 	clientGone := c.Request.Context().Done()
@@ -186,6 +189,11 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 	}
 }
 
+func (h *ChatHandler) HandleChatOptions(c *gin.Context) {
+	applyLocalDevCORSHeaders(c)
+	c.Status(http.StatusNoContent)
+}
+
 func buildPromptChatRequest(p PromptRequest, language string) *domain.ChatRequest {
 	return &domain.ChatRequest{
 		Message: &chat.ChatCompletionMessage{
@@ -199,6 +207,20 @@ func buildPromptChatRequest(p PromptRequest, language string) *domain.ChatReques
 		StrategyName:     p.StrategyName,
 		Language:         language,
 	}
+}
+
+func applyLocalDevCORSHeaders(c *gin.Context) {
+	origin := c.GetHeader("Origin")
+	if origin != localDevCORSOrigin {
+		return
+	}
+
+	headers := c.Writer.Header()
+	headers.Set("Access-Control-Allow-Origin", origin)
+	headers.Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	headers.Set("Access-Control-Allow-Headers", "Content-Type, Accept, X-API-Key")
+	headers.Set("Access-Control-Max-Age", "600")
+	headers.Add("Vary", "Origin")
 }
 
 func writeSSEResponse(w gin.ResponseWriter, response StreamResponse) error {

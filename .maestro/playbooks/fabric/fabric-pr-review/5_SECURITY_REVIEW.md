@@ -79,7 +79,7 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
   - Note: Revalidated `internal/cli/flags.go` and kept debug mode off by default (`--debug=0`) with no default API key or bootstrap credentials added anywhere in the reviewed server path.
   - Note: Hardened server startup defaults so `--serve` now binds to `127.0.0.1:8080` by default, refuses non-loopback bind addresses unless `--api-key` is provided, and documents the explicit `0.0.0.0` + API key path for remote or Docker exposure.
   - Note: Hardened `internal/server/ollama.go` so Ollama compatibility mode is loopback-only until that surface has its own authentication story, closing the accidental unauthenticated wildcard-bind case.
-  - Note: Revalidated `internal/server/chat.go` CORS behavior and added regression coverage to keep the SSE endpoint pinned to the local dev origin (`http://localhost:5173`) rather than a wildcard origin.
+  - Note: Hardened `internal/server/chat.go` CORS behavior so `/chat` only serves the documented local dev origin (`http://localhost:5173`) and now answers `OPTIONS` preflight requests without reflecting arbitrary origins.
   - Note: Added regression coverage in `internal/server/server_security_test.go`, `internal/server/chat_test.go`, and `internal/cli/flags_test.go`, then reran `go test ./internal/server ./internal/cli`.
   - Debug mode disabled by default
   - No default credentials

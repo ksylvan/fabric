@@ -488,7 +488,7 @@ The server does not implement rate limiting. When deploying publicly, use a reve
 
 ## CORS
 
-The server sets CORS headers for local development:
+Fabric does not enable permissive global CORS. The `/chat` endpoint allows the local web development origin `http://localhost:5173` and responds to preflight requests for that origin only:
 
 ```http
 Access-Control-Allow-Origin: http://localhost:5173
