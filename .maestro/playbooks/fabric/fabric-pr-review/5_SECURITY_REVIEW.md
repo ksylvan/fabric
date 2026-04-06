@@ -86,7 +86,10 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
   - Secure defaults for server mode
   - CORS properly configured (if applicable)
 
-- [ ] **Insecure deserialization**:
+- [x] **Insecure deserialization**:
+  - Note: Hardened `internal/cli/flags.go` so YAML config loading now uses a strict `yaml.Decoder` with `KnownFields(true)`, rejecting unknown keys instead of silently ignoring unexpected input during deserialization.
+  - Note: Revalidated the reviewed JSON request paths in `internal/server/ollama.go` and `internal/chat/chat.go`; both deserialize into concrete structs or explicitly filtered maps, with no polymorphic type loading, reflection-based object construction, or code-executing unmarshal hooks introduced by this PR.
+  - Note: Added regression coverage in `internal/cli/flags_test.go` for unknown-key rejection and reran `go test ./internal/cli ./internal/server`.
   - JSON/YAML parsing is safe
   - No unsafe unmarshaling of user input
   - Type checking before deserialization

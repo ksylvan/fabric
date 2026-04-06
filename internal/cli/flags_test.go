@@ -194,10 +194,7 @@ visualFPS: 3
 
 	// Test 3: Invalid YAML config
 	t.Run("Invalid YAML config", func(t *testing.T) {
-		badConfig := `
-temperature: "not a float"
-model: 123  # should be string
-`
+		badConfig := "temperature: \"not a float\"\nmodel: 123  # should be string\n"
 		badfile, err := os.CreateTemp("", "bad-config.*.yaml")
 		if err != nil {
 			t.Fatal(err)
@@ -217,6 +214,32 @@ model: 123  # should be string
 
 		_, err = Init()
 		assert.Error(t, err)
+	})
+
+	// Test 4: Unknown YAML keys are rejected
+	t.Run("Unknown YAML key", func(t *testing.T) {
+		unknownKeyConfig := "model: gpt-4\nnotARealFlag: true\n"
+		unknownFile, err := os.CreateTemp("", "unknown-config.*.yaml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer os.Remove(unknownFile.Name())
+
+		if _, err := unknownFile.Write([]byte(unknownKeyConfig)); err != nil {
+			t.Fatal(err)
+		}
+		if err := unknownFile.Close(); err != nil {
+			t.Fatal(err)
+		}
+
+		oldArgs := os.Args
+		defer func() { os.Args = oldArgs }()
+		os.Args = []string{"cmd", "--config", unknownFile.Name()}
+
+		_, err = Init()
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "notARealFlag")
+		assert.Contains(t, err.Error(), "not found in type cli.Flags")
 	})
 }
 
