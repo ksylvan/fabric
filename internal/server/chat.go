@@ -138,7 +138,10 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 				_, err = chatter.Send(c.Request.Context(), chatReq, opts)
 				if err != nil {
 					log.Printf("Error from chatter.Send: %v", err)
-					// Error already sent to streamChan via domain.StreamTypeError if occurred in Send loop
+					streamChan <- domain.StreamUpdate{
+						Type:    domain.StreamTypeError,
+						Content: fmt.Sprintf(i18n.T("server_chat_error"), err),
+					}
 					return
 				}
 			}(prompt)
@@ -200,12 +203,13 @@ func buildPromptChatRequest(p PromptRequest, language string) *domain.ChatReques
 			Role:    chat.ChatMessageRoleUser,
 			Content: p.UserInput,
 		},
-		PatternName:      p.PatternName,
-		ContextName:      p.ContextName,
-		SessionName:      p.SessionName,
-		PatternVariables: p.Variables,
-		StrategyName:     p.StrategyName,
-		Language:         language,
+		PatternName:              p.PatternName,
+		ContextName:              p.ContextName,
+		SessionName:              p.SessionName,
+		PatternVariables:         p.Variables,
+		RestrictTemplateFeatures: true,
+		StrategyName:             p.StrategyName,
+		Language:                 language,
 	}
 }
 

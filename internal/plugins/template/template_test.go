@@ -143,3 +143,48 @@ func TestApplyTemplate(t *testing.T) {
 		})
 	}
 }
+
+func TestApplyTemplateWithPolicyRejectsNestedTemplateVariableValues(t *testing.T) {
+	_, err := ApplyTemplateWithPolicy(
+		"Role: {{role}}",
+		map[string]string{"role": "{{plugin:sys:env:HOME}}"},
+		"",
+		&RemotePatternPolicy,
+	)
+	if err == nil {
+		t.Fatal("expected nested template directives in variables to be rejected")
+	}
+	if !strings.Contains(err.Error(), "cannot contain nested template directives") {
+		t.Fatalf("expected nested directive error, got %q", err.Error())
+	}
+}
+
+func TestApplyTemplateWithPolicyRejectsUnsafePluginNamespaces(t *testing.T) {
+	_, err := ApplyTemplateWithPolicy(
+		"{{plugin:sys:env:HOME}}",
+		nil,
+		"",
+		&RemotePatternPolicy,
+	)
+	if err == nil {
+		t.Fatal("expected unsafe plugin namespace to be rejected")
+	}
+	if !strings.Contains(err.Error(), `plugin "sys" is disabled`) {
+		t.Fatalf("expected plugin restriction error, got %q", err.Error())
+	}
+}
+
+func TestApplyTemplateWithPolicyAllowsSafePluginNamespaces(t *testing.T) {
+	got, err := ApplyTemplateWithPolicy(
+		"{{plugin:text:upper:hello}}",
+		nil,
+		"",
+		&RemotePatternPolicy,
+	)
+	if err != nil {
+		t.Fatalf("expected safe plugin namespace to succeed, got %v", err)
+	}
+	if got != "HELLO" {
+		t.Fatalf("expected safe plugin output, got %q", got)
+	}
+}

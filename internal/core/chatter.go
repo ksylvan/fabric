@@ -264,8 +264,18 @@ func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *
 	}
 
 	// Now we know request.Message is not nil, process template variables
+	var templatePolicy *template.ApplyPolicy
+	if request.RestrictTemplateFeatures {
+		templatePolicy = &template.RemotePatternPolicy
+	}
+
 	if request.InputHasVars && !request.NoVariableReplacement {
-		request.Message.Content, err = template.ApplyTemplate(request.Message.Content, request.PatternVariables, "")
+		request.Message.Content, err = template.ApplyTemplateWithPolicy(
+			request.Message.Content,
+			request.PatternVariables,
+			"",
+			templatePolicy,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -279,13 +289,23 @@ func (o *Chatter) BuildSession(request *domain.ChatRequest, raw bool) (session *
 			if request.NoVariableReplacement {
 				pattern, err = o.db.Patterns.GetWithoutVariables(request.PatternName, request.Message.Content)
 			} else {
-				pattern, err = o.db.Patterns.GetApplyVariables(request.PatternName, request.PatternVariables, request.Message.Content)
+				pattern, err = o.db.Patterns.GetApplyVariablesWithPolicy(
+					request.PatternName,
+					request.PatternVariables,
+					request.Message.Content,
+					templatePolicy,
+				)
 			}
 		} else {
 			if request.NoVariableReplacement {
 				pattern, err = o.db.Patterns.GetWithoutVariablesFromDB(request.PatternName, request.Message.Content)
 			} else {
-				pattern, err = o.db.Patterns.GetApplyVariablesFromDB(request.PatternName, request.PatternVariables, request.Message.Content)
+				pattern, err = o.db.Patterns.GetApplyVariablesFromDBWithPolicy(
+					request.PatternName,
+					request.PatternVariables,
+					request.Message.Content,
+					templatePolicy,
+				)
 			}
 		}
 

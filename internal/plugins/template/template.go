@@ -54,9 +54,17 @@ func matchTriple(r *regexp.Regexp, full string) (string, string, string, bool) {
 }
 
 func ApplyTemplate(content string, variables map[string]string, input string) (string, error) {
+	return ApplyTemplateWithPolicy(content, variables, input, nil)
+}
+
+func ApplyTemplateWithPolicy(content string, variables map[string]string, input string, policy *ApplyPolicy) (string, error) {
 	tokenPattern := regexp.MustCompile(`\{\{([^{}]+)\}\}`)
 
 	debugf("Starting template processing with input='%s'\n", input)
+
+	if err := validateTemplateVariablesWithPolicy(variables, policy); err != nil {
+		return "", err
+	}
 
 	for {
 		if !strings.Contains(content, "{{") {
@@ -74,6 +82,9 @@ func ApplyTemplate(content string, variables map[string]string, input string) (s
 
 			// Extension call
 			if strings.HasPrefix(raw, "ext:") {
+				if policy != nil && !policy.AllowExtensions {
+					return "", newRestrictedTemplateError("template extensions are disabled for remote pattern execution")
+				}
 				if name, operation, value, ok := matchTriple(extensionPattern, full); ok {
 					if strings.Contains(value, InputSentinel) {
 						value = strings.ReplaceAll(value, InputSentinel, input)
@@ -93,6 +104,12 @@ func ApplyTemplate(content string, variables map[string]string, input string) (s
 			// Plugin call
 			if strings.HasPrefix(raw, "plugin:") {
 				if namespace, operation, value, ok := matchTriple(pluginPattern, full); ok {
+					if policy != nil && !policy.allowsPluginNamespace(namespace) {
+						return "", newRestrictedTemplateError(
+							"template plugin %q is disabled for remote pattern execution",
+							namespace,
+						)
+					}
 					debugf("Plugin call: namespace=%s operation=%s value=%s\n", namespace, operation, value)
 					var (
 						result string

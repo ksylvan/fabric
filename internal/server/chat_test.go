@@ -53,6 +53,9 @@ func TestBuildPromptChatRequest_PreservesStrategyAndUserInput(t *testing.T) {
 	if got := request.PatternVariables["topic"]; got != "pipelines" {
 		t.Fatalf("expected variables to be preserved, got %q", got)
 	}
+	if !request.RestrictTemplateFeatures {
+		t.Fatal("expected server chat requests to restrict unsafe template features")
+	}
 }
 
 func TestWriteSSEResponse_FormatsEventStreamChunk(t *testing.T) {

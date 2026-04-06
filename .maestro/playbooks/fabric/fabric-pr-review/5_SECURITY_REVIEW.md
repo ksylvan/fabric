@@ -110,10 +110,10 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
 
 - [x] **Pattern security**:
   - Note: Revalidated `internal/plugins/db/fsdb/patterns.go`, `internal/server/patterns.go`, and the storage boundary helpers; custom pattern lookup still allows same-name overrides by design but stays inside the configured custom/main pattern roots, and REST callers remain limited to configured pattern names instead of arbitrary file paths.
-  - Note: Revalidated pattern-variable handling in `internal/plugins/db/fsdb/patterns.go`; template substitution still requires explicitly named variables, preserves the `{{input}}` sentinel until the final replacement step, and does not introduce any new file-read or path-resolution path from request-supplied variable names.
-  - Note: Hardened `internal/plugins/template/extension_executor.go` so registered template extensions now execute via direct argv parsing (`shellquote.Split` + `exec.Command`) instead of `sh -c`, which closes shell metacharacter expansion and delegated command chaining from pattern-controlled extension values.
-  - Note: Moved extension command tracing off stdout and into debug logging so normal pattern execution no longer echoes full extension command lines.
-  - Note: Added regression coverage in `internal/plugins/template/extension_executor_test.go` for shell-metacharacter payloads and reran `go test ./internal/plugins/template ./internal/plugins/db/fsdb ./internal/server`.
+  - Note: Hardened server-side pattern execution so `/chat`, `/api/chat`, and `/patterns/:name/apply` now run under a restricted template policy: remote requests can still use safe `text` and `datetime` helpers, but `ext:` directives plus `sys`, `file`, and other non-allowlisted plugin namespaces are rejected before execution.
+  - Note: Hardened request-supplied pattern variables so remote callers can no longer smuggle nested template directives like `{{plugin:sys:env:HOME}}` or `{{ext:...}}` through otherwise benign variable placeholders; REST API variable values are now treated as literals instead of recursively executed template fragments.
+  - Note: Hardened `POST /patterns/:name` so the REST API refuses to persist unsafe pattern bodies that contain disabled directives or dynamic plugin namespaces, preventing authenticated API clients from storing patterns that would later reach the restricted execution path.
+  - Note: Added regression coverage in `internal/plugins/template/template_test.go`, `internal/core/chatter_test.go`, `internal/server/chat_test.go`, and `internal/server/patterns_test.go`, then reran `go test ./internal/plugins/template ./internal/server ./internal/plugins/db/fsdb` plus the chatter-focused subset `go test ./internal/core -run 'TestJoinPromptSections|TestRecordFirstStreamError|TestChatter_'`.
   - Custom patterns can't override system paths
   - Pattern variables are sanitized
   - No code execution via patterns

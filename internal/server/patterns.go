@@ -2,10 +2,12 @@ package restapi
 
 import (
 	"errors"
+	"io"
 	"maps"
 	"net/http"
 
 	"github.com/danielmiessler/fabric/internal/plugins/db/fsdb"
+	"github.com/danielmiessler/fabric/internal/plugins/template"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,7 +29,7 @@ func NewPatternsHandler(r *gin.Engine, patterns *fsdb.PatternsEntity) (ret *Patt
 	r.DELETE("/patterns/:name", ret.Delete)                 // From StorageHandler
 	r.GET("/patterns/exists/:name", ret.Exists)             // From StorageHandler
 	r.PUT("/patterns/rename/:oldName/:newName", ret.Rename) // From StorageHandler
-	r.POST("/patterns/:name", ret.Save)                     // From StorageHandler
+	r.POST("/patterns/:name", ret.Save)                     // Custom method with template safety checks
 	// Add POST route for patterns with variables in request body
 	r.POST("/patterns/:name/apply", ret.ApplyPattern)
 	return
@@ -96,9 +98,18 @@ func (h *PatternsHandler) ApplyPattern(c *gin.Context) {
 	}
 	maps.Copy(variables, request.Variables)
 
-	pattern, err := h.patterns.GetApplyVariablesFromDB(name, variables, request.Input)
+	pattern, err := h.patterns.GetApplyVariablesFromDBWithPolicy(
+		name,
+		variables,
+		request.Input,
+		&template.RemotePatternPolicy,
+	)
 	if err != nil {
 		if errors.Is(err, fsdb.ErrInvalidStorageName) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if errors.Is(err, template.ErrRestrictedTemplateFeature) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -106,4 +117,30 @@ func (h *PatternsHandler) ApplyPattern(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, pattern)
+}
+
+func (h *PatternsHandler) Save(c *gin.Context) {
+	name := c.Param("name")
+
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := template.ValidateTemplateContentWithPolicy(string(body), &template.RemotePatternPolicy); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.patterns.Save(name, body); err != nil {
+		if errors.Is(err, fsdb.ErrInvalidStorageName) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

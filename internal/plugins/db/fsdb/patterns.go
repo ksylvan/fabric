@@ -30,23 +30,31 @@ type Pattern struct {
 // GetApplyVariables main entry point for getting patterns from any source
 func (o *PatternsEntity) GetApplyVariables(
 	source string, variables map[string]string, input string) (pattern *Pattern, err error) {
+	return o.GetApplyVariablesWithPolicy(source, variables, input, nil)
+}
 
+func (o *PatternsEntity) GetApplyVariablesWithPolicy(
+	source string, variables map[string]string, input string, policy *template.ApplyPolicy) (pattern *Pattern, err error) {
 	if pattern, err = o.loadPattern(source); err != nil {
 		return
 	}
 
-	err = o.applyVariables(pattern, variables, input)
+	err = o.applyVariablesWithPolicy(pattern, variables, input, policy)
 	return
 }
 
 func (o *PatternsEntity) GetApplyVariablesFromDB(
 	name string, variables map[string]string, input string) (pattern *Pattern, err error) {
+	return o.GetApplyVariablesFromDBWithPolicy(name, variables, input, nil)
+}
 
+func (o *PatternsEntity) GetApplyVariablesFromDBWithPolicy(
+	name string, variables map[string]string, input string, policy *template.ApplyPolicy) (pattern *Pattern, err error) {
 	if pattern, err = o.getFromDB(name); err != nil {
 		return
 	}
 
-	err = o.applyVariables(pattern, variables, input)
+	err = o.applyVariablesWithPolicy(pattern, variables, input, policy)
 	return
 }
 
@@ -118,7 +126,11 @@ func (o *PatternsEntity) applyInput(pattern *Pattern, input string) {
 
 func (o *PatternsEntity) applyVariables(
 	pattern *Pattern, variables map[string]string, input string) (err error) {
+	return o.applyVariablesWithPolicy(pattern, variables, input, nil)
+}
 
+func (o *PatternsEntity) applyVariablesWithPolicy(
+	pattern *Pattern, variables map[string]string, input string, policy *template.ApplyPolicy) (err error) {
 	o.ensureInput(pattern)
 
 	// Temporarily replace {{input}} with a sentinel token to protect it
@@ -128,7 +140,7 @@ func (o *PatternsEntity) applyVariables(
 	// Process all other template variables in the pattern
 	// Pass the actual input so extension calls can use {{input}} within their value parameter
 	var processed string
-	if processed, err = template.ApplyTemplate(withSentinel, variables, input); err != nil {
+	if processed, err = template.ApplyTemplateWithPolicy(withSentinel, variables, input, policy); err != nil {
 		return
 	}
 

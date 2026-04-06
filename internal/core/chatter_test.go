@@ -310,6 +310,32 @@ func TestChatter_BuildSession_PatternFileAccessDependsOnRequestSource(t *testing
 	}
 }
 
+func TestChatter_BuildSession_RestrictTemplateFeaturesRejectsUnsafePatternPlugins(t *testing.T) {
+	db := fsdb.NewDb(t.TempDir())
+
+	patternDir := filepath.Join(db.Patterns.Dir, "unsafe-pattern")
+	if err := os.MkdirAll(patternDir, 0o755); err != nil {
+		t.Fatalf("failed to create pattern directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(patternDir, "system.md"), []byte("{{plugin:sys:env:HOME}}"), 0o644); err != nil {
+		t.Fatalf("failed to write pattern: %v", err)
+	}
+
+	chatter := &Chatter{db: db}
+	request := &domain.ChatRequest{
+		PatternName:              "unsafe-pattern",
+		RestrictTemplateFeatures: true,
+		Message: &chat.ChatCompletionMessage{
+			Role:    chat.ChatMessageRoleUser,
+			Content: "user input",
+		},
+	}
+
+	if _, err := chatter.BuildSession(request, false); err == nil {
+		t.Fatal("expected restricted template mode to reject unsafe pattern plugins")
+	}
+}
+
 func TestChatter_Send_StreamingErrorPropagation(t *testing.T) {
 	// Create a temporary database for testing
 	tempDir := t.TempDir()

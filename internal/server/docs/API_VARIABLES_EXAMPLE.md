@@ -102,4 +102,4 @@ For patterns that use multiple variables:
 - Variables are passed in the `variables` field as a key-value map
 - Variables are processed using Go's template system
 - The `{{input}}` variable is automatically handled and should not be included in the variables map
-- Variables support the same features as CLI variables (plugins, extensions, etc.)
+- REST API variables are treated as literal values; nested template directives and server-side plugin/extension execution are rejected.
