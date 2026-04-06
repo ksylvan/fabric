@@ -205,11 +205,15 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - The analyzer exited successfully with no diagnostics, so this pass did not identify modernization changes to carry into `GO_ISSUES.md`.
   - No task images were attached for this checklist item.
 
-- [ ] **Check formatting**: Run:
+- [x] **Check formatting**: Run:
   ```bash
   gofmt -l .
   ```
   Flag any unformatted files.
+  Notes from targeted review on 2026-04-05:
+  - Ran `gofmt -l .` from the repo root.
+  - The command produced no output, so there are no currently unformatted Go files to carry into `GO_ISSUES.md`.
+  - No task images were attached for this checklist item.
 
 - [ ] **Check vet**: Run:
   ```bash
