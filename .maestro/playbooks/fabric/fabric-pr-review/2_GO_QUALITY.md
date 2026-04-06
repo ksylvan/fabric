@@ -36,11 +36,17 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - Scoped files still lean on `fmt.Errorf` and `errors.New` more than `pkg/errors.Wrap`, so wrap-style consistency should be carried into the later consolidated Go issues document if the project wants to enforce that convention repo-wide.
   - Verified with `go test ./internal/tools/youtube ./internal/cli`.
 
-- [ ] **Context usage**: Check `context.Context` patterns:
+- [x] **Context usage**: Check `context.Context` patterns:
   - Context is the first parameter where applicable
   - Context is propagated through call chains
   - Cancellation is handled for long operations
   - Timeouts are set for external calls
+  Notes from targeted review on 2026-04-05:
+  - Reviewed the PR-added visual extraction path in `internal/cli/cli.go` and `internal/tools/youtube/youtube.go`.
+  - `internal/tools/youtube/youtube.go` adds a bounded execution window with `context.WithTimeout(context.Background(), 15*time.Minute)` and uses `exec.CommandContext` for `yt-dlp`, `ffmpeg`, and per-frame `tesseract` work, so the new subprocess-heavy flow does handle timeout-driven cancellation.
+  - The main gap is context propagation: `processYoutubeVideo`, `YouTube.Grab`, and `YouTube.GrabVisual` do not accept a caller-provided `context.Context`, so CLI/request cancellation cannot flow into the OCR pipeline and callers cannot supply their own deadline.
+  - `internal/cli/flags.go` and `internal/cli/help.go` only add surface area for the feature and do not affect context behavior.
+  - Carry the missing caller-propagated context into the later consolidated Go issues document as a Major issue if Fabric wants request-scoped cancellation on long-running YouTube operations.
 
 - [ ] **Interface compliance**: Verify interfaces:
   - Functions accept interfaces, return concrete types
