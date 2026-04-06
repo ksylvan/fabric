@@ -48,6 +48,8 @@ type StreamResponse struct {
 }
 
 const localDevCORSOrigin = "http://localhost:5173"
+const chatSSECacheControl = "no-cache, no-store, must-revalidate"
+const clientSafeChatErrorMessage = "chat request failed"
 
 func NewChatHandler(r *gin.Engine, registry *core.PluginRegistry, db *fsdb.Db) *ChatHandler {
 	handler := &ChatHandler{
@@ -87,8 +89,10 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 
 	// Set headers for SSE
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
-	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Cache-Control", chatSSECacheControl)
 	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("Pragma", "no-cache")
+	c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
 
 	clientGone := c.Request.Context().Done()
@@ -116,7 +120,7 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 				)
 				if err != nil {
 					log.Printf("Error creating chatter: %v", err)
-					streamChan <- domain.StreamUpdate{Type: domain.StreamTypeError, Content: fmt.Sprintf(i18n.T("server_chat_error"), err)}
+					streamChan <- newClientSafeChatErrorUpdate()
 					return
 				}
 
@@ -138,38 +142,23 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 				_, err = chatter.Send(c.Request.Context(), chatReq, opts)
 				if err != nil {
 					log.Printf("Error from chatter.Send: %v", err)
-					streamChan <- domain.StreamUpdate{
-						Type:    domain.StreamTypeError,
-						Content: fmt.Sprintf(i18n.T("server_chat_error"), err),
-					}
+					streamChan <- newClientSafeChatErrorUpdate()
 					return
 				}
 			}(prompt)
 
+			sawError := false
 			for update := range streamChan {
 				select {
 				case <-clientGone:
 					return
 				default:
-					var response StreamResponse
-					switch update.Type {
-					case domain.StreamTypeContent:
-						response = StreamResponse{
-							Type:    "content",
-							Format:  detectFormat(update.Content),
-							Content: update.Content,
-						}
-					case domain.StreamTypeUsage:
-						response = StreamResponse{
-							Type:  "usage",
-							Usage: update.Usage,
-						}
-					case domain.StreamTypeError:
-						response = StreamResponse{
-							Type:    "error",
-							Format:  "plain",
-							Content: update.Content,
-						}
+					response, ok := streamResponseForUpdate(update)
+					if !ok {
+						continue
+					}
+					if response.Type == "error" {
+						sawError = true
 					}
 
 					if err := writeSSEResponse(c.Writer, response); err != nil {
@@ -177,6 +166,9 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 						return
 					}
 				}
+			}
+			if sawError {
+				return
 			}
 
 			completeResponse := StreamResponse{
@@ -189,6 +181,37 @@ func (h *ChatHandler) HandleChat(c *gin.Context) {
 				return
 			}
 		}
+	}
+}
+
+func newClientSafeChatErrorUpdate() domain.StreamUpdate {
+	return domain.StreamUpdate{
+		Type:    domain.StreamTypeError,
+		Content: clientSafeChatErrorMessage,
+	}
+}
+
+func streamResponseForUpdate(update domain.StreamUpdate) (StreamResponse, bool) {
+	switch update.Type {
+	case domain.StreamTypeContent:
+		return StreamResponse{
+			Type:    "content",
+			Format:  detectFormat(update.Content),
+			Content: update.Content,
+		}, true
+	case domain.StreamTypeUsage:
+		return StreamResponse{
+			Type:  "usage",
+			Usage: update.Usage,
+		}, true
+	case domain.StreamTypeError:
+		return StreamResponse{
+			Type:    "error",
+			Format:  "plain",
+			Content: clientSafeChatErrorMessage,
+		}, true
+	default:
+		return StreamResponse{}, false
 	}
 }
 

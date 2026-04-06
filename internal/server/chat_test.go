@@ -2,14 +2,23 @@ package restapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/danielmiessler/fabric/internal/chat"
+	"github.com/danielmiessler/fabric/internal/core"
+	"github.com/danielmiessler/fabric/internal/domain"
 	debuglog "github.com/danielmiessler/fabric/internal/log"
+	"github.com/danielmiessler/fabric/internal/plugins"
+	"github.com/danielmiessler/fabric/internal/plugins/ai"
+	"github.com/danielmiessler/fabric/internal/plugins/db/fsdb"
+	"github.com/danielmiessler/fabric/internal/tools"
 	"github.com/gin-gonic/gin"
 )
 
@@ -128,11 +137,17 @@ func TestHandleChat_SetsEventStreamHeaders(t *testing.T) {
 	if got := recorder.Header().Get("Content-Type"); got != "text/event-stream" {
 		t.Fatalf("expected SSE content type, got %q", got)
 	}
-	if got := recorder.Header().Get("Cache-Control"); got != "no-cache" {
-		t.Fatalf("expected no-cache header, got %q", got)
+	if got := recorder.Header().Get("Cache-Control"); got != chatSSECacheControl {
+		t.Fatalf("expected cache-control header %q, got %q", chatSSECacheControl, got)
 	}
 	if got := recorder.Header().Get("Connection"); got != "keep-alive" {
 		t.Fatalf("expected keep-alive header, got %q", got)
+	}
+	if got := recorder.Header().Get("Pragma"); got != "no-cache" {
+		t.Fatalf("expected pragma header %q, got %q", "no-cache", got)
+	}
+	if got := recorder.Header().Get("X-Content-Type-Options"); got != "nosniff" {
+		t.Fatalf("expected nosniff header, got %q", got)
 	}
 	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "" {
 		t.Fatalf("expected no CORS header without a matching origin, got %q", got)
@@ -268,4 +283,82 @@ func TestHandleChat_RequestLoggingRespectsDebugLevel(t *testing.T) {
 			t.Fatalf("expected debug request logging at basic level, got %q", got)
 		}
 	})
+}
+
+func TestHandleChat_RedactsBackendErrorsFromSSEStream(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	handler := &ChatHandler{
+		registry: newStreamingErrorRegistry(t, errors.New("backend failed with sk-test-secret from /tmp/fabric-secret")),
+	}
+
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+	ctx.Request = httptest.NewRequest(
+		http.MethodPost,
+		"/chat",
+		strings.NewReader(`{"prompts":[{"userInput":"hello"}],"language":"en"}`),
+	)
+	ctx.Request.Header.Set("Content-Type", "application/json")
+
+	handler.HandleChat(ctx)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusOK, recorder.Code)
+	}
+
+	body := recorder.Body.String()
+	if !strings.Contains(body, `"type":"error"`) {
+		t.Fatalf("expected error event in SSE stream, got %q", body)
+	}
+	if strings.Contains(body, "sk-test-secret") || strings.Contains(body, "/tmp/fabric-secret") {
+		t.Fatalf("expected SSE stream to redact backend details, got %q", body)
+	}
+	if !strings.Contains(body, clientSafeChatErrorMessage) {
+		t.Fatalf("expected generic chat error message, got %q", body)
+	}
+	if strings.Contains(body, `"type":"complete"`) {
+		t.Fatalf("expected errored stream to stop without a completion event, got %q", body)
+	}
+}
+
+type streamingErrorVendor struct {
+	err error
+}
+
+func (v *streamingErrorVendor) GetName() string                       { return "TestVendor" }
+func (v *streamingErrorVendor) GetSetupDescription() string           { return "TestVendor" }
+func (v *streamingErrorVendor) IsConfigured() bool                    { return true }
+func (v *streamingErrorVendor) Configure() error                      { return nil }
+func (v *streamingErrorVendor) Setup() error                          { return nil }
+func (v *streamingErrorVendor) SetupFillEnvFileContent(*bytes.Buffer) {}
+func (v *streamingErrorVendor) ListModels(context.Context) ([]string, error) {
+	return []string{"test-model"}, nil
+}
+func (v *streamingErrorVendor) SendStream(_ context.Context, _ []*chat.ChatCompletionMessage, _ *domain.ChatOptions, updates chan domain.StreamUpdate) error {
+	close(updates)
+	return v.err
+}
+func (v *streamingErrorVendor) Send(context.Context, []*chat.ChatCompletionMessage, *domain.ChatOptions) (string, error) {
+	return "", v.err
+}
+func (v *streamingErrorVendor) NeedsRawMode(string) bool { return false }
+
+func newStreamingErrorRegistry(t *testing.T, sendErr error) *core.PluginRegistry {
+	t.Helper()
+
+	db := fsdb.NewDb(t.TempDir())
+	vendorManager := ai.NewVendorsManager()
+	vendorManager.AddVendors(&streamingErrorVendor{err: sendErr})
+
+	return &core.PluginRegistry{
+		Db:            db,
+		VendorManager: vendorManager,
+		Defaults: &tools.Defaults{
+			PluginBase:         &plugins.PluginBase{},
+			Vendor:             &plugins.Setting{Value: "TestVendor"},
+			Model:              &plugins.SetupQuestion{Setting: &plugins.Setting{Value: "test-model"}},
+			ModelContextLength: &plugins.SetupQuestion{Setting: &plugins.Setting{Value: "0"}},
+		},
+	}
 }

@@ -776,6 +776,8 @@ fabric --serve
 
 By default Fabric binds the REST API to `127.0.0.1:8080`. To expose it on a non-loopback interface, also set `--api-key`.
 
+API-key-protected server mode also applies a per-client rate limit to reduce brute-force and burst abuse. Use a reverse proxy if you need stricter edge controls.
+
 The server provides endpoints for:
 
 - Chat completions with streaming responses

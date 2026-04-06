@@ -38,6 +38,7 @@ func Serve(registry *core.PluginRegistry, address string, apiKey string) (err er
 	r.Use(gin.Recovery())
 
 	if apiKey != "" {
+		r.Use(newProtectedRoutesRateLimitMiddleware())
 		r.Use(APIKeyMiddleware(apiKey))
 	} else {
 		slog.Info("Starting REST API server on loopback without API key authentication", "address", address)

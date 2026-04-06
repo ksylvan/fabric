@@ -489,7 +489,9 @@ Error responses include JSON with details:
 
 ## Rate Limiting
 
-The server does not implement rate limiting. When deploying publicly, use a reverse proxy (nginx, Caddy) with rate limiting enabled.
+When you enable `--api-key`, Fabric applies a built-in per-client rate limit of 60 requests per minute across REST API routes. This helps absorb credential-guessing and burst abuse before requests reach the handler layer.
+
+For internet-facing deployments, still put Fabric behind a reverse proxy (nginx, Caddy, Traefik, etc.) so you can enforce stricter quotas, IP reputation controls, and edge-layer logging.
 
 ## Request Size Limits
 
