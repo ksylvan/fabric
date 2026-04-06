@@ -147,7 +147,7 @@ func processYoutubeVideo(
 		} else if registry.Language.DefaultLanguage.Value != "" {
 			language = registry.Language.DefaultLanguage.Value
 		}
-		if visualText, err = registry.YouTube.GrabVisual(videoId, language, flags.YtDlpArgs, flags.YouTubeVisualSensitivity, flags.YouTubeVisualFps); err != nil {
+		if visualText, err = registry.YouTube.GrabVisual(videoId, language, flags.YtDlpArgs, flags.YouTubeVisualSensitivity, flags.YouTubeVisualFPS); err != nil {
 			return
 		}
 		message = AppendMessage(message, visualText)

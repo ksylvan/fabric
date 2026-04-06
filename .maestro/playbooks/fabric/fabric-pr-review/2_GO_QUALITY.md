@@ -76,11 +76,17 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - `internal/cli/cli.go` (203 lines) and `internal/cli/help.go` (289 lines) remain focused; `internal/cli/flags.go` is larger at 573 lines but still stays within the package's flag/config parsing responsibility.
   - Verified with `go test ./internal/tools/youtube ./internal/cli`.
 
-- [ ] **Naming conventions**: Verify:
+- [x] **Naming conventions**: Verify:
   - CamelCase for exported identifiers
   - camelCase for unexported identifiers
   - Meaningful, descriptive names
   - Acronyms are all caps (HTTP, API, ID)
+  Notes from targeted review/fix on 2026-04-05:
+  - Reviewed the PR-touched Go files in scope: `internal/tools/youtube/youtube.go`, `internal/cli/cli.go`, `internal/cli/flags.go`, and `internal/cli/help.go`; no task images were attached for this checklist item.
+  - The exported additions in scope remain descriptive and use CamelCase (`GrabVisual`, `VisualText`, `YouTubeVisualSensitivity`), while the new unexported locals added for the OCR path stay camelCase.
+  - Normalized the new acronym-bearing identifiers introduced by this PR so `FPS` and `URL` now follow Go initialism style in the changed code (`YouTubeVisualFPS`, `VisualFPS`, `cmdURL`, `streamURL`) instead of mixed-case variants.
+  - The package still contains older `Id` and `YtDlp` spellings such as `videoId`, `ChannelId`, and `YtDlpArgs`; those predate this task and should be treated as broader repo-level cleanup if strict Go initialism consistency is desired.
+  - Verified with `go test ./internal/tools/youtube ./internal/cli`.
 
 - [ ] **Documentation**: Check:
   - Exported functions have doc comments

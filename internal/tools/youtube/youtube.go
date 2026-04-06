@@ -606,7 +606,7 @@ func (o *YouTube) Grab(url string, options *Options) (ret *VideoInfo, err error)
 
 	if options.Visual {
 		// Currently defaults to 'en' and no extra args, similar to transcript default behavior in Grab
-		if ret.VisualText, err = o.GrabVisual(videoId, options.Lang, options.YtDlpArgs, options.VisualSensitivity, options.VisualFps); err != nil {
+		if ret.VisualText, err = o.GrabVisual(videoId, options.Lang, options.YtDlpArgs, options.VisualSensitivity, options.VisualFPS); err != nil {
 			return
 		}
 	}
@@ -773,7 +773,7 @@ type Options struct {
 	TranscriptWithTimestamps bool
 	Visual                   bool
 	VisualSensitivity        float64
-	VisualFps                int
+	VisualFPS                int
 	Comments                 bool
 	Lang                     string
 	Metadata                 bool
@@ -842,7 +842,7 @@ func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 	flag.BoolVar(&options.TranscriptWithTimestamps, "transcriptWithTimestamps", false, "Output only the transcript with timestamps")
 	flag.BoolVar(&options.Visual, "visual", false, i18n.T("youtube_extract_visual_data_help"))
 	flag.Float64Var(&options.VisualSensitivity, "visual-sensitivity", 0.4, i18n.T("youtube_visual_sensitivity_help"))
-	flag.IntVar(&options.VisualFps, "visual-fps", 0, i18n.T("youtube_visual_fps_help"))
+	flag.IntVar(&options.VisualFPS, "visual-fps", 0, i18n.T("youtube_visual_fps_help"))
 	flag.BoolVar(&options.Comments, "comments", false, "Output the comments on the video")
 	flag.StringVar(&options.Lang, "lang", "en", "Language for the transcript (default: English)")
 	flag.BoolVar(&options.Metadata, "metadata", false, "Output video metadata")
@@ -891,21 +891,21 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 	}
 	ytArgs = append(ytArgs, "--", videoURL)
 
-	cmdUrl := exec.CommandContext(ctx, "yt-dlp", ytArgs...)
-	urlBytes, err := cmdUrl.Output()
+	cmdURL := exec.CommandContext(ctx, "yt-dlp", ytArgs...)
+	urlBytes, err := cmdURL.Output()
 	if err != nil {
 		return "", fmt.Errorf(i18n.T("youtube_failed_get_stream_url"), err)
 	}
 
 	streamUrls := strings.Split(strings.TrimSpace(string(urlBytes)), "\n")
-	var streamUrl string
+	var streamURL string
 	for _, u := range streamUrls {
 		if strings.HasPrefix(u, "http") {
-			streamUrl = strings.TrimSpace(u)
+			streamURL = strings.TrimSpace(u)
 			break
 		}
 	}
-	if streamUrl == "" {
+	if streamURL == "" {
 		return "", errors.New(i18n.T("youtube_failed_parse_http_stream_url"))
 	}
 
@@ -917,7 +917,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 	}
 
 	framePattern := filepath.Join(tempDir, "frame_%04d.jpg")
-	cmdFfmpeg := exec.CommandContext(ctx, "ffmpeg", "-i", streamUrl, "-vf", filter, "-fps_mode", "vfr", framePattern)
+	cmdFfmpeg := exec.CommandContext(ctx, "ffmpeg", "-i", streamURL, "-vf", filter, "-fps_mode", "vfr", framePattern)
 	if _, err := cmdFfmpeg.CombinedOutput(); err != nil {
 		return "", fmt.Errorf(i18n.T("youtube_ffmpeg_frame_extraction_failed"), err)
 	}
