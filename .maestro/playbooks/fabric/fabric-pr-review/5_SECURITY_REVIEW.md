@@ -108,7 +108,12 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
   - OAuth tokens properly managed
   - Key rotation considerations
 
-- [ ] **Pattern security**:
+- [x] **Pattern security**:
+  - Note: Revalidated `internal/plugins/db/fsdb/patterns.go`, `internal/server/patterns.go`, and the storage boundary helpers; custom pattern lookup still allows same-name overrides by design but stays inside the configured custom/main pattern roots, and REST callers remain limited to configured pattern names instead of arbitrary file paths.
+  - Note: Revalidated pattern-variable handling in `internal/plugins/db/fsdb/patterns.go`; template substitution still requires explicitly named variables, preserves the `{{input}}` sentinel until the final replacement step, and does not introduce any new file-read or path-resolution path from request-supplied variable names.
+  - Note: Hardened `internal/plugins/template/extension_executor.go` so registered template extensions now execute via direct argv parsing (`shellquote.Split` + `exec.Command`) instead of `sh -c`, which closes shell metacharacter expansion and delegated command chaining from pattern-controlled extension values.
+  - Note: Moved extension command tracing off stdout and into debug logging so normal pattern execution no longer echoes full extension command lines.
+  - Note: Added regression coverage in `internal/plugins/template/extension_executor_test.go` for shell-metacharacter payloads and reran `go test ./internal/plugins/template ./internal/plugins/db/fsdb ./internal/server`.
   - Custom patterns can't override system paths
   - Pattern variables are sanitized
   - No code execution via patterns

@@ -21,6 +21,9 @@ case "$1" in
     "stdout")
         echo "Hello, $2!"
         ;;
+    "args")
+        echo "$2"
+        ;;
     "file")
         echo "Hello, $2!" > "$3"
         echo "$3"  # Print the filename for path_from_stdout
@@ -69,6 +72,41 @@ config:
 		expected := "Hello, World!\n"
 		if output != expected {
 			t.Errorf("Expected output %q, got %q", expected, output)
+		}
+	})
+
+	t.Run("DisablesShellInjectionFromValue", func(t *testing.T) {
+		configPath := filepath.Join(tmpDir, "argv-extension.yaml")
+		configContent := `name: argv-test
+executable: ` + testScript + `
+type: executable
+timeout: 30s
+operations:
+  inspect:
+    cmd_template: "{{executable}} args {{1}}"
+config:
+  output:
+    method: stdout`
+
+		if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
+			t.Fatalf("Failed to create config: %v", err)
+		}
+
+		if err := registry.Register(configPath); err != nil {
+			t.Fatalf("Failed to register extension: %v", err)
+		}
+
+		markerPath := filepath.Join(tmpDir, "should-not-exist")
+		output, err := executor.Execute("argv-test", "inspect", "safe; touch "+markerPath)
+		if err != nil {
+			t.Fatalf("Failed to execute: %v", err)
+		}
+
+		if !strings.Contains(output, "safe") {
+			t.Fatalf("Expected output to include literal argument, got %q", output)
+		}
+		if _, err := os.Stat(markerPath); !os.IsNotExist(err) {
+			t.Fatalf("expected %s to remain absent, stat err=%v", markerPath, err)
 		}
 	})
 

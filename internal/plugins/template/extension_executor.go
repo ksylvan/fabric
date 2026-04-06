@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/danielmiessler/fabric/internal/i18n"
+	debuglog "github.com/danielmiessler/fabric/internal/log"
+	"github.com/kballard/go-shellquote"
 )
 
 // ExtensionExecutor handles the secure execution of extensions
@@ -46,15 +48,12 @@ func (e *ExtensionExecutor) Execute(name, operation, value string) (string, erro
 		return "", fmt.Errorf(i18n.T("extension_failed_format_command"), err)
 	}
 
-	// Split the command string into command and arguments
-	cmdParts := strings.Fields(cmdStr)
-	if len(cmdParts) < 1 {
-		return "", errors.New(i18n.T("extension_empty_command"))
+	// Parse into discrete argv entries so pattern-controlled values do not
+	// inherit shell expansion or command chaining semantics.
+	cmd, err := buildExtensionCommand(cmdStr)
+	if err != nil {
+		return "", err
 	}
-
-	// Create command with the Executable and formatted arguments
-	cmd := exec.Command("sh", "-c", cmdStr)
-	//cmd := exec.Command(cmdParts[0], cmdParts[1:]...)
 
 	// Set up environment if specified
 	if len(ext.Env) > 0 {
@@ -92,6 +91,17 @@ func (e *ExtensionExecutor) formatCommand(ext *ExtensionDefinition, operation st
 	return ApplyTemplate(opConfig.CmdTemplate, vars, "")
 }
 
+func buildExtensionCommand(cmdStr string) (*exec.Cmd, error) {
+	cmdParts, err := shellquote.Split(cmdStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse extension command: %w", err)
+	}
+	if len(cmdParts) == 0 {
+		return nil, errors.New(i18n.T("extension_empty_command"))
+	}
+	return exec.Command(cmdParts[0], cmdParts[1:]...), nil
+}
+
 // executeStdout runs the command and captures its stdout
 func (e *ExtensionExecutor) executeStdout(cmd *exec.Cmd, ext *ExtensionDefinition) (string, error) {
 	var stdout bytes.Buffer
@@ -99,8 +109,7 @@ func (e *ExtensionExecutor) executeStdout(cmd *exec.Cmd, ext *ExtensionDefinitio
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	//debug output
-	fmt.Printf(i18n.T("extension_executing_command"), cmd.String())
+	debuglog.Debug(debuglog.Detailed, i18n.T("extension_executing_command"), cmd.String())
 
 	if err := cmd.Run(); err != nil {
 		return "", fmt.Errorf(i18n.T("extension_execution_failed_stderr"), err, stderr.String())
