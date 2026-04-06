@@ -63,3 +63,59 @@ func TestDetectErrorTraceLoggingRedactsURLs(t *testing.T) {
 		t.Fatalf("expected trace log output to include redacted URL marker, got %q", logged)
 	}
 }
+
+func TestBuildSafeYTDlpArgsRejectsDangerousFlags(t *testing.T) {
+	t.Parallel()
+
+	testCases := []string{
+		"--exec=sh -c 'echo hacked'",
+		"--config-locations /tmp/yt-dlp.conf",
+		"--plugin-dirs=/tmp/plugins",
+		"--alias safe '--exec echo hacked'",
+	}
+
+	for _, additionalArgs := range testCases {
+		additionalArgs := additionalArgs
+		t.Run(additionalArgs, func(t *testing.T) {
+			t.Parallel()
+
+			_, err := buildSafeYTDlpArgs([]string{"--get-url"}, additionalArgs)
+			if err == nil {
+				t.Fatalf("expected %q to be rejected", additionalArgs)
+			}
+			if !strings.Contains(err.Error(), "invalid yt-dlp arguments") {
+				t.Fatalf("expected yt-dlp validation error, got %q", err.Error())
+			}
+		})
+	}
+}
+
+func TestBuildSafeYTDlpArgsAllowsExpectedAuthenticationFlags(t *testing.T) {
+	t.Parallel()
+
+	got, err := buildSafeYTDlpArgs(
+		[]string{"--write-auto-subs"},
+		"--cookies-from-browser brave --sleep-requests 2",
+	)
+	if err != nil {
+		t.Fatalf("buildSafeYTDlpArgs returned error: %v", err)
+	}
+
+	want := []string{
+		"--ignore-config",
+		"--write-auto-subs",
+		"--cookies-from-browser",
+		"brave",
+		"--sleep-requests",
+		"2",
+	}
+
+	if len(got) != len(want) {
+		t.Fatalf("expected %d args, got %d (%q)", len(want), len(got), strings.Join(got, " "))
+	}
+	for i, wantArg := range want {
+		if got[i] != wantArg {
+			t.Fatalf("expected arg %d to be %q, got %q", i, wantArg, got[i])
+		}
+	}
+}

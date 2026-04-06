@@ -58,7 +58,7 @@ fabric -y "https://www.youtube.com/watch?v=VIDEO_ID" --metadata
 
 ### Custom yt-dlp Arguments
 
-Pass additional arguments to yt-dlp for advanced functionality. **User-provided arguments take precedence** over built-in fabric arguments, giving you full control:
+Pass additional arguments to yt-dlp for advanced functionality. User-provided arguments still override most built-in transcript settings, but Fabric keeps a small fixed safety boundary around the embedded `yt-dlp` subprocess:
 
 ```bash
 # Use browser cookies for age-restricted or private videos
@@ -83,16 +83,19 @@ fabric -y "https://www.youtube.com/watch?v=VIDEO_ID" --yt-dlp-args="--cookies-fr
 fabric -y "https://www.youtube.com/watch?v=VIDEO_ID" --yt-dlp-args="--sub-format srt"
 ```
 
+Fabric always adds `--ignore-config` so your ambient `yt-dlp` config files do not change Fabric's behavior, and it rejects security-sensitive passthrough flags such as `--exec`, `--config-locations`, `--plugin-dirs`, and `--alias`.
+
 #### Argument Precedence
 
 Fabric constructs the yt-dlp command in this order:
 
-1. **Built-in base arguments** (`--write-auto-subs`, `--skip-download`, etc.)
-2. **Language selection** (from `-g` flag): `--sub-langs LANGUAGE`
-3. **User arguments** (from `--yt-dlp-args`): **These override any conflicting built-in arguments**
-4. **Video URL**
+1. **Fabric safety flags** (`--ignore-config`)
+2. **Built-in base arguments** (`--write-auto-subs`, `--skip-download`, etc.)
+3. **Language selection** (from `-g` flag): `--sub-langs LANGUAGE`
+4. **User arguments** (from `--yt-dlp-args`): these override conflicting transcript settings unless they are blocked for safety
+5. **Video URL**
 
-This means you can override any built-in behavior by specifying it in `--yt-dlp-args`.
+This means you can still override most built-in transcript behavior by specifying it in `--yt-dlp-args`, but not the fixed safety controls above.
 
 ### Playlist Processing
 
@@ -255,7 +258,7 @@ export FABRIC_YOUTUBE_API_KEY="your_api_key_here"
 5. **Language support**: Specify language codes for better transcript accuracy
 6. **Rate limiting**: If you encounter 429 errors, use `--sleep-requests 1` to slow down requests
 7. **Persistent settings**: Set common yt-dlp args in your config file to avoid repeating them
-8. **Argument precedence**: Use `--yt-dlp-args` to override any built-in behavior when needed
+8. **Argument precedence**: Use `--yt-dlp-args` to override most built-in behavior when needed
 9. **Testing**: Use `yt-dlp --list-subs URL` to see available subtitle languages before processing
 
 ## Examples

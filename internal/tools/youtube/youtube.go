@@ -62,6 +62,13 @@ var sensitiveYtFlags = map[string]struct{}{
 	"-u":                     {},
 }
 
+var blockedYtFlags = map[string]struct{}{
+	"--alias":            {},
+	"--config-locations": {},
+	"--exec":             {},
+	"--plugin-dirs":      {},
+}
+
 // TimeGapForRepeats defines the minimum gap in seconds before duplicate lines are kept.
 const TimeGapForRepeats = 10
 
@@ -270,8 +277,6 @@ func (o *YouTube) tryMethodYtDlpInternal(videoId string, language string, additi
 		"-o", outputPath,
 	}
 
-	args := append([]string{}, baseArgs...)
-
 	// Add built-in language selection first
 	if language != "" {
 		langMatch := language[:2]
@@ -279,16 +284,12 @@ func (o *YouTube) tryMethodYtDlpInternal(videoId string, language string, additi
 		if langMatch != language {
 			langOpts += "," + langMatch
 		}
-		args = append(args, "--sub-langs", langOpts)
+		baseArgs = append(baseArgs, "--sub-langs", langOpts)
 	}
 
-	// Add user-provided arguments last so they take precedence
-	if additionalArgs != "" {
-		additionalArgsList, err := shellquote.Split(additionalArgs)
-		if err != nil {
-			return "", fmt.Errorf("%s", fmt.Sprintf(i18n.T("youtube_invalid_ytdlp_arguments"), err))
-		}
-		args = append(args, additionalArgsList...)
+	args, err := buildSafeYTDlpArgs(baseArgs, additionalArgs)
+	if err != nil {
+		return "", err
 	}
 
 	args = append(args, videoURL)
@@ -484,6 +485,47 @@ func sanitizeYTLogText(text string) string {
 	text = urlLogRegex.ReplaceAllString(text, "<redacted-url>")
 	text = sensitiveYtArgRegex.ReplaceAllString(text, "${1}=<redacted>")
 	return text
+}
+
+// buildSafeYTDlpArgs applies Fabric's fixed yt-dlp flags and rejects subprocess-expanding options.
+func buildSafeYTDlpArgs(baseArgs []string, additionalArgs string) ([]string, error) {
+	args := make([]string, 0, len(baseArgs)+1)
+	args = append(args, "--ignore-config")
+	args = append(args, baseArgs...)
+
+	if additionalArgs == "" {
+		return args, nil
+	}
+
+	parsed, err := shellquote.Split(additionalArgs)
+	if err != nil {
+		return nil, fmt.Errorf(i18n.T("youtube_invalid_ytdlp_arguments"), err)
+	}
+
+	for _, arg := range parsed {
+		if blockedFlag, blocked := blockedYTDlpFlag(arg); blocked {
+			return nil, fmt.Errorf(
+				i18n.T("youtube_invalid_ytdlp_arguments"),
+				fmt.Errorf("unsupported yt-dlp option %q", blockedFlag),
+			)
+		}
+	}
+
+	return append(args, parsed...), nil
+}
+
+func blockedYTDlpFlag(arg string) (string, bool) {
+	if !strings.HasPrefix(arg, "-") {
+		return "", false
+	}
+
+	flagName := arg
+	if name, _, hasValue := strings.Cut(arg, "="); hasValue {
+		flagName = name
+	}
+
+	_, blocked := blockedYtFlags[flagName]
+	return flagName, blocked
 }
 
 // shouldIncludeRepeat determines if repeated content should be included based on time gap
@@ -956,17 +998,14 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 	videoURL := "https://www.youtube.com/watch?v=" + videoId
 
 	// Resolve the direct media stream first so FFmpeg can process it without a full download.
-	ytArgs := []string{"-f", "bv", "--get-url"}
-	if additionalArgs != "" {
-		parsed, parseErr := shellquote.Split(additionalArgs)
-		if parseErr != nil {
-			return "", fmt.Errorf(i18n.T("youtube_invalid_ytdlp_arguments"), parseErr)
-		}
-		ytArgs = append(ytArgs, parsed...)
+	ytArgs, err := buildSafeYTDlpArgs([]string{"-f", "bv", "--get-url"}, additionalArgs)
+	if err != nil {
+		return "", err
 	}
 	ytArgs = append(ytArgs, "--", videoURL)
 
 	cmdURL := exec.CommandContext(ctx, "yt-dlp", ytArgs...)
+	debuglog.Debug(debuglog.Trace, "yt-dlp %+v\n", sanitizeYTArgs(cmdURL.Args))
 	urlBytes, err := cmdURL.Output()
 	if err != nil {
 		return "", fmt.Errorf(i18n.T("youtube_failed_get_stream_url"), err)
