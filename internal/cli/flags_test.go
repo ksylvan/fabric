@@ -120,6 +120,9 @@ temperature: 0.9
 model: gpt-4
 pattern: analyze
 stream: true
+visual: true
+visualSensitivity: 0.25
+visualFPS: 3
 `
 	tmpfile, err := os.CreateTemp("", "config.*.yaml")
 	if err != nil {
@@ -146,13 +149,22 @@ stream: true
 		assert.Equal(t, "gpt-4", flags.Model)
 		assert.Equal(t, "analyze", flags.Pattern)
 		assert.True(t, flags.Stream)
+		assert.True(t, flags.YouTubeVisual)
+		assert.Equal(t, 0.25, flags.YouTubeVisualSensitivity)
+		assert.Equal(t, 3, flags.YouTubeVisualFPS)
 	})
 
 	// Test 2: CLI overrides YAML
 	t.Run("CLI overrides YAML", func(t *testing.T) {
 		oldArgs := os.Args
 		defer func() { os.Args = oldArgs }()
-		os.Args = []string{"cmd", "--config", tmpfile.Name(), "--temperature", "0.7", "--model", "gpt-3.5-turbo"}
+		os.Args = []string{
+			"cmd", "--config", tmpfile.Name(),
+			"--temperature", "0.7",
+			"--model", "gpt-3.5-turbo",
+			"--visual-sensitivity", "0.6",
+			"--visual-fps", "5",
+		}
 
 		flags, err := Init()
 		assert.NoError(t, err)
@@ -160,6 +172,9 @@ stream: true
 		assert.Equal(t, "gpt-3.5-turbo", flags.Model)
 		assert.Equal(t, "analyze", flags.Pattern) // unchanged from YAML
 		assert.True(t, flags.Stream)              // unchanged from YAML
+		assert.True(t, flags.YouTubeVisual)       // unchanged from YAML
+		assert.Equal(t, 0.6, flags.YouTubeVisualSensitivity)
+		assert.Equal(t, 5, flags.YouTubeVisualFPS)
 	})
 
 	// Test 3: Invalid YAML config

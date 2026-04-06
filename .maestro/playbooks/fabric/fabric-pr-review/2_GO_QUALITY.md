@@ -170,10 +170,17 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - Context cancellation is still a broader pre-existing inconsistency in some provider implementations because several `ListModels` and `SendStream` methods accept `context.Context` but ignore it via `_ context.Context`; that is worth carrying into the later consolidated Go issues document as existing tech debt, but it is not a regression introduced by this PR.
   - Verified with `go test ./internal/plugins/... ./internal/core`.
 
-- [ ] **Configuration patterns**: For config changes:
+- [x] **Configuration patterns**: For config changes:
   - Environment variables via `godotenv`
   - Flags via `go-flags`
   - YAML config support
+  Notes from targeted review/fix on 2026-04-05:
+  - Reviewed the PR-touched configuration surface in `internal/cli/flags.go`, `internal/cli/cli.go`, `internal/cli/help.go`, `internal/plugins/db/fsdb/db.go`, and `internal/cli/flags_test.go`; no task images were attached for this checklist item.
+  - The branch correctly exposes the new visual extraction settings through `go-flags`, and the existing environment-file path remains unchanged through `internal/plugins/db/fsdb/db.go`, which still loads persisted settings from `~/.config/fabric/.env` via `godotenv`.
+  - The concrete regression in this PR slice was YAML support: the new `--visual`, `--visual-sensitivity`, and `--visual-fps` flags were added without `yaml` tags, so `config.yaml` defaults could not drive the new YouTube visual extraction feature even though the rest of Fabric's config loader expects tagged fields.
+  - Added `yaml:"visual"`, `yaml:"visualSensitivity"`, and `yaml:"visualFPS"` to the new flags so they now participate in the established CLI-over-YAML merge path.
+  - Extended `internal/cli/flags_test.go` to cover both YAML loading and CLI override behavior for the new visual settings, which locks in the expected configuration precedence.
+  - Verified with `go test ./internal/cli ./internal/plugins/db/fsdb`.
 
 - [ ] **Logging patterns**: For logging:
   - Use standard `log` package
