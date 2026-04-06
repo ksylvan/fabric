@@ -83,7 +83,7 @@ fabric -y "https://www.youtube.com/watch?v=VIDEO_ID" --yt-dlp-args="--cookies-fr
 fabric -y "https://www.youtube.com/watch?v=VIDEO_ID" --yt-dlp-args="--sub-format srt"
 ```
 
-Fabric always adds `--ignore-config` so your ambient `yt-dlp` config files do not change Fabric's behavior, and it rejects security-sensitive passthrough flags such as `--exec`, `--config-locations`, `--plugin-dirs`, and `--alias`.
+Fabric always adds `--ignore-config` so your ambient `yt-dlp` config files do not change Fabric's behavior, and it rejects security-sensitive passthrough flags such as `--exec`, `--exec-before-download`, `--config-locations`, `--plugin-dirs`, and `--alias`.
 
 #### Argument Precedence
 
