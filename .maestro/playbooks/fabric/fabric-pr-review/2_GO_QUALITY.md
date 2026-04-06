@@ -103,11 +103,18 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
 
 ### Task 4: Review Concurrency
 
-- [ ] **Goroutine safety**: Look for:
+- [x] **Goroutine safety**: Look for:
   - Race conditions on shared state
   - Proper channel usage (closing, direction)
   - Context-aware goroutines
   - No goroutine leaks
+  Notes from targeted review/fix on 2026-04-05:
+  - Reviewed the PR-touched Go files in scope: `internal/tools/youtube/youtube.go`, `internal/cli/cli.go`, `internal/cli/flags.go`, and `internal/cli/help.go`; no task images were attached for this checklist item.
+  - The only new goroutine fan-out in scope is the OCR worker loop inside `internal/tools/youtube/youtube.go`; the CLI files do not introduce goroutines, channels, or other shared-state concurrency.
+  - The current worker coordination is race-safe in the reviewed path: each goroutine writes to its own `results[idx]` slot, error aggregation is guarded by `sync.Mutex`, and semaphore tokens are released with `defer`, so the bounded worker pool does not leak permits on early returns.
+  - The subprocess-heavy OCR work is at least internally cancellation-aware because each worker uses the shared timeout-bound context with `exec.CommandContext`, which means the goroutines do not outlive the 15-minute extraction deadline even if `tesseract` stalls.
+  - Added `TestGrabVisualParallelOCRPreservesFrameOrder` to exercise the parallel OCR path with out-of-order worker completion and confirm the final output remains deterministic while the race detector stays clean.
+  - Verified with `go test ./internal/tools/youtube` and `go test -race ./internal/tools/youtube`.
 
 - [ ] **Streaming**: For streaming responses:
   - Channels are properly buffered

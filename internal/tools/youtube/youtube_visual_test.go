@@ -56,6 +56,46 @@ func TestGrabVisualRedactsTesseractStderr(t *testing.T) {
 	}
 }
 
+func TestGrabVisualParallelOCRPreservesFrameOrder(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("unix shell fixture")
+	}
+
+	binDir := t.TempDir()
+	writeExecutable(t, binDir, "yt-dlp", "#!/bin/sh\nprintf '%s\\n' 'https://cdn.example.com/video'\n")
+	writeExecutable(t, binDir, "ffmpeg", "#!/bin/sh\nlast=''\nfor arg in \"$@\"; do\n\tlast=\"$arg\"\ndone\nfor n in 1 2 3; do\n\tframe=$(printf '%s' \"$last\" | sed \"s/%04d/$(printf '%04d' \"$n\")/\")\n\t: > \"$frame\"\ndone\n")
+	writeExecutable(t, binDir, "tesseract", "#!/bin/sh\nbase=$(basename \"$1\")\ncase \"$base\" in\n\tframe_0001.jpg)\n\t\tsleep 0.03\n\t\tprintf '%s\\n' 'recognized text frame one'\n\t\t;;\n\tframe_0002.jpg)\n\t\tsleep 0.01\n\t\tprintf '%s\\n' 'recognized text frame two'\n\t\t;;\n\tframe_0003.jpg)\n\t\tsleep 0.02\n\t\tprintf '%s\\n' 'recognized text frame three'\n\t\t;;\n\tesac\n")
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	yt := NewYouTube()
+	got, err := yt.GrabVisual("video123", "en", "", 0.4, 0)
+	if err != nil {
+		t.Fatalf("GrabVisual returned error: %v", err)
+	}
+
+	expectedOrder := []string{
+		"recognized text frame one",
+		"recognized text frame two",
+		"recognized text frame three",
+	}
+
+	lastIndex := -1
+	for _, want := range expectedOrder {
+		currentIndex := strings.Index(got, want)
+		if currentIndex == -1 {
+			t.Fatalf("expected output to include %q, got %q", want, got)
+		}
+		if currentIndex <= lastIndex {
+			t.Fatalf("expected %q to appear after the previous frame text, got %q", want, got)
+		}
+		lastIndex = currentIndex
+	}
+
+	if count := strings.Count(got, "-->"); count != 3 {
+		t.Fatalf("expected three visual cues, got %d in %q", count, got)
+	}
+}
+
 func writeExecutable(t *testing.T, dir, name, content string) {
 	t.Helper()
 
