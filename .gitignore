@@ -328,11 +328,5 @@ tmp/
 # Claude MEMORY directory
 MEMORY/
 
-<<<<<<< HEAD
 # Maestro artifacts
 .maestro
-
-=======
-# Maestro directory
-.maestro/
->>>>>>> main
