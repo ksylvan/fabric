@@ -45,7 +45,8 @@ var playlistPatternRegex *regexp.Regexp
 var vttTagRegex *regexp.Regexp
 var durationRegex *regexp.Regexp
 
-const TimeGapForRepeats = 10 // seconds
+// TimeGapForRepeats defines the minimum gap in seconds before duplicate lines are kept.
+const TimeGapForRepeats = 10
 
 func init() {
 	// Match timestamps like "00:00:01.234" or just numbers or sequence numbers
@@ -62,6 +63,7 @@ func init() {
 	durationRegex = regexp.MustCompile(`(?i)PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?`)
 }
 
+// NewYouTube constructs the YouTube plugin and its setup prompts.
 func NewYouTube() (ret *YouTube) {
 
 	label := "YouTube"
@@ -78,6 +80,7 @@ func NewYouTube() (ret *YouTube) {
 	return
 }
 
+// YouTube provides transcript, metadata, comments, and visual extraction for videos.
 type YouTube struct {
 	*plugins.PluginBase
 	ApiKey *plugins.SetupQuestion
@@ -99,6 +102,7 @@ func (o *YouTube) initService() (err error) {
 	return
 }
 
+// GetVideoOrPlaylistId extracts a video ID and playlist ID from a YouTube URL.
 func (o *YouTube) GetVideoOrPlaylistId(url string) (videoId string, playlistId string, err error) {
 	// Extract video ID using pre-compiled regex
 	videoMatch := videoPatternRegex.FindStringSubmatch(url)
@@ -135,6 +139,7 @@ func (o *YouTube) extractAndValidateVideoId(url string) (videoId string, err err
 	return videoId, nil
 }
 
+// GrabTranscriptForUrl resolves a video URL and returns its transcript.
 func (o *YouTube) GrabTranscriptForUrl(url string, language string) (ret string, err error) {
 	var videoId string
 	if videoId, err = o.extractAndValidateVideoId(url); err != nil {
@@ -501,6 +506,7 @@ func parseSeconds(secondsStr string) (int, error) {
 	return seconds, nil
 }
 
+// GrabComments retrieves top-level comments and replies for a video.
 func (o *YouTube) GrabComments(videoId string) (ret []string, err error) {
 	if err = o.initService(); err != nil {
 		return
@@ -527,6 +533,7 @@ func (o *YouTube) GrabComments(videoId string) (ret []string, err error) {
 	return
 }
 
+// GrabDurationForUrl resolves a video URL and returns its duration in minutes.
 func (o *YouTube) GrabDurationForUrl(url string) (ret int, err error) {
 	if err = o.initService(); err != nil {
 		return
@@ -539,6 +546,7 @@ func (o *YouTube) GrabDurationForUrl(url string) (ret int, err error) {
 	return o.GrabDuration(videoId)
 }
 
+// GrabDuration returns a video's duration in minutes.
 func (o *YouTube) GrabDuration(videoId string) (ret int, err error) {
 	var videoResponse *youtube.VideoListResponse
 	if videoResponse, err = o.service.Videos.List([]string{"contentDetails"}).Id(videoId).Do(); err != nil {
@@ -562,6 +570,7 @@ func (o *YouTube) GrabDuration(videoId string) (ret int, err error) {
 	return
 }
 
+// Grab retrieves the requested transcript, visual text, comments, duration, and metadata.
 func (o *YouTube) Grab(url string, options *Options) (ret *VideoInfo, err error) {
 	var videoId string
 	if videoId, err = o.extractAndValidateVideoId(url); err != nil {
@@ -690,6 +699,7 @@ func (o *YouTube) FetchAndSavePlaylist(playlistID, filename string) (err error) 
 	return
 }
 
+// FetchAndPrintPlaylist prints playlist video IDs and titles to stdout.
 func (o *YouTube) FetchAndPrintPlaylist(playlistID string) (err error) {
 	var videos []*VideoMeta
 	if videos, err = o.FetchPlaylistVideos(playlistID); err != nil {
@@ -760,12 +770,14 @@ func (o *YouTube) findVTTFilesWithFallback(dir, requestedLanguage string) ([]str
 	return []string{vttFiles[0]}, nil
 }
 
+// VideoMeta describes a single playlist video entry.
 type VideoMeta struct {
 	Id              string
 	Title           string
 	TitleNormalized string
 }
 
+// Options configures which parts of a YouTube resource to fetch.
 type Options struct {
 	Duration                 bool
 	Transcript               bool
@@ -779,6 +791,7 @@ type Options struct {
 	YtDlpArgs                string
 }
 
+// VideoInfo aggregates the data returned by Grab and GrabByFlags.
 type VideoInfo struct {
 	Transcript string         `json:"transcript"`
 	VisualText string         `json:"visualText,omitempty"`
@@ -787,6 +800,7 @@ type VideoInfo struct {
 	Metadata   *VideoMetadata `json:"metadata,omitempty"`
 }
 
+// VideoMetadata contains metadata for a single YouTube video.
 type VideoMetadata struct {
 	Id           string   `json:"id"`
 	Title        string   `json:"title"`
@@ -800,6 +814,7 @@ type VideoMetadata struct {
 	LikeCount    uint64   `json:"likeCount"`
 }
 
+// GrabMetadata retrieves metadata for a single YouTube video.
 func (o *YouTube) GrabMetadata(videoId string) (metadata *VideoMetadata, err error) {
 	if err = o.initService(); err != nil {
 		return
@@ -834,6 +849,7 @@ func (o *YouTube) GrabMetadata(videoId string) (metadata *VideoMetadata, err err
 	return
 }
 
+// GrabByFlags parses YouTube-specific CLI flags and returns the requested video data.
 func (o *YouTube) GrabByFlags() (ret *VideoInfo, err error) {
 	options := &Options{}
 	flag.BoolVar(&options.Duration, "duration", false, "Output only the duration")
@@ -882,6 +898,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 
 	videoURL := "https://www.youtube.com/watch?v=" + videoId
 
+	// Resolve the direct media stream first so FFmpeg can process it without a full download.
 	ytArgs := []string{"-f", "bv", "--get-url"}
 	if additionalArgs != "" {
 		parsed, parseErr := shellquote.Split(additionalArgs)
@@ -910,6 +927,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 		return "", errors.New(i18n.T("youtube_failed_parse_http_stream_url"))
 	}
 
+	// Either sample at a fixed FPS or let FFmpeg emit frames only on scene changes.
 	var filter string
 	if fps > 0 {
 		// A fixed frame rate overrides scene detection when callers want denser sampling.
@@ -929,6 +947,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 		return "", err
 	}
 
+	// OCR frames concurrently while preserving filename order for the final cue output.
 	var wg sync.WaitGroup
 	results := make([]string, len(files))
 	var errs []error
@@ -967,6 +986,7 @@ func (o *YouTube) GrabVisual(videoId string, language string, additionalArgs str
 		return "", errs[0]
 	}
 
+	// Render OCR output as VTT-like cues so it can be appended alongside transcript text.
 	var sb strings.Builder
 	for i, text := range results {
 		if text != "" {

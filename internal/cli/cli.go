@@ -13,7 +13,7 @@ import (
 	"github.com/danielmiessler/fabric/internal/tools/youtube"
 )
 
-// Cli Controls the cli. It takes in the flags and runs the appropriate functions
+// Cli parses command-line flags and dispatches the requested Fabric command.
 func Cli(version string) (err error) {
 	var currentFlags *Flags
 	if currentFlags, err = Init(); err != nil {
@@ -176,6 +176,7 @@ func processYoutubeVideo(
 	return
 }
 
+// WriteOutput prints the message and optionally persists it to outputFile.
 func WriteOutput(message string, outputFile string) (err error) {
 	fmt.Println(message)
 	if outputFile != "" {

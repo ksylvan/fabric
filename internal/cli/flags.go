@@ -22,9 +22,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Flags create flags struct. the users flags go into this, this will be passed to the chat struct in cli
+// Flags stores the supported CLI flags and their YAML-backed defaults.
 // Chat parameter defaults set in the struct tags must match domain.Default* constants
-
 type Flags struct {
 	Pattern                         string               `short:"p" long:"pattern" yaml:"pattern" description:"Choose a pattern from the available patterns" default:""`
 	PatternVariables                map[string]string    `short:"v" long:"variable" description:"Values for pattern variables, e.g. -v=#role:expert -v=#points:30"`
@@ -112,7 +111,7 @@ type Flags struct {
 	Debug                           int                  `long:"debug" description:"Set debug level (0=off, 1=basic, 2=detailed, 3=trace, 4=wire)" default:"0"`
 }
 
-// Init Initialize flags. returns a Flags struct and an error
+// Init parses CLI flags, overlays YAML config values, and returns the resulting Flags.
 func Init() (ret *Flags, err error) {
 	debuglog.SetLevel(debuglog.LevelFromInt(parseDebugLevel(os.Args[1:])))
 	// Track which yaml-configured flags were set on CLI
@@ -431,6 +430,7 @@ func validateImageParameters(imagePath, size, quality, background string, compre
 	return nil
 }
 
+// BuildChatOptions converts CLI flags into chat runtime options.
 func (o *Flags) BuildChatOptions() (ret *domain.ChatOptions, err error) {
 	// Validate image file if specified
 	if err = validateImageFile(o.ImageFile); err != nil {
@@ -479,6 +479,7 @@ func (o *Flags) BuildChatOptions() (ret *domain.ChatOptions, err error) {
 	return
 }
 
+// BuildChatRequest converts CLI input into a chat request payload.
 func (o *Flags) BuildChatRequest(Meta string) (ret *domain.ChatRequest, err error) {
 	ret = &domain.ChatRequest{
 		ContextName:           o.Context,
@@ -546,15 +547,18 @@ func (o *Flags) BuildChatRequest(Meta string) (ret *domain.ChatRequest, err erro
 	return
 }
 
+// AppendMessage appends new text to the accumulated CLI message body.
 func (o *Flags) AppendMessage(message string) {
 	o.Message = AppendMessage(o.Message, message)
 }
 
+// IsChatRequest reports whether the current flags require a chat request.
 func (o *Flags) IsChatRequest() (ret bool) {
 	ret = o.Message != "" || len(o.Attachments) > 0 || o.Context != "" || o.Session != "" || o.Pattern != ""
 	return
 }
 
+// WriteOutput prints the message and optionally writes it to the configured output file.
 func (o *Flags) WriteOutput(message string) (err error) {
 	fmt.Println(message)
 	if o.Output != "" {
@@ -563,6 +567,7 @@ func (o *Flags) WriteOutput(message string) (err error) {
 	return
 }
 
+// AppendMessage joins two message fragments with a newline when needed.
 func AppendMessage(message string, newMessage string) (ret string) {
 	if message != "" {
 		ret = message + "\n" + newMessage

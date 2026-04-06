@@ -111,7 +111,7 @@ func NewTranslatedHelpWriter(parser *flags.Parser, writer io.Writer) *Translated
 	}
 }
 
-// WriteHelp writes the help output with translated flag descriptions
+// WriteHelp renders translated help output for the configured parser.
 func (h *TranslatedHelpWriter) WriteHelp() {
 	fmt.Fprintf(h.writer, "%s\n", i18n.T("usage_header"))
 	fmt.Fprintf(h.writer, "  %s %s\n\n", h.parser.Name, i18n.T("options_placeholder"))
