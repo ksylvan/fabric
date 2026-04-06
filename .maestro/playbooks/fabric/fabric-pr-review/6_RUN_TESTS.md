@@ -29,11 +29,12 @@ Execute the Fabric test suite and generate the required changelog for the PR.
   Verify Go 1.24+ is installed.
   Result: `go version go1.26.1 darwin/arm64` on 2026-04-06, which satisfies the Go 1.24+ requirement.
 
-- [ ] **Check working directory**:
+- [x] **Check working directory**:
   ```bash
   git status
   ```
   Working directory must be clean for changelog generation.
+  Result: `git status --short --branch` on 2026-04-06 shows a dirty worktree on `feat/youtube-visual-extraction`: modified `completions/_fabric`, `completions/fabric.bash`, `completions/fabric.fish`, `internal/server/chat.go`, `internal/server/serve.go`, and untracked `internal/server/rate_limit.go`. The changelog-generation prerequisite is not currently met.
 
 ### Task 2: Build the Project
 
