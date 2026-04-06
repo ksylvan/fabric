@@ -142,10 +142,18 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - Changelog coverage is present through `cmd/generate_changelog/incoming/2073.txt`, and the README help text was updated in both English and Chinese to document the new CLI flags.
   - Verified the reviewed surface still builds and passes targeted regression coverage with `go test ./internal/cli ./internal/tools/youtube`.
 
-- [ ] **Function signatures**: Verify:
+- [x] **Function signatures**: Verify:
   - Context is first parameter
   - Options pattern for many parameters
   - Error is last return value
+  Notes from targeted review on 2026-04-05:
+  - Reviewed the PR-touched function signatures in `internal/cli/cli.go` and `internal/tools/youtube/youtube.go`; no task images were attached for this checklist item.
+  - Return ordering stays consistent in the reviewed code: the PR-added and PR-modified helpers continue to keep `error` in the final return position, including `Grab`, `GrabVisual`, and the CLI orchestration helpers.
+  - The aggregate YouTube entry point already follows the options-pattern direction Fabric wants: `Grab(url string, options *Options)` absorbs the new visual extraction controls as added struct fields instead of forcing every caller through a wider positional signature.
+  - The main signature gap is `GrabVisual(videoId, language, additionalArgs, sensitivity, fps)`, which now carries five positional parameters and still creates its own `context.Background()` timeout internally; that means the new OCR path does not meet the "context first parameter" guideline and is the clearest follow-up candidate for a `GrabVisual(ctx context.Context, videoID string, opts *VisualOptions)`-style refactor.
+  - `processYoutubeVideo(flags, registry, videoId)` is only an unexported CLI helper with a narrow internal call graph, so its current signature is acceptable for now even though it also lacks caller-supplied context.
+  - Carry the missing context-first and dedicated visual-options cleanup for the OCR path into the later consolidated Go issues document as a Major signature-design issue.
+  - Verified with `go test ./internal/tools/youtube ./internal/cli`.
 
 ### Task 6: Check Fabric-Specific Patterns
 
