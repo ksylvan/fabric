@@ -105,6 +105,9 @@ func TestHandleChat_SetsEventStreamHeaders(t *testing.T) {
 	if got := recorder.Header().Get("Connection"); got != "keep-alive" {
 		t.Fatalf("expected keep-alive header, got %q", got)
 	}
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:5173" {
+		t.Fatalf("expected restrictive CORS origin, got %q", got)
+	}
 }
 
 func TestHandleChat_RequestLoggingRespectsDebugLevel(t *testing.T) {

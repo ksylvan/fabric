@@ -25,6 +25,20 @@ func TestInit(t *testing.T) {
 	assert.Equal(t, expectedFlags.Copy, flags.Copy)
 }
 
+func TestInit_DefaultServerDefaultsAreLocalAndDebugOff(t *testing.T) {
+	homeDir := t.TempDir()
+	t.Setenv("HOME", homeDir)
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd"}
+
+	flags, err := Init()
+	assert.NoError(t, err)
+	assert.Equal(t, "127.0.0.1:8080", flags.ServeAddress)
+	assert.Equal(t, 0, flags.Debug)
+}
+
 func TestReadStdin(t *testing.T) {
 	input := "test input"
 	stdin := io.NopCloser(strings.NewReader(input))

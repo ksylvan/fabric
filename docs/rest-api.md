@@ -10,7 +10,7 @@ Start the server:
 fabric --serve
 ```
 
-The server runs on `http://localhost:8080` by default.
+The server listens on `http://127.0.0.1:8080` by default.
 
 Test it:
 
@@ -40,13 +40,13 @@ The Swagger UI lets you:
 | Flag | Description | Default |
 | ------ | ------------- | --------- |
 | `--serve` | Start the REST API server | - |
-| `--address` | Server address and port | `:8080` |
+| `--address` | Server address and port | `127.0.0.1:8080` |
 | `--api-key` | Enable API key authentication | (none) |
 
 Example with custom configuration:
 
 ```bash
-fabric --serve --address :9090 --api-key my_secret_key
+fabric --serve --address 0.0.0.0:9090 --api-key my_secret_key
 ```
 
 ## Authentication
@@ -63,7 +63,7 @@ Example:
 curl -H "X-API-Key: my_secret_key" http://localhost:8080/patterns/names
 ```
 
-Without an API key, the server accepts all requests and logs a warning.
+Without an API key, Fabric only allows loopback bind addresses such as `127.0.0.1:8080` or `localhost:8080`. To expose the REST API on `0.0.0.0`, `:8080`, or another non-loopback interface, set `--api-key`.
 
 ## Endpoints
 
@@ -439,13 +439,13 @@ docker run --rm -it \
 docker run --rm -it \
   -p 8080:8080 \
   -v $HOME/.fabric-config:/root/.config/fabric \
-  kayvan/fabric:latest --serve
+  kayvan/fabric:latest --serve --address 0.0.0.0:8080 --api-key my_secret_key
 
 # With authentication
 docker run --rm -it \
   -p 8080:8080 \
   -v $HOME/.fabric-config:/root/.config/fabric \
-  kayvan/fabric:latest --serve --api-key my_secret_key
+  kayvan/fabric:latest --serve --address 0.0.0.0:8080 --api-key my_secret_key
 ```
 
 ## Ollama Compatibility Mode
@@ -453,8 +453,10 @@ docker run --rm -it \
 Fabric can emulate Ollama's API endpoints:
 
 ```bash
-fabric --serveOllama --address :11434
+fabric --serveOllama --address 127.0.0.1:11434
 ```
+
+Ollama compatibility mode is loopback-only because it does not expose an authentication layer.
 
 This mode provides:
 

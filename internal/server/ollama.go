@@ -189,6 +189,10 @@ func parseOllamaNumCtx(options map[string]any) (int, error) {
 }
 
 func ServeOllama(registry *core.PluginRegistry, address string, version string) (err error) {
+	if err = validateOllamaServerConfig(address); err != nil {
+		return err
+	}
+
 	r := gin.New()
 
 	// Middleware

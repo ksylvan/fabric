@@ -498,6 +498,8 @@ Fabric 内置了 REST API 服务器，通过 HTTP 暴露所有核心功能。启
 fabric --serve
 ```
 
+默认情况下，Fabric 会将 REST API 绑定到 `127.0.0.1:8080`。如果要暴露到非回环地址，请同时设置 `--api-key`。
+
 服务器提供以下端点：
 
 - 带流式响应的聊天补全
@@ -514,8 +516,10 @@ fabric --serve
 Fabric 可以通过暴露 Ollama 兼容的 API 端点，作为 Ollama 的直接替代品：
 
 ```bash
-fabric --serve --serveOllama
+fabric --serveOllama --address 127.0.0.1:11434
 ```
+
+由于 Ollama 兼容模式没有额外的身份验证层，因此它仅允许绑定到回环地址。
 
 这将启用以下 Ollama 兼容端点：
 

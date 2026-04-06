@@ -82,7 +82,7 @@ function __fabric_register_completions
         complete -c $cmd -s W -l wipesession -d "Wipe session" -a "(__fabric_get_sessions)"
         complete -c $cmd -l printcontext -d "Print context" -a "(__fabric_get_contexts)"
         complete -c $cmd -l printsession -d "Print session" -a "(__fabric_get_sessions)"
-        complete -c $cmd -l address -d "The address to bind the REST API (default: :8080)"
+        complete -c $cmd -l address -d "The address to bind the REST API (default: 127.0.0.1:8080)"
         complete -c $cmd -l api-key -d "API key used to secure server routes"
         complete -c $cmd -l config -d "Path to YAML config file" -r -a "*.yaml *.yml"
         complete -c $cmd -l search-location -d "Set location for web search results (e.g., 'America/Los_Angeles')"

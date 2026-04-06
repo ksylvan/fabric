@@ -27,6 +27,10 @@ import (
 // @in header
 // @name X-API-Key
 func Serve(registry *core.PluginRegistry, address string, apiKey string) (err error) {
+	if err = validateRESTServerConfig(address, apiKey); err != nil {
+		return err
+	}
+
 	r := gin.New()
 
 	// Middleware
@@ -36,7 +40,7 @@ func Serve(registry *core.PluginRegistry, address string, apiKey string) (err er
 	if apiKey != "" {
 		r.Use(APIKeyMiddleware(apiKey))
 	} else {
-		slog.Warn("Starting REST API server without API key authentication. This may pose security risks.")
+		slog.Info("Starting REST API server on loopback without API key authentication", "address", address)
 	}
 
 	// Swagger UI and documentation endpoint with custom YAML handler

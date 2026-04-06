@@ -702,7 +702,7 @@ Application Options:
       --dry-run                     Show what would be sent to the model without actually sending it
       --serve                       Serve the Fabric Rest API
       --serveOllama                 Serve the Fabric Rest API with ollama endpoints
-      --address=                    The address to bind the REST API (default: :8080)
+      --address=                    The address to bind the REST API (default: 127.0.0.1:8080)
       --api-key=                    API key used to secure server routes
       --config=                     Path to YAML config file
       --version                     Print current version
@@ -774,6 +774,8 @@ Fabric includes a built-in REST API server that exposes all core functionality o
 fabric --serve
 ```
 
+By default Fabric binds the REST API to `127.0.0.1:8080`. To expose it on a non-loopback interface, also set `--api-key`.
+
 The server provides endpoints for:
 
 - Chat completions with streaming responses
@@ -790,8 +792,10 @@ For complete endpoint documentation, authentication setup, and usage examples, s
 Fabric can serve as a drop-in replacement for Ollama by exposing Ollama-compatible API endpoints. Start the server with:
 
 ```bash
-fabric --serve --serveOllama
+fabric --serveOllama --address 127.0.0.1:11434
 ```
+
+Ollama compatibility mode is loopback-only because it does not expose an authentication layer.
 
 This enables the following Ollama-compatible endpoints:
 
