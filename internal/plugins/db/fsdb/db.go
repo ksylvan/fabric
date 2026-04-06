@@ -11,6 +11,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const EnvFilePerms os.FileMode = 0o600
+
 func NewDb(dir string) (db *Db) {
 
 	db = &Db{Dir: dir}
@@ -80,6 +82,9 @@ func (o *Db) Configure() (err error) {
 }
 
 func (o *Db) LoadEnvFile() (err error) {
+	if err = o.ensureSecureEnvFilePerms(); err != nil {
+		return
+	}
 	if err = godotenv.Load(o.EnvFilePath); err != nil {
 		err = fmt.Errorf(i18n.T("db_error_loading_env_file"), err)
 	}
@@ -93,12 +98,23 @@ func (o *Db) IsEnvFileExists() (ret bool) {
 }
 
 func (o *Db) SaveEnv(content string) (err error) {
-	err = os.WriteFile(o.EnvFilePath, []byte(content), 0644)
+	err = os.WriteFile(o.EnvFilePath, []byte(content), EnvFilePerms)
 	return
 }
 
 func (o *Db) FilePath(fileName string) (ret string) {
 	return filepath.Join(o.Dir, fileName)
+}
+
+func (o *Db) ensureSecureEnvFilePerms() error {
+	if _, err := os.Stat(o.EnvFilePath); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	return os.Chmod(o.EnvFilePath, EnvFilePerms)
 }
 
 type DirectoryChange struct {

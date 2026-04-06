@@ -11,7 +11,7 @@ import (
 )
 
 const ConfigDirPerms os.FileMode = 0755
-const EnvFilePerms os.FileMode = 0644
+const EnvFilePerms os.FileMode = 0o600
 
 // initializeFabric initializes the fabric database and plugin registry
 func initializeFabric() (registry *core.PluginRegistry, err error) {
