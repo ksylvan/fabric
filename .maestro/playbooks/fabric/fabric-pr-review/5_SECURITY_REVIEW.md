@@ -54,11 +54,11 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
   - LDAP/XPath injection (if applicable)
 
 - [x] **Sensitive data exposure**: Reviewed the new logging and error surfaces in YouTube visual extraction, YAML config loading, and chat handling; no remaining API key, signed URL, or internal-path exposure was found after hardening the newly introduced debug/error paths.
-  - Note: Hardened `internal/cli/flags.go` so detailed debug logging reports configured YAML keys without logging the absolute config path, avoiding username/home-directory disclosure in debug output.
+  - Note: Hardened `internal/cli/flags.go` so detailed debug logging now reports only configured/applied YAML key names, never the absolute config path or YAML field values, which closes the debug-mode secret leakage path for config-backed settings.
   - Note: Hardened `internal/tools/youtube/youtube.go` so transcript/VTT filesystem failures strip temp-file paths before surfacing errors, preventing transient OCR/transcript failures from revealing Fabric's internal temp-directory layout.
   - Note: Revalidated that yt-dlp trace logging still redacts URLs, cookies, authorization headers, and token-like query parameters via `sanitizeYTArgs()` / `sanitizeYTLogText()`.
   - Note: Reviewed `internal/server/chat.go`; request logging remains debug-level only and logs language/count/model/pattern/context metadata without prompt bodies or secrets.
-  - Note: Added regression coverage for the config-loader debug log and transcript-file read failures, then reran `go test ./internal/tools/youtube ./internal/server ./internal/cli ./internal/core ./internal/plugins/db/fsdb`.
+  - Note: Added regression coverage for both the config-loader log summary and the YAML-application path in `Init()`, plus the existing transcript-file read failure case, then reran `go test ./internal/tools/youtube ./internal/server ./internal/cli ./internal/core ./internal/plugins/db/fsdb`.
   - API keys not logged
   - No PII in debug output
   - Errors don't expose internal paths
