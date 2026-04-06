@@ -44,12 +44,13 @@ Execute the Fabric test suite and generate the required changelog for the PR.
   ```
   Result: `go build -o fabric ./cmd/fabric` completed successfully on 2026-04-06 with no build errors.
 
-- [ ] **Build helper binaries** (if changed):
+- [x] **Build helper binaries** (if changed):
   ```bash
   go build -o code2context ./cmd/code2context
   go build -o to_pdf ./cmd/to_pdf
   go build -o generate_changelog ./cmd/generate_changelog
   ```
+  Result: `go build -o code2context ./cmd/code2context`, `go build -o to_pdf ./cmd/to_pdf`, and `go build -o generate_changelog ./cmd/generate_changelog` all completed successfully on 2026-04-06 with no build errors.
 
 ### Task 3: Run Test Suite
 
