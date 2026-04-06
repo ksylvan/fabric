@@ -62,11 +62,19 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
 
 ### Task 3: Review Code Organization
 
-- [ ] **Package structure**: Check:
+- [x] **Package structure**: Check:
   - `internal/` packages are truly internal
   - No circular dependencies
   - Clear package boundaries
   - Appropriate file sizes
+  Notes from targeted review on 2026-04-05:
+  - Reviewed the PR-touched Go files in scope and the adjacent wiring points in `cmd/fabric/main.go`, `internal/core/plugin_registry.go`, and `internal/server/youtube.go` to trace package ownership and dependency direction.
+  - The `internal/` boundaries remain properly internal in practice: the reviewed packages are only consumed from inside the module, with `cmd/fabric` entering through `internal/cli` and the rest of the YouTube flow staying under `internal/`.
+  - No circular dependencies were introduced in the reviewed graph. `internal/cli` depends on `internal/core` and `internal/tools/youtube`, `internal/core` wires `youtube.NewYouTube()`, and `internal/tools/youtube` only depends downward on shared support packages such as `internal/plugins`, `internal/i18n`, and logging.
+  - Package boundaries are otherwise clear for this PR slice: CLI orchestration lives in `internal/cli`, registry/setup ownership stays in `internal/core`, and REST exposure remains in `internal/server`.
+  - The main organization concern is file sizing within `internal/tools/youtube`: `internal/tools/youtube/youtube.go` is now 987 lines and bundles transcript download, comments/metadata fetching, aggregate grab helpers, OCR frame extraction, and subprocess utilities in one file, so carry that forward as a Minor structure issue in the later consolidated Go issues document.
+  - `internal/cli/cli.go` (203 lines) and `internal/cli/help.go` (289 lines) remain focused; `internal/cli/flags.go` is larger at 573 lines but still stays within the package's flag/config parsing responsibility.
+  - Verified with `go test ./internal/tools/youtube ./internal/cli`.
 
 - [ ] **Naming conventions**: Verify:
   - CamelCase for exported identifiers
