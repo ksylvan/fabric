@@ -48,10 +48,17 @@ Perform a Go-specific code review focusing on Fabric's coding conventions, Go id
   - `internal/cli/flags.go` and `internal/cli/help.go` only add surface area for the feature and do not affect context behavior.
   - Carry the missing caller-propagated context into the later consolidated Go issues document as a Major issue if Fabric wants request-scoped cancellation on long-running YouTube operations.
 
-- [ ] **Interface compliance**: Verify interfaces:
+- [x] **Interface compliance**: Verify interfaces:
   - Functions accept interfaces, return concrete types
   - Interfaces are defined where they're used
   - No empty interfaces (`interface{}`) without good reason
+  Notes from targeted review on 2026-04-05:
+  - Reviewed the PR-touched Go files in scope: `internal/tools/youtube/youtube.go`, `internal/cli/cli.go`, `internal/cli/flags.go`, and `internal/cli/help.go`.
+  - No `interface{}` or `any` usage was introduced in the reviewed files, so the PR does not add empty-interface surface area.
+  - The only interface-typed parameters in scope are standard library I/O boundaries such as `detectError(io.Reader)` and the translated help writer functions that accept `io.Writer`, which is appropriate because those call sites benefit from stream abstraction.
+  - The reviewed functions and methods continue to return concrete values (`string`, `[]string`, `*VideoInfo`, `*VideoMetadata`, `*TranslatedHelpWriter`) rather than interface types, so the new YouTube visual extraction path does not widen return contracts unnecessarily.
+  - No new project-local interfaces were added in these files, so there is no new interface-placement issue to flag from this PR slice.
+  - Verified with `go test ./internal/tools/youtube ./internal/cli`.
 
 ### Task 3: Review Code Organization
 
