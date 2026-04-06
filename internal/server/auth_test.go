@@ -38,6 +38,12 @@ func TestAPIKeyMiddleware(t *testing.T) {
 			wantStatus: http.StatusOK,
 		},
 		{
+			name:       "protected route rejects wrong api key",
+			path:       "/protected",
+			header:     "secret-extra",
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
 			name:       "swagger route remains public",
 			path:       "/swagger/index.html",
 			wantStatus: http.StatusOK,

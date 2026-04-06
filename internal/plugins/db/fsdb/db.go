@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -105,8 +106,77 @@ func (o *Db) IsEnvFileExists() (ret bool) {
 }
 
 func (o *Db) SaveEnv(content string) (err error) {
+	if err = os.MkdirAll(o.Dir, ConfigDirPerms); err != nil {
+		return
+	}
+	if err = o.ensureSecureConfigDirPerms(); err != nil {
+		return
+	}
 	err = os.WriteFile(o.EnvFilePath, []byte(content), EnvFilePerms)
 	return
+}
+
+func (o *Db) LoadEnvMap() (map[string]string, error) {
+	if err := o.ensureSecureEnvFilePerms(); err != nil {
+		if os.IsNotExist(err) {
+			return map[string]string{}, nil
+		}
+		return nil, err
+	}
+	if !o.IsEnvFileExists() {
+		return map[string]string{}, nil
+	}
+
+	values, err := godotenv.Read(o.EnvFilePath)
+	if err != nil {
+		return nil, fmt.Errorf(i18n.T("db_error_loading_env_file"), err)
+	}
+
+	return values, nil
+}
+
+func (o *Db) SaveEnvMap(values map[string]string) error {
+	keys := make([]string, 0, len(values))
+	for key, value := range values {
+		if key == "" || value == "" {
+			continue
+		}
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	var content strings.Builder
+	for _, key := range keys {
+		content.WriteString(key)
+		content.WriteString("=")
+		content.WriteString(values[key])
+		content.WriteString("\n")
+	}
+
+	return o.SaveEnv(content.String())
+}
+
+func (o *Db) UpdateEnvValues(updates map[string]*string) error {
+	values, err := o.LoadEnvMap()
+	if err != nil {
+		return err
+	}
+
+	for key, value := range updates {
+		if value == nil {
+			continue
+		}
+		if *value == "" {
+			delete(values, key)
+			_ = os.Unsetenv(key)
+			continue
+		}
+
+		values[key] = *value
+		_ = os.Setenv(key, *value)
+	}
+
+	return o.SaveEnvMap(values)
 }
 
 func (o *Db) FilePath(fileName string) (ret string) {

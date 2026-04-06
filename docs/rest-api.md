@@ -305,7 +305,7 @@ Manage API keys and environment settings.
 
 `GET /config`
 
-Returns API keys and URLs for all configured vendors.
+Returns API keys and URLs for supported vendors. Secret values are masked to their last 4 characters.
 
 **Update configuration:**
 
@@ -313,12 +313,17 @@ Returns API keys and URLs for all configured vendors.
 
 ```json
 {
-  "OPENAI_API_KEY": "sk-...",
-  "ANTHROPIC_API_KEY": "sk-ant-..."
+  "openai_api_key": "sk-...",
+  "anthropic_api_key": "sk-ant-...",
+  "ollama_url": "http://localhost:11434"
 }
 ```
 
-Updates `~/.config/fabric/.env` with new values.
+Updates `~/.config/fabric/.env` with merged values.
+
+- Omitted fields are preserved.
+- Masked values returned by `GET /config` are treated as unchanged and preserved.
+- Sending an empty string clears that specific setting.
 
 ## Complete Workflow Examples
 

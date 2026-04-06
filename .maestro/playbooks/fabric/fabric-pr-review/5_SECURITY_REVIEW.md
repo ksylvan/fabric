@@ -97,7 +97,12 @@ Perform a security-focused review of the code changes, checking for vulnerabilit
 
 ### Task 4: Fabric-Specific Security
 
-- [ ] **API key handling**:
+- [x] **API key handling**:
+  - Note: Revalidated that provider credentials continue to live in `~/.config/fabric/.env` with `0600` file permissions and are surfaced through `/config` only as masked values, never as raw secrets.
+  - Note: Hardened `internal/server/configuration.go` and `internal/plugins/db/fsdb/db.go` so `POST /config/update` now merges into the existing env file instead of clobbering unrelated settings, preserves unchanged masked secrets, and allows explicit per-key clearing for safer credential rotation.
+  - Note: Hardened `internal/server/auth.go` to compare REST API keys with `crypto/subtle.ConstantTimeCompare`, removing the avoidable direct string comparison from the authentication path.
+  - Note: Reviewed the Codex/Copilot OAuth and provider request paths and found no token-in-URL or token-in-log regression in the reviewed surfaces; access/refresh tokens stay in header or env-file storage paths rather than query parameters.
+  - Note: Added regression coverage in `internal/server/configuration_test.go` and `internal/server/auth_test.go`, then reran `go test ./internal/server ./internal/plugins/db/fsdb`.
   - Provider API keys stored securely
   - Keys not exposed in URLs or logs
   - OAuth tokens properly managed

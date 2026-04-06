@@ -1,6 +1,7 @@
 package restapi
 
 import (
+	"crypto/subtle"
 	"net/http"
 	"strings"
 
@@ -28,7 +29,7 @@ func APIKeyMiddleware(apiKey string) gin.HandlerFunc {
 			return
 		}
 
-		if headerApiKey != apiKey {
+		if subtle.ConstantTimeCompare([]byte(headerApiKey), []byte(apiKey)) != 1 {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Wrong API Key"})
 			return
 		}
