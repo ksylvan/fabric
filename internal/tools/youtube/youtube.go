@@ -329,7 +329,7 @@ func (o *YouTube) tryMethodYtDlpWithTimestamps(videoId string, language string, 
 func (o *YouTube) readAndCleanVTTFile(filename string) (ret string, err error) {
 	var content []byte
 	if content, err = os.ReadFile(filename); err != nil {
-		return
+		return "", sanitizeFilesystemError(err)
 	}
 
 	// Convert VTT to plain text
@@ -367,7 +367,7 @@ func (o *YouTube) readAndCleanVTTFile(filename string) (ret string, err error) {
 func (o *YouTube) readAndFormatVTTWithTimestamps(filename string) (ret string, err error) {
 	var content []byte
 	if content, err = os.ReadFile(filename); err != nil {
-		return
+		return "", sanitizeFilesystemError(err)
 	}
 
 	// Parse VTT and preserve timestamps
@@ -486,6 +486,24 @@ func sanitizeYTLogText(text string) string {
 	text = urlLogRegex.ReplaceAllString(text, "<redacted-url>")
 	text = sensitiveYtArgRegex.ReplaceAllString(text, "${1}=<redacted>")
 	return text
+}
+
+func sanitizeFilesystemError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	var pathErr *os.PathError
+	if errors.As(err, &pathErr) {
+		return fmt.Errorf("%s: %w", pathErr.Op, pathErr.Err)
+	}
+
+	var linkErr *os.LinkError
+	if errors.As(err, &linkErr) {
+		return fmt.Errorf("%s: %w", linkErr.Op, linkErr.Err)
+	}
+
+	return err
 }
 
 // buildSafeYTDlpArgs applies Fabric's fixed yt-dlp flags and rejects subprocess-expanding options.
@@ -838,7 +856,7 @@ func (o *YouTube) findVTTFilesWithFallback(dir, requestedLanguage string) ([]str
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("%s", fmt.Sprintf(i18n.T("youtube_failed_walk_directory"), err))
+		return nil, fmt.Errorf("%s", fmt.Sprintf(i18n.T("youtube_failed_walk_directory"), sanitizeFilesystemError(err)))
 	}
 
 	if len(vttFiles) == 0 {

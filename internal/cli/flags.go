@@ -196,6 +196,7 @@ func Init() (ret *Flags, err error) {
 		flagsVal := reflect.ValueOf(ret).Elem()
 		yamlVal := reflect.ValueOf(yamlFlags).Elem()
 		flagsType := flagsVal.Type()
+		appliedYAMLTags := make([]string, 0, flagsType.NumField())
 
 		for i := 0; i < flagsType.NumField(); i++ {
 			field := flagsType.Field(i)
@@ -212,10 +213,15 @@ func Init() (ret *Flags, err error) {
 						} else {
 							flagField.Set(yamlField)
 						}
-						debuglog.Debug(debuglog.Detailed, "Applied YAML value for %s: %v\n", yamlTag, yamlField.Interface())
+						appliedYAMLTags = append(appliedYAMLTags, yamlTag)
 					}
 				}
 			}
+		}
+
+		if len(appliedYAMLTags) > 0 {
+			slices.Sort(appliedYAMLTags)
+			debuglog.Debug(debuglog.Detailed, "Applied YAML config keys: %s\n", strings.Join(appliedYAMLTags, ", "))
 		}
 	}
 
@@ -325,8 +331,7 @@ func loadYAMLConfig(configPath string) (*Flags, error) {
 
 	debuglog.Debug(
 		debuglog.Detailed,
-		"Loaded YAML config %s with keys: %s\n",
-		absPath,
+		"Loaded YAML config with keys: %s\n",
 		strings.Join(summarizeConfiguredYAMLFields(config), ", "),
 	)
 

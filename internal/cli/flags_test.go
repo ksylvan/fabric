@@ -210,7 +210,7 @@ func TestLoadYAMLConfigDebugOutputRedactsValues(t *testing.T) {
 	configContent := `
 model: gpt-4
 temperature: 0.4
-ServeAPIKey: super-secret-server-key
+notificationCommand: super-secret-server-key
 `
 
 	tmpfile, err := os.CreateTemp("", "config-debug.*.yaml")
@@ -246,11 +246,73 @@ ServeAPIKey: super-secret-server-key
 	if strings.Contains(logged, "super-secret-server-key") {
 		t.Fatalf("expected debug output to redact config values, got %q", logged)
 	}
+	if strings.Contains(logged, tmpfile.Name()) {
+		t.Fatalf("expected debug output to omit absolute config path, got %q", logged)
+	}
 	if !strings.Contains(logged, "Loaded YAML config") {
 		t.Fatalf("expected debug output to mention the config load, got %q", logged)
 	}
 	if !strings.Contains(logged, "model") || !strings.Contains(logged, "temperature") {
 		t.Fatalf("expected debug output to summarize configured yaml keys, got %q", logged)
+	}
+	if !strings.Contains(logged, "notificationCommand") {
+		t.Fatalf("expected debug output to summarize notificationCommand, got %q", logged)
+	}
+}
+
+func TestInitDebugOutputSummarizesAppliedYAMLKeysWithoutValues(t *testing.T) {
+	configContent := `
+model: gpt-4
+notificationCommand: super-secret-server-key
+visual: true
+`
+
+	tmpfile, err := os.CreateTemp("", "config-init-debug.*.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if _, err := tmpfile.Write([]byte(configContent)); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"cmd", "--debug", "2", "--config", tmpfile.Name()}
+
+	oldLevel := debuglog.GetLevel()
+	defer debuglog.SetLevel(oldLevel)
+
+	var buf bytes.Buffer
+	debuglog.SetOutput(&buf)
+	defer debuglog.SetOutput(os.Stderr)
+
+	flags, err := Init()
+	if err != nil {
+		t.Fatalf("Init returned error: %v", err)
+	}
+	if flags.NotificationCommand != "super-secret-server-key" {
+		t.Fatalf("expected notification command to be loaded from YAML, got %q", flags.NotificationCommand)
+	}
+	if !flags.YouTubeVisual {
+		t.Fatal("expected visual flag to be loaded from YAML")
+	}
+
+	logged := buf.String()
+	if strings.Contains(logged, "super-secret-server-key") {
+		t.Fatalf("expected Init debug output to omit YAML values, got %q", logged)
+	}
+	if !strings.Contains(logged, "Applied YAML config keys:") {
+		t.Fatalf("expected Init debug output to summarize applied keys, got %q", logged)
+	}
+	for _, key := range []string{"model", "notificationCommand", "visual"} {
+		if !strings.Contains(logged, key) {
+			t.Fatalf("expected Init debug output to include %q, got %q", key, logged)
+		}
 	}
 }
 

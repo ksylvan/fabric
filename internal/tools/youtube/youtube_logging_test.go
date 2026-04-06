@@ -3,6 +3,7 @@ package youtube
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -118,5 +119,23 @@ func TestBuildSafeYTDlpArgsAllowsExpectedAuthenticationFlags(t *testing.T) {
 		if got[i] != wantArg {
 			t.Fatalf("expected arg %d to be %q, got %q", i, wantArg, got[i])
 		}
+	}
+}
+
+func TestReadAndCleanVTTFileReadErrorOmitsTempPath(t *testing.T) {
+	t.Parallel()
+
+	yt := NewYouTube()
+	missingFile := filepath.Join(t.TempDir(), "missing.vtt")
+
+	_, err := yt.readAndCleanVTTFile(missingFile)
+	if err == nil {
+		t.Fatal("expected VTT read error")
+	}
+	if strings.Contains(err.Error(), missingFile) {
+		t.Fatalf("expected read error to omit internal path, got %q", err.Error())
+	}
+	if !strings.Contains(err.Error(), "open:") {
+		t.Fatalf("expected sanitized filesystem error context, got %q", err.Error())
 	}
 }
