@@ -312,3 +312,46 @@ func TestPatternsEntity_CustomPatternsEmpty(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Main pattern content", pattern.Pattern)
 }
+
+func TestPatternsEntity_CustomPatternSymlinkCannotEscapeDirectory(t *testing.T) {
+	rootDir := t.TempDir()
+	mainDir := filepath.Join(rootDir, "main-patterns")
+	customDir := filepath.Join(rootDir, "custom-patterns")
+	outsideDir := filepath.Join(rootDir, "outside-pattern")
+	require.NoError(t, os.MkdirAll(mainDir, 0o755))
+	require.NoError(t, os.MkdirAll(customDir, 0o755))
+	require.NoError(t, os.MkdirAll(outsideDir, 0o755))
+
+	require.NoError(t, os.WriteFile(filepath.Join(outsideDir, "system.md"), []byte("Outside pattern"), 0o644))
+
+	entity := &PatternsEntity{
+		StorageEntity: &StorageEntity{
+			Dir:       mainDir,
+			Label:     "patterns",
+			ItemIsDir: true,
+		},
+		SystemPatternFile: "system.md",
+		CustomPatternsDir: customDir,
+	}
+
+	createTestPattern(t, &PatternsEntity{
+		StorageEntity: &StorageEntity{
+			Dir:       mainDir,
+			Label:     "patterns",
+			ItemIsDir: true,
+		},
+		SystemPatternFile: "system.md",
+	}, "shared-pattern", "Main pattern content")
+
+	if err := os.Symlink(outsideDir, filepath.Join(customDir, "shared-pattern")); err != nil {
+		t.Skipf("symlink creation unavailable: %v", err)
+	}
+
+	names, err := entity.GetNames()
+	require.NoError(t, err)
+	assert.Equal(t, []string{"shared-pattern"}, names)
+
+	pattern, err := entity.GetRaw("shared-pattern")
+	require.NoError(t, err)
+	assert.Equal(t, "Main pattern content", pattern.Pattern)
+}

@@ -59,6 +59,9 @@ func (o *StorageEntity) GetNames() (ret []string, err error) {
 
 	for _, entry := range entries {
 		entryPath := filepath.Join(absDir, entry.Name())
+		if _, err := resolvePathWithinDir(absDir, entry.Name()); err != nil {
+			continue
+		}
 
 		// Get metadata for the entry, including symlink info
 		fileInfo, err := os.Lstat(entryPath)
@@ -187,7 +190,47 @@ func (o *StorageEntity) pathForName(name string) (string, error) {
 		return "", err
 	}
 
-	return o.BuildFilePathByName(name), nil
+	return resolvePathWithinDir(o.Dir, o.buildFileName(name))
+}
+
+func resolvePathWithinDir(baseDir string, pathParts ...string) (string, error) {
+	if len(pathParts) == 0 {
+		return "", fmt.Errorf("%w: empty path", ErrInvalidStorageName)
+	}
+
+	resolvedBaseDir, err := util.GetAbsolutePath(baseDir)
+	if err != nil {
+		return "", fmt.Errorf(i18n.T("storage_error_resolve_directory"), err)
+	}
+
+	candidatePath := filepath.Join(append([]string{resolvedBaseDir}, pathParts...)...)
+	cleanedCandidatePath := filepath.Clean(candidatePath)
+	resolvedCandidatePath := cleanedCandidatePath
+
+	if path, err := filepath.EvalSymlinks(cleanedCandidatePath); err == nil {
+		resolvedCandidatePath = path
+	} else if !os.IsNotExist(err) {
+		return "", err
+	} else {
+		parentDir := filepath.Dir(cleanedCandidatePath)
+		resolvedParentDir, parentErr := filepath.EvalSymlinks(parentDir)
+		if parentErr == nil {
+			resolvedCandidatePath = filepath.Join(resolvedParentDir, filepath.Base(cleanedCandidatePath))
+		} else if !os.IsNotExist(parentErr) {
+			return "", parentErr
+		}
+	}
+
+	relativePath, err := filepath.Rel(resolvedBaseDir, resolvedCandidatePath)
+	if err != nil {
+		return "", fmt.Errorf("%w: %q", ErrInvalidStorageName, filepath.Join(pathParts...))
+	}
+
+	if relativePath == "." || relativePath == ".." || strings.HasPrefix(relativePath, ".."+string(os.PathSeparator)) {
+		return "", fmt.Errorf("%w: %q", ErrInvalidStorageName, filepath.Join(pathParts...))
+	}
+
+	return cleanedCandidatePath, nil
 }
 
 func (o *StorageEntity) SaveAsJson(name string, item any) (err error) {

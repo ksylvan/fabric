@@ -1,6 +1,7 @@
 package fsdb
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -145,18 +146,25 @@ func (o *PatternsEntity) getFromDB(name string) (ret *Pattern, err error) {
 
 	// First check custom patterns directory if it exists
 	if o.CustomPatternsDir != "" {
-		customPatternPath := filepath.Join(o.CustomPatternsDir, name, o.SystemPatternFile)
-		if pattern, customErr := os.ReadFile(customPatternPath); customErr == nil {
-			ret = &Pattern{
-				Name:    name,
-				Pattern: string(pattern),
+		customPatternPath, customPathErr := resolvePathWithinDir(o.CustomPatternsDir, name, o.SystemPatternFile)
+		if customPathErr == nil {
+			if pattern, customErr := os.ReadFile(customPatternPath); customErr == nil {
+				ret = &Pattern{
+					Name:    name,
+					Pattern: string(pattern),
+				}
+				return ret, nil
 			}
-			return ret, nil
+		} else if !errors.Is(customPathErr, ErrInvalidStorageName) {
+			return nil, customPathErr
 		}
 	}
 
 	// Fallback to main patterns directory
-	patternPath := filepath.Join(o.Dir, name, o.SystemPatternFile)
+	patternPath, err := resolvePathWithinDir(o.Dir, name, o.SystemPatternFile)
+	if err != nil {
+		return nil, err
+	}
 
 	var pattern []byte
 	if pattern, err = os.ReadFile(patternPath); err != nil {
@@ -295,7 +303,10 @@ func (o *PatternsEntity) Save(name string, content []byte) (err error) {
 		return err
 	}
 
-	patternDir := filepath.Join(o.Dir, name)
+	patternDir, err := resolvePathWithinDir(o.Dir, name)
+	if err != nil {
+		return err
+	}
 	if err = os.MkdirAll(patternDir, os.ModePerm); err != nil {
 		return fmt.Errorf(i18n.T("patterns_error_create_directory"), err)
 	}

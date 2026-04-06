@@ -86,3 +86,43 @@ func TestStorage_RejectsTraversalNames(t *testing.T) {
 		t.Fatalf("expected traversal target to remain absent, stat err=%v", err)
 	}
 }
+
+func TestStorage_RejectsSymlinkEscapes(t *testing.T) {
+	rootDir := t.TempDir()
+	storageDir := filepath.Join(rootDir, "storage")
+	if err := os.MkdirAll(storageDir, 0o755); err != nil {
+		t.Fatalf("failed to create storage dir: %v", err)
+	}
+
+	outsideFile := filepath.Join(rootDir, "outside.txt")
+	if err := os.WriteFile(outsideFile, []byte("secret"), 0o644); err != nil {
+		t.Fatalf("failed to create outside file: %v", err)
+	}
+
+	linkPath := filepath.Join(storageDir, "linked")
+	if err := os.Symlink(outsideFile, linkPath); err != nil {
+		t.Skipf("symlink creation unavailable: %v", err)
+	}
+
+	storage := &StorageEntity{Dir: storageDir}
+
+	if _, err := storage.Load("linked"); !errors.Is(err, ErrInvalidStorageName) {
+		t.Fatalf("expected invalid storage name error from Load, got %v", err)
+	}
+
+	if storage.Exists("linked") {
+		t.Fatal("expected Exists to reject symlinked paths outside the storage dir")
+	}
+
+	if err := storage.Save("linked", []byte("overwrite")); !errors.Is(err, ErrInvalidStorageName) {
+		t.Fatalf("expected invalid storage name error from Save, got %v", err)
+	}
+
+	content, err := os.ReadFile(outsideFile)
+	if err != nil {
+		t.Fatalf("failed to read outside file: %v", err)
+	}
+	if string(content) != "secret" {
+		t.Fatalf("expected outside file to remain unchanged, got %q", string(content))
+	}
+}
