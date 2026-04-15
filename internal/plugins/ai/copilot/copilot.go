@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -401,8 +402,7 @@ func (c *Client) parseSSEStream(reader io.Reader, channel chan domain.StreamUpda
 // extractResponseText extracts the assistant's response from messages.
 func (c *Client) extractResponseText(messages []responseMessage) string {
 	// Find the last assistant message (Copilot's response)
-	for i := len(messages) - 1; i >= 0; i-- {
-		msg := messages[i]
+	for _, msg := range slices.Backward(messages) {
 		// Response messages from Copilot have the copilotConversationResponseMessage type
 		if msg.ODataType == "#microsoft.graph.copilotConversationResponseMessage" {
 			if msg.Text != "" {
