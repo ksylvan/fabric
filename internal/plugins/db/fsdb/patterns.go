@@ -55,14 +55,18 @@ func (o *PatternsEntity) GetRaw(name string) (*Pattern, error) {
 	return o.getFromDB(name)
 }
 
-func (o *PatternsEntity) loadPattern(source string) (pattern *Pattern, err error) {
-	// Determine if this is a file path
-	isFilePath := strings.HasPrefix(source, "\\") ||
+// LooksLikePatternFilePath reports whether source is treated as a filesystem
+// path by loadPattern. HTTP handlers must reject these names so the CLI
+// file-path feature cannot be used over the REST API.
+func LooksLikePatternFilePath(source string) bool {
+	return strings.HasPrefix(source, "\\") ||
 		strings.HasPrefix(source, "/") ||
 		strings.HasPrefix(source, "~") ||
 		strings.HasPrefix(source, ".")
+}
 
-	if isFilePath {
+func (o *PatternsEntity) loadPattern(source string) (pattern *Pattern, err error) {
+	if LooksLikePatternFilePath(source) {
 		// Resolve the file path using GetAbsolutePath
 		var absPath string
 		if absPath, err = util.GetAbsolutePath(source); err != nil {
@@ -119,8 +123,13 @@ func (o *PatternsEntity) applyVariables(
 
 // retrieves a pattern from the database by name
 func (o *PatternsEntity) getFromDB(name string) (ret *Pattern, err error) {
-	if strings.Contains(name, "..") {
-		return nil, fmt.Errorf(i18n.T("pattern_invalid_name"), name)
+	if ValidateStorageName(name) != nil {
+		// Typed, so a future HTTP route without a pre-validation guard
+		// still maps this rejection to 400 instead of 500.
+		return nil, &InvalidStorageNameError{
+			Name:    name,
+			Message: fmt.Sprintf(i18n.T("pattern_invalid_name"), name),
+		}
 	}
 
 	// First check custom patterns directory if it exists
@@ -283,7 +292,19 @@ func (o *PatternsEntity) Get(name string) (*Pattern, error) {
 	return o.GetApplyVariables(name, nil, "")
 }
 func (o *PatternsEntity) Save(name string, content []byte) (err error) {
-	patternDir := filepath.Join(o.Dir, name)
+	// Names that loadPattern treats as file paths (".foo", "~bar", ...) must
+	// not be stored: GetApplyVariables would read them back from the
+	// filesystem instead of the database.
+	if LooksLikePatternFilePath(name) {
+		return &InvalidStorageNameError{
+			Name:    name,
+			Message: fmt.Sprintf(i18n.T("pattern_invalid_name"), name),
+		}
+	}
+	var patternDir string
+	if patternDir, err = o.resolvedPath(name); err != nil {
+		return
+	}
 	if err = os.MkdirAll(patternDir, os.ModePerm); err != nil {
 		return fmt.Errorf(i18n.T("patterns_error_create_directory"), err)
 	}

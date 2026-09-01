@@ -21,6 +21,19 @@ func TestSessions_GetOrCreateSession(t *testing.T) {
 	}
 }
 
+// Get must reject an invalid name instead of answering with a new empty
+// session, so GET /sessions/<bad-name> is a 400 like the other entities.
+func TestSessions_GetRejectsInvalidNames(t *testing.T) {
+	sessions := &SessionsEntity{
+		StorageEntity: &StorageEntity{Dir: t.TempDir(), FileExtension: ".json"},
+	}
+	for _, name := range invalidStorageNames {
+		if _, err := sessions.Get(name); err == nil {
+			t.Errorf("Get(%q) succeeded, want error", name)
+		}
+	}
+}
+
 func TestSessions_SaveSession(t *testing.T) {
 	dir := t.TempDir()
 	sessions := &SessionsEntity{

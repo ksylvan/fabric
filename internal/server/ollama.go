@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"math"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -45,6 +47,7 @@ type APIConvert struct {
 	registry *core.PluginRegistry
 	r        *gin.Engine
 	addr     *string
+	apiKey   string
 }
 
 type OllamaRequestBody struct {
@@ -188,12 +191,28 @@ func parseOllamaNumCtx(options map[string]any) (int, error) {
 	return contextLength, nil
 }
 
-func ServeOllama(registry *core.PluginRegistry, address string, version string) (err error) {
+// ServeOllama runs the Ollama-compatible API server on address. An empty
+// apiKey disables authentication.
+func ServeOllama(registry *core.PluginRegistry, address string, version string, apiKey string) error {
+	return newOllamaEngine(registry, address, version, apiKey).Run(address)
+}
+
+// newOllamaEngine builds the engine without starting it, so tests can
+// exercise the routes. The address parameter is the /api/chat forward
+// target, not the listen address that Run takes; in production the two
+// are the same value.
+func newOllamaEngine(registry *core.PluginRegistry, address string, version string, apiKey string) *gin.Engine {
 	r := gin.New()
 
 	// Middleware
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
+	if apiKey != "" {
+		r.Use(APIKeyMiddleware(apiKey))
+		warnIfNonLoopbackChatForward(address)
+	} else {
+		slog.Warn("Starting Ollama-compatible API server without API key authentication. This may pose security risks.")
+	}
 
 	// Register routes
 	fabricDb := registry.Db
@@ -208,6 +227,7 @@ func ServeOllama(registry *core.PluginRegistry, address string, version string) 
 		registry: registry,
 		r:        r,
 		addr:     &address,
+		apiKey:   apiKey,
 	}
 	// Ollama Endpoints
 	r.GET("/api/tags", typeConversion.ollamaTags)
@@ -216,13 +236,7 @@ func ServeOllama(registry *core.PluginRegistry, address string, version string) 
 	})
 	r.POST("/api/chat", typeConversion.ollamaChat)
 
-	// Start server
-	err = r.Run(address)
-	if err != nil {
-		return err
-	}
-
-	return
+	return r
 }
 
 func (f APIConvert) ollamaTags(c *gin.Context) {
@@ -350,6 +364,9 @@ func (f APIConvert) ollamaChat(c *gin.Context) {
 		log.Printf(i18n.T("ollama_error_creating_chat_request"), err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("ollama_failed_create_request")})
 		return
+	}
+	if f.apiKey != "" {
+		req.Header.Set(APIKeyHeader, f.apiKey)
 	}
 
 	req = req.WithContext(c.Request.Context())
@@ -528,6 +545,28 @@ func buildFabricChatURL(addr string) (string, error) {
 		return "", errors.New(i18n.T("ollama_invalid_address_path_not_allowed"))
 	}
 	return strings.TrimRight(parsed.String(), "/"), nil
+}
+
+// warnIfNonLoopbackChatForward warns when /api/chat requests will be
+// forwarded to a non-loopback address: the forwarded request carries the
+// configured API key, which should not leave this machine, especially over
+// plaintext HTTP. Unspecified (wildcard) addresses count as local: a
+// connection to 0.0.0.0 or :: goes to the local host.
+func warnIfNonLoopbackChatForward(address string) {
+	baseURL, err := buildFabricChatURL(address)
+	if err != nil {
+		return
+	}
+	parsed, err := url.Parse(baseURL)
+	if err != nil {
+		return
+	}
+	if host := parsed.Hostname(); host == "localhost" {
+		return
+	} else if ip := net.ParseIP(host); ip != nil && (ip.IsLoopback() || ip.IsUnspecified()) {
+		return
+	}
+	slog.Warn("Ollama chat requests are forwarded to a non-loopback address; the configured API key will be sent there.", "address", baseURL)
 }
 
 // writeOllamaResponse constructs an Ollama-formatted response chunk and writes it

@@ -3,8 +3,10 @@ package fsdb
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/danielmiessler/fabric/internal/i18n"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -179,6 +181,49 @@ func TestPatternsEntity_Save(t *testing.T) {
 	assert.Equal(t, content, data)
 }
 
+func TestPatternsEntity_SaveRejectsPathTraversal(t *testing.T) {
+	entity, cleanup := setupTestPatternsEntity(t)
+	defer cleanup()
+
+	parent := filepath.Dir(entity.Dir)
+	err := entity.Save("..", []byte("pwned"))
+	require.Error(t, err)
+	_, statErr := os.Stat(filepath.Join(parent, "system.md"))
+	assert.True(t, os.IsNotExist(statErr))
+}
+
+// Names that loadPattern treats as filesystem paths must not be storable:
+// GetApplyVariables would read them back from disk instead of the database.
+func TestPatternsEntity_SaveRejectsFilePathNames(t *testing.T) {
+	entity, cleanup := setupTestPatternsEntity(t)
+	defer cleanup()
+
+	for _, name := range []string{".foo", "..bar", "~bar", "/abs/path", `\win\path`} {
+		err := entity.Save(name, []byte("pwned"))
+		assert.Error(t, err, "expected error for file-path name: %q", name)
+		if strings.HasPrefix(name, "/") || strings.HasPrefix(name, `\`) {
+			// An accepted absolute name would not write under entity.Dir,
+			// so the join below aims at the wrong place. The error
+			// assertion carries the protection for these two.
+			continue
+		}
+		_, statErr := os.Stat(filepath.Join(entity.Dir, name))
+		assert.True(t, os.IsNotExist(statErr), "created a directory for: %q", name)
+	}
+}
+
+func TestGetApplyVariables_FromFile(t *testing.T) {
+	entity, cleanup := setupTestPatternsEntity(t)
+	defer cleanup()
+
+	path := filepath.Join(t.TempDir(), "fromfile.md")
+	require.NoError(t, os.WriteFile(path, []byte("Hello {{input}}"), 0o644))
+
+	result, err := entity.GetApplyVariables(path, nil, "world")
+	require.NoError(t, err)
+	assert.Equal(t, "Hello world", result.Pattern)
+}
+
 func TestPatternsEntity_CustomPatterns(t *testing.T) {
 	// Create main patterns directory
 	mainDir, err := os.MkdirTemp("", "test-main-patterns-*")
@@ -333,20 +378,43 @@ func TestPrintPattern(t *testing.T) {
 }
 
 func TestGetFromDB_PathTraversal(t *testing.T) {
+	if _, err := i18n.Init("en"); err != nil {
+		t.Fatalf("i18n.Init() error = %v", err)
+	}
+
 	entity, cleanup := setupTestPatternsEntity(t)
 	defer cleanup()
 
-	traversalNames := []string{
-		"../etc/passwd",
-		"../../secret",
-		"foo/../bar",
-		"..",
-		"valid/../../../etc/shadow",
+	for _, name := range invalidStorageNames {
+		t.Run(name, func(t *testing.T) {
+			_, err := entity.GetRaw(name)
+			require.Error(t, err, "expected error for traversal name: %q", name)
+			assert.Contains(t, err.Error(), "invalid pattern name", "wrong error for: %q", name)
+			var invalidName *InvalidStorageNameError
+			assert.ErrorAs(t, err, &invalidName, "want typed rejection for: %q", name)
+		})
 	}
-	for _, name := range traversalNames {
-		_, err := entity.GetRaw(name)
-		assert.Error(t, err, "expected error for traversal name: %q", name)
-		assert.Contains(t, err.Error(), "invalid pattern name", "wrong error for: %q", name)
+}
+
+// Separator-free ".." inside a name is safe as a single path element and is
+// deliberately accepted since getFromDB switched to ValidateStorageName.
+func TestGetFromDB_AllowsDotsWithinName(t *testing.T) {
+	entity, cleanup := setupTestPatternsEntity(t)
+	defer cleanup()
+
+	createTestPattern(t, entity, "foo..bar", "dotty {{input}}")
+
+	pattern, err := entity.GetRaw("foo..bar")
+	require.NoError(t, err)
+	assert.Equal(t, "dotty {{input}}", pattern.Pattern)
+}
+
+func TestLooksLikePatternFilePath(t *testing.T) {
+	for _, source := range []string{"/x", `~\x`, `\x`, `.\x`, "~", ".", ".."} {
+		assert.True(t, LooksLikePatternFilePath(source), "expected file-path detection for: %q", source)
+	}
+	for _, source := range []string{"", "pattern", "foo..bar", "a/b", "x~y", "x.y"} {
+		assert.False(t, LooksLikePatternFilePath(source), "unexpected file-path detection for: %q", source)
 	}
 }
 

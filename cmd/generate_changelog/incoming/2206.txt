@@ -1,0 +1,7 @@
+### PR [#2206](https://github.com/danielmiessler/Fabric/pull/2206) by [ksylvan](https://github.com/ksylvan): fix: confine storage names and authenticate Ollama serve
+
+- Prevented path traversal and unsafe storage names by rejecting separators, reserved devices, and forbidden path characters.
+- Confined storage CRUD operations to their designated entity directories.
+- Protected Ollama-compatible routes with constant-time API key authentication and secure credential forwarding.
+- Added warnings before forwarding credentials to non-loopback chat addresses.
+- Localized authentication warnings, sanitized validation errors, and expanded security test coverage.

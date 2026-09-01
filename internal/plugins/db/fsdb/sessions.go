@@ -13,6 +13,11 @@ type SessionsEntity struct {
 }
 
 func (o *SessionsEntity) Get(name string) (session *Session, err error) {
+	// Reject invalid names here: Exists reports false for them, and the
+	// missing-session branch would silently answer with a new empty session.
+	if err = ValidateStorageName(name); err != nil {
+		return nil, err
+	}
 	session = &Session{Name: name}
 
 	if o.Exists(name) {

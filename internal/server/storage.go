@@ -1,17 +1,54 @@
 package restapi
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/danielmiessler/fabric/internal/plugins/db"
+	"github.com/danielmiessler/fabric/internal/plugins/db/fsdb"
 	"github.com/gin-gonic/gin"
 )
 
 // StorageHandler defines the handler for storage-related operations
 type StorageHandler[T any] struct {
 	storage db.Storage[T]
+}
+
+// setHSTS sets the Strict-Transport-Security header. Every validation 400
+// sends it, so the reject paths match the chat BindJSON 400 path.
+func setHSTS(c *gin.Context) {
+	c.Writer.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains")
+}
+
+// storageError answers err. Name-validation rejections become a 400 whose
+// body contains only the rejected name. Everything else stays a 500 with a
+// generic body: fsdb wraps *os.PathError values, so err.Error() would leak
+// absolute filesystem paths to the client. The full error goes to the log.
+func storageError(c *gin.Context, err error) {
+	if _, ok := errors.AsType[*fsdb.InvalidStorageNameError](err); ok {
+		setHSTS(c)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	slog.Error("storage operation failed", "error", err)
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+}
+
+// rejectInvalidStorageName answers a 400 when name fails storage-name
+// validation. Empty names pass: the fields this guards are optional.
+func rejectInvalidStorageName(c *gin.Context, name string) bool {
+	if name == "" {
+		return false
+	}
+	if err := fsdb.ValidateStorageName(name); err != nil {
+		setHSTS(c)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return true
+	}
+	return false
 }
 
 // NewStorageHandler creates a new StorageHandler
@@ -31,7 +68,7 @@ func (h *StorageHandler[T]) Get(c *gin.Context) {
 	name := c.Param("name")
 	item, err := h.storage.Get(name)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		storageError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, item)
@@ -41,7 +78,7 @@ func (h *StorageHandler[T]) Get(c *gin.Context) {
 func (h *StorageHandler[T]) GetNames(c *gin.Context) {
 	names, err := h.storage.GetNames()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		storageError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, names)
@@ -52,7 +89,7 @@ func (h *StorageHandler[T]) Delete(c *gin.Context) {
 	name := c.Param("name")
 	err := h.storage.Delete(name)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		storageError(c, err)
 		return
 	}
 	c.Status(http.StatusOK)
@@ -71,7 +108,7 @@ func (h *StorageHandler[T]) Rename(c *gin.Context) {
 	newName := c.Param("newName")
 	err := h.storage.Rename(oldName, newName)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		storageError(c, err)
 		return
 	}
 	c.Status(http.StatusOK)
@@ -87,14 +124,14 @@ func (h *StorageHandler[T]) Save(c *gin.Context) {
 
 	content, err := io.ReadAll(body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		storageError(c, err)
 		return
 	}
 
 	// Save the content to storage
 	err = h.storage.Save(name, content)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		storageError(c, err)
 		return
 	}
 	c.Status(http.StatusOK)
