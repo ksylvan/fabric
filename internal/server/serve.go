@@ -28,6 +28,10 @@ import (
 // @in header
 // @name X-API-Key
 func Serve(registry *core.PluginRegistry, address string, apiKey string) (err error) {
+	return newServeEngine(registry, apiKey).Run(address)
+}
+
+func newServeEngine(registry *core.PluginRegistry, apiKey string) *gin.Engine {
 	r := gin.New()
 
 	// Middleware
@@ -77,11 +81,5 @@ func Serve(registry *core.PluginRegistry, address string, apiKey string) (err er
 	NewModelsHandler(r, registry.VendorManager)
 	NewStrategiesHandler(r)
 
-	// Start server
-	err = r.Run(address)
-	if err != nil {
-		return err
-	}
-
-	return
+	return r
 }
