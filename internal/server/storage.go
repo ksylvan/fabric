@@ -29,6 +29,7 @@ func setHSTS(c *gin.Context) {
 // absolute filesystem paths to the client. The full error goes to the log.
 func storageError(c *gin.Context, err error) {
 	if _, ok := errors.AsType[*fsdb.InvalidStorageNameError](err); ok {
+		logSecurityEvent(c, "Rejected invalid storage name", "error", err)
 		setHSTS(c)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -44,6 +45,7 @@ func rejectInvalidStorageName(c *gin.Context, name string) bool {
 		return false
 	}
 	if err := fsdb.ValidateStorageName(name); err != nil {
+		logSecurityEvent(c, "Rejected invalid storage name", "name", name, "error", err)
 		setHSTS(c)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return true

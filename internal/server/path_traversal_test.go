@@ -1,7 +1,9 @@
 package restapi
 
 import (
+	"bytes"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,6 +15,15 @@ import (
 	"github.com/danielmiessler/fabric/internal/plugins/db/fsdb"
 	"github.com/gin-gonic/gin"
 )
+
+func captureServerLogs() (*bytes.Buffer, func()) {
+	var buf bytes.Buffer
+	prev := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&buf, nil)))
+	return &buf, func() {
+		slog.SetDefault(prev)
+	}
+}
 
 func TestStorageHandler_RejectsPathTraversal(t *testing.T) {
 	if _, err := i18n.Init("en"); err != nil {
@@ -48,6 +59,31 @@ func TestStorageHandler_RejectsPathTraversal(t *testing.T) {
 		if _, err := os.Stat(contextsDir); err != nil {
 			t.Fatalf("%s: contexts dir was deleted: %v", path, err)
 		}
+	}
+}
+
+func TestStorageHandler_LogsRejectedTraversal(t *testing.T) {
+	if _, err := i18n.Init("en"); err != nil {
+		t.Fatalf("i18n.Init() error = %v", err)
+	}
+	gin.SetMode(gin.TestMode)
+
+	buf, restore := captureServerLogs()
+	defer restore()
+
+	r := gin.New()
+	NewContextsHandler(r, &fsdb.ContextsEntity{
+		StorageEntity: &fsdb.StorageEntity{Label: "Contexts", Dir: t.TempDir()},
+	})
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodDelete, "/contexts/%2e%2e", nil)
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("got %d, want 400", w.Code)
+	}
+	if !strings.Contains(buf.String(), "Rejected invalid storage name") {
+		t.Fatalf("missing security log entry: %q", buf.String())
 	}
 }
 
@@ -197,6 +233,53 @@ func TestChatHandler_RejectsUnsafeNames(t *testing.T) {
 	}
 }
 
+func TestChatHandler_LogsRejectedUnsafeNames(t *testing.T) {
+	if _, err := i18n.Init("en"); err != nil {
+		t.Fatalf("i18n.Init() error = %v", err)
+	}
+	gin.SetMode(gin.TestMode)
+
+	t.Run("pattern name", func(t *testing.T) {
+		buf, restore := captureServerLogs()
+		defer restore()
+
+		r := gin.New()
+		r.POST("/chat", (&ChatHandler{}).HandleChat)
+
+		w := httptest.NewRecorder()
+		body := `{"prompts":[{"patternName":"/etc/hosts","userInput":"x"}]}`
+		req := httptest.NewRequest(http.MethodPost, "/chat", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("got status %d, want 400", w.Code)
+		}
+		if !strings.Contains(buf.String(), "Rejected invalid pattern name") {
+			t.Fatalf("missing pattern-name security log entry: %q", buf.String())
+		}
+	})
+
+	t.Run("context name", func(t *testing.T) {
+		buf, restore := captureServerLogs()
+		defer restore()
+
+		r := gin.New()
+		r.POST("/chat", (&ChatHandler{}).HandleChat)
+
+		w := httptest.NewRecorder()
+		body := `{"prompts":[{"userInput":"x","contextName":"../keep.txt"}]}`
+		req := httptest.NewRequest(http.MethodPost, "/chat", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusBadRequest {
+			t.Fatalf("got status %d, want 400", w.Code)
+		}
+		if !strings.Contains(buf.String(), "Rejected invalid storage name") {
+			t.Fatalf("missing storage-name security log entry: %q", buf.String())
+		}
+	})
+}
+
 func TestPatternsHandler_RejectsUnsafeNamesOnReadRoutes(t *testing.T) {
 	if _, err := i18n.Init("en"); err != nil {
 		t.Fatalf("i18n.Init() error = %v", err)
@@ -282,4 +365,34 @@ func TestAPIKeyMiddleware(t *testing.T) {
 			t.Fatalf("got %d, want 200", w.Code)
 		}
 	})
+}
+
+func TestAPIKeyMiddleware_LogsUnauthorizedAttempts(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	buf, restore := captureServerLogs()
+	defer restore()
+
+	r := gin.New()
+	r.Use(APIKeyMiddleware("secret"))
+	r.GET("/ping", func(c *gin.Context) { c.Status(http.StatusOK) })
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
+	req.Header.Set(APIKeyHeader, "wrong")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("got %d, want 401", w.Code)
+	}
+
+	logOutput := buf.String()
+	if !strings.Contains(logOutput, "API key authentication failed") {
+		t.Fatalf("missing auth failure log entry: %q", logOutput)
+	}
+	if !strings.Contains(logOutput, "invalid_api_key") {
+		t.Fatalf("missing auth failure reason: %q", logOutput)
+	}
+	if strings.Contains(logOutput, "wrong") || strings.Contains(logOutput, "secret") {
+		t.Fatalf("log leaked API key material: %q", logOutput)
+	}
 }

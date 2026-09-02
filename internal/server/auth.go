@@ -3,6 +3,7 @@ package restapi
 import (
 	"crypto/sha256"
 	"crypto/subtle"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -10,6 +11,18 @@ import (
 )
 
 const APIKeyHeader = "X-API-Key"
+
+func logSecurityEvent(c *gin.Context, message string, attrs ...any) {
+	baseAttrs := []any{
+		"method", c.Request.Method,
+		"path", c.Request.URL.Path,
+		"client_ip", c.ClientIP(),
+	}
+	if route := c.FullPath(); route != "" {
+		baseAttrs = append(baseAttrs, "route", route)
+	}
+	slog.Warn(message, append(baseAttrs, attrs...)...)
+}
 
 // APIKeyMiddleware validates API key for protected endpoints.
 // Swagger documentation endpoints (/swagger/*) are exempt from authentication
@@ -29,12 +42,14 @@ func APIKeyMiddleware(apiKey string) gin.HandlerFunc {
 		headerApiKey := c.GetHeader(APIKeyHeader)
 
 		if headerApiKey == "" {
+			logSecurityEvent(c, "API key authentication failed", "reason", "missing_api_key")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing API Key"})
 			return
 		}
 
 		headerKey := sha256.Sum256([]byte(headerApiKey))
 		if subtle.ConstantTimeCompare(headerKey[:], expectedKey[:]) != 1 {
+			logSecurityEvent(c, "API key authentication failed", "reason", "invalid_api_key")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Wrong API Key"})
 			return
 		}

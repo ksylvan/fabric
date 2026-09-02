@@ -24,6 +24,7 @@ func rejectUnsafePatternName(c *gin.Context, name string) bool {
 		return false
 	}
 	if fsdb.LooksLikePatternFilePath(name) || fsdb.ValidateStorageName(name) != nil {
+		logSecurityEvent(c, "Rejected invalid pattern name", "name", name)
 		setHSTS(c)
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf(i18n.T("pattern_invalid_name"), name)})
 		return true
