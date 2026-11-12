@@ -39,3 +39,13 @@ The author reports that `go test ./internal/tools/keenable/` passes and `go buil
 ## Review boundary
 
 This task reads and records the PR description only. Base-branch identification, diff analysis, implementation review, and independent test execution remain for subsequent playbook tasks. No images were attached to the task or embedded in the PR description.
+
+## Base branch
+
+GitHub PR metadata checked on 2026-11-11 confirms that PR #2330 targets `main` in `danielmiessler/Fabric`.
+
+- Base commit: `de0b72766db0436b6c1887bb75768cb3960e67e5`.
+- PR head: `KGKallasmaa/Fabric:feat/keenable-search` at `fb296d490cca4fdebbcb78d5107241f134152d19`.
+- Local `upstream` points to `danielmiessler/Fabric`; local `origin` points to `ksylvan/fabric`. Use the upstream base (or the recorded base commit for a reproducible snapshot) when the later task analyzes the PR diff.
+
+Only base-branch identification was performed in this run. Diff analysis and review remain pending.
