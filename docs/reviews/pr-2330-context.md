@@ -137,3 +137,11 @@ None.
 Shell completion scripts are source code because they implement shell completion behavior. Locale JSON files are configuration/localization resources; the incoming changelog entry is documentation, despite living under `cmd/`. No build scripts, dependency manifests, or CI workflows changed.
 
 Validation: compared category membership against `git diff --name-only` for the recorded PR snapshot; all 25 paths are covered once, with no uncategorized paths. This task changes review documentation only, so code tests are not applicable. No images analyzed. Size assessment, risk analysis, and [[REVIEW_SCOPE]] remain pending.
+
+## PR size assessment
+
+PR #2330 is **medium** under the playbook thresholds (small: fewer than 100 changed lines; medium: 100–500; large: more than 500). The recorded PR-only base/head diff contains **320 additions + 3 deletions = 323 changed lines across 25 files**. Changed lines count additions and deletions, rather than the net increase of 317 lines.
+
+Verified by summing `git diff --numstat de0b72766db0436b6c1887bb75768cb3960e67e5...fb296d490cca4fdebbcb78d5107241f134152d19`. The fixed PR snapshot excludes review documentation introduced on this branch. This assessment measures diff size only; high-risk-area analysis and [[REVIEW_SCOPE]] remain pending.
+
+Validation: asserted 25 paths, 320 additions, 3 deletions, and membership in the medium-size range. Documentation-only change; code tests are not applicable. No images analyzed.
