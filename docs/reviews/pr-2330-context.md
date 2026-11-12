@@ -49,3 +49,42 @@ GitHub PR metadata checked on 2026-11-11 confirms that PR #2330 targets `main` i
 - Local `upstream` points to `danielmiessler/Fabric`; local `origin` points to `ksylvan/fabric`. Use the upstream base (or the recorded base commit for a reproducible snapshot) when the later task analyzes the PR diff.
 
 Only base-branch identification was performed in this run. Diff analysis and review remain pending.
+
+## Diff summary
+
+Captured on 2026-11-11. `origin/main` and `upstream/main` both resolve to the recorded base `de0b72766db0436b6c1887bb75768cb3960e67e5`.
+
+The requested `git diff --stat origin/main...HEAD` at review commit `7a488beff67898b426bb68fc833fb7acb621d78e` reports **26 files changed, 371 insertions, and 3 deletions**. This includes `docs/reviews/pr-2330-context.md` (51 added lines), a review artifact introduced after the PR head. Further review commits will also affect that working-branch comparison.
+
+For the PR-only snapshot, `git diff --stat de0b72766db0436b6c1887bb75768cb3960e67e5...fb296d490cca4fdebbcb78d5107241f134152d19` reports **25 files changed, 320 insertions, and 3 deletions**:
+
+```text
+ README.md                                |   1 +
+ cmd/generate_changelog/incoming/2330.txt |   5 ++
+ completions/_fabric                      |   1 +
+ completions/fabric.bash                  |   4 +-
+ completions/fabric.fish                  |   1 +
+ internal/cli/flags.go                    |   1 +
+ internal/cli/help.go                     |   1 +
+ internal/cli/tools.go                    |  14 ++++
+ internal/core/plugin_registry.go         |   7 +-
+ internal/i18n/locales/ar-BH.json         |   7 ++
+ internal/i18n/locales/ar-SA.json         |   7 ++
+ internal/i18n/locales/de.json            |   7 ++
+ internal/i18n/locales/en.json            |   7 ++
+ internal/i18n/locales/es.json            |   7 ++
+ internal/i18n/locales/fa.json            |   7 ++
+ internal/i18n/locales/fr.json            |   7 ++
+ internal/i18n/locales/it.json            |   7 ++
+ internal/i18n/locales/ja.json            |   7 ++
+ internal/i18n/locales/pl.json            |   7 ++
+ internal/i18n/locales/pt-BR.json         |   7 ++
+ internal/i18n/locales/pt-PT.json         |   7 ++
+ internal/i18n/locales/tr.json            |   7 ++
+ internal/i18n/locales/zh.json            |   7 ++
+ internal/tools/keenable/keenable.go      | 121 +++++++++++++++++++++++++++++++
+ internal/tools/keenable/keenable_test.go |  69 ++++++++++++++++++
+ 25 files changed, 320 insertions(+), 3 deletions(-)
+```
+
+The diff is nonempty, so the empty-diff shortcut does not apply. File categorization, size assessment, risk analysis, and [[REVIEW_SCOPE]] remain for subsequent tasks. No source code changed in this task; code tests were not applicable. No images analyzed.
