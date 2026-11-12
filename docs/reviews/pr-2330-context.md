@@ -88,3 +88,52 @@ For the PR-only snapshot, `git diff --stat de0b72766db0436b6c1887bb75768cb3960e6
 ```
 
 The diff is nonempty, so the empty-diff shortcut does not apply. File categorization, size assessment, risk analysis, and [[REVIEW_SCOPE]] remain for subsequent tasks. No source code changed in this task; code tests were not applicable. No images analyzed.
+
+## Changed file categories
+
+Categorized the PR-only snapshot between the recorded base and head above. Each of the 25 changed files appears exactly once; review artifacts added after the PR head are excluded.
+
+### Source code files (8)
+
+- `completions/_fabric`
+- `completions/fabric.bash`
+- `completions/fabric.fish`
+- `internal/cli/flags.go`
+- `internal/cli/help.go`
+- `internal/cli/tools.go`
+- `internal/core/plugin_registry.go`
+- `internal/tools/keenable/keenable.go`
+
+### Test files (1)
+
+- `internal/tools/keenable/keenable_test.go`
+
+### Configuration files (14)
+
+- `internal/i18n/locales/ar-BH.json`
+- `internal/i18n/locales/ar-SA.json`
+- `internal/i18n/locales/de.json`
+- `internal/i18n/locales/en.json`
+- `internal/i18n/locales/es.json`
+- `internal/i18n/locales/fa.json`
+- `internal/i18n/locales/fr.json`
+- `internal/i18n/locales/it.json`
+- `internal/i18n/locales/ja.json`
+- `internal/i18n/locales/pl.json`
+- `internal/i18n/locales/pt-BR.json`
+- `internal/i18n/locales/pt-PT.json`
+- `internal/i18n/locales/tr.json`
+- `internal/i18n/locales/zh.json`
+
+### Documentation files (2)
+
+- `README.md`
+- `cmd/generate_changelog/incoming/2330.txt`
+
+### Build/CI files (0)
+
+None.
+
+Shell completion scripts are source code because they implement shell completion behavior. Locale JSON files are configuration/localization resources; the incoming changelog entry is documentation, despite living under `cmd/`. No build scripts, dependency manifests, or CI workflows changed.
+
+Validation: compared category membership against `git diff --name-only` for the recorded PR snapshot; all 25 paths are covered once, with no uncategorized paths. This task changes review documentation only, so code tests are not applicable. No images analyzed. Size assessment, risk analysis, and [[REVIEW_SCOPE]] remain pending.
