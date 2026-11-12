@@ -145,3 +145,24 @@ PR #2330 is **medium** under the playbook thresholds (small: fewer than 100 chan
 Verified by summing `git diff --numstat de0b72766db0436b6c1887bb75768cb3960e67e5...fb296d490cca4fdebbcb78d5107241f134152d19`. The fixed PR snapshot excludes review documentation introduced on this branch. This assessment measures diff size only; high-risk-area analysis and [[REVIEW_SCOPE]] remain pending.
 
 Validation: asserted 25 paths, 320 additions, 3 deletions, and membership in the medium-size range. Documentation-only change; code tests are not applicable. No images analyzed.
+
+## High-risk areas
+
+Assessed against the recorded PR-only base/head diff. These are review priorities, not confirmed defects.
+
+| Area | Changed files | Reason and review focus |
+| --- | --- | --- |
+| User input and external HTTP boundary (highest priority) | `internal/tools/keenable/keenable.go` | `Search` sends the user's query to Keenable in JSON, chooses a public or keyed endpoint, and decodes external results. Examine query handling, timeout/transport failures, redirects with the custom API-key header, response/error-body size handling, malformed responses, and third-party text/URLs entering Markdown and downstream chat prompts. Search queries can contain sensitive user content. |
+| Optional credential handling | `internal/tools/keenable/keenable.go`, `internal/core/plugin_registry.go` | `NewClient` adds the optional API-key setup question; `Search` trims and sends it as `X-API-Key`. Registry changes initialize/configure the client, expose setup, and include it in environment-file serialization. Verify absent-key behavior, key loading/persistence, and that errors do not expose credentials. These are outbound service credentials; no application login or authorization policy changes appear in the diff. |
+| Core CLI processing | `internal/cli/tools.go`, `internal/cli/flags.go` | The new user-controlled flag invokes search without an `IsConfigured` gate, appends results, and either writes output or passes results toward chat. Examine registry initialization, error propagation, standalone versus chat behavior, and interactions with other tool flags and early returns. |
+| Persistence integration | `internal/core/plugin_registry.go` | `SaveEnvFile` now includes Keenable setup content before calling the existing `o.Db.SaveEnv`. Review this existing filesystem-backed configuration path for credential persistence/regressions. No new database queries, schema changes, migrations, or direct database access are introduced in the changed code. |
+
+Supporting review surfaces:
+
+- `internal/tools/keenable/keenable_test.go` covers public/keyed requests, basic formatting and truncation, skipped URL-less results, and a non-200 response. Inspect gaps around transport/decode failures, Unicode truncation, key whitespace, and CLI/setup integration during detailed review; no CLI or registry tests are added by this PR.
+- All 14 changed `internal/i18n/locales/*.json` files supply setup/help and formatted error messages. Check matching keys and formatting placeholders because these messages execute on client failure paths.
+- `internal/cli/help.go`, the three completion scripts, `README.md`, and `cmd/generate_changelog/incoming/2330.txt` are lower-risk discoverability/documentation changes. Check that their claims and flag argument behavior match the implementation.
+
+No financial processing or domain-specific sensitive-record handling appears in the PR diff. Sensitive-data scrutiny centers on optional API keys and user-provided search queries. Result URLs are rendered as text here; the new client does not fetch each returned URL.
+
+Validation: checked risk paths against all 25 changed paths in the fixed PR snapshot and inspected the HTTP client, tests, CLI dispatch, and registry diff. Used the indexed graph to inspect `handleToolProcessing` and `SaveEnvFile`; the fast index excludes `internal/tools`, so the PR diff supplied that source. This documentation-only task adds no executable behavior; code tests were not run or added. No images analyzed. Only high-risk-area identification is complete; [[REVIEW_SCOPE]] remains for the next task.
